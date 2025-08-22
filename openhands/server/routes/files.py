@@ -233,7 +233,6 @@ async def git_changes(
     user_id: str = Depends(get_user_id),
 ) -> list[dict[str, str]] | JSONResponse:
     runtime: Runtime = conversation.runtime
-
     cwd = runtime.config.workspace_mount_path_in_sandbox
     logger.info(f'Getting git changes in {cwd}')
 

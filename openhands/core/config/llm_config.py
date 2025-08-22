@@ -46,6 +46,12 @@ class LLMConfig(BaseModel):
         reasoning_effort: The effort to put into reasoning. This is a string that can be one of 'low', 'medium', 'high', or 'none'. Can apply to all reasoning models.
         seed: The seed to use for the LLM.
         safety_settings: Safety settings for models that support them (like Mistral AI and Gemini).
+        conversation_token_limit: The maximum number of tokens allowed in the entire conversation history. When exceeded, automatic compression is triggered.
+        single_request_token_limit: The maximum number of tokens allowed for a single LLM request. This prevents individual requests from exceeding provider limits.
+        token_warning_threshold: The threshold (as a fraction) at which to warn about approaching token limits. Default is 0.8 (80%).
+        auto_compress_on_limit: Whether to automatically compress conversation history when token limits are exceeded. Default is True.
+        enable_llm_request_logging: Whether to enable detailed logging of LLM requests and responses for debugging purposes. Default is True.
+        enable_full_content_logging: Whether to enable logging of complete LLM input content without truncation. Default is True.
     """
 
     model: str = Field(default='claude-sonnet-4-20250514')
@@ -90,6 +96,30 @@ class LLMConfig(BaseModel):
     safety_settings: list[dict[str, str]] | None = Field(
         default=None,
         description='Safety settings for models that support them (like Mistral AI and Gemini)',
+    )
+    conversation_token_limit: int = Field(
+        default=300000,
+        description='Maximum tokens allowed in conversation history before compression is triggered'
+    )
+    single_request_token_limit: int = Field(
+        default=250000,
+        description='Maximum tokens allowed for a single LLM request'
+    )
+    token_warning_threshold: float = Field(
+        default=0.8,
+        description='Threshold (0-1) at which to warn about approaching token limits'
+    )
+    auto_compress_on_limit: bool = Field(
+        default=True,
+        description='Automatically compress conversation when token limits are exceeded'
+    )
+    enable_llm_request_logging: bool = Field(
+        default=True,
+        description='Enable detailed logging of LLM requests and responses for debugging'
+    )
+    enable_full_content_logging: bool = Field(
+        default=True,
+        description='Enable logging of complete LLM input content without truncation'
     )
 
     model_config = ConfigDict(extra='forbid')

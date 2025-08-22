@@ -49,6 +49,9 @@
 # Enable the browser environment
 #enable_browser = true
 
+# Enable git changes tracking (shows file changes in UI)
+#enable_git_tracking = true
+
 # Maximum budget per task, 0.0 means no limit
 #max_budget_per_task = 0.0
 
@@ -112,6 +115,35 @@ api_key = ""
 
 # API base URL (For Headless / CLI only -  In Web this is overridden by Session Init)
 #base_url = ""
+
+# Token限制配置
+# 对话历史允许的最大token数，超过后触发压缩
+#conversation_token_limit = 300000
+
+# 单次LLM请求允许的最大token数
+#single_request_token_limit = 250000
+
+# 接近token限制时的警告阈值 (0-1)
+#token_warning_threshold = 0.8
+
+# 当超过token限制时自动压缩对话
+#auto_compress_on_limit = true
+
+# 启用详细的LLM请求和响应日志 (用于调试)
+#enable_llm_request_logging = true
+
+# 启用完整内容日志记录 (不截断，显示完整LLM输入内容)
+#enable_full_content_logging = true
+
+# 重试策略配置
+# 智能重试策略，针对不同错误类型采用不同处理方式
+#enable_intelligent_retry = true
+
+# Token相关错误的重试等待时间（秒）
+#token_error_retry_wait = 2
+
+# 网络错误的基础重试等待时间（秒）
+#network_error_base_wait = 5
 
 # API version
 #api_version = ""
@@ -378,6 +410,7 @@ classpath = "my_package.my_module.MyCustomAgent"
 # - "observation_masking": Keeps full event structure but masks older observations
 # - "recent": Keeps only recent events and discards older ones
 # - "llm": Uses an LLM to summarize conversation history
+# - "semantic": Uses semantic analysis for intelligent conversation compression
 # - "amortized": Intelligently forgets older events while preserving important context
 # - "llm_attention": Uses an LLM to prioritize most relevant context
 type = "noop"
@@ -408,14 +441,29 @@ type = "noop"
 # Maximum size of history before triggering summarization
 #max_size = 100
 
-# 5. Amortized Forgetting Condenser
+# 5. Semantic Condenser - Advanced semantic compression with importance analysis
+#type = "semantic"
+# Reference to an LLM config to use for semantic analysis
+#llm_config = "condenser"
+# Number of initial events to always keep (typically includes task description)
+#keep_first = 1
+# Maximum size of history before triggering compression
+#max_size = 100
+# Maximum compression ratio (0-1), controls compression strength
+#max_compression_ratio = 0.3
+# Whether to enable semantic analysis for importance scoring
+#enable_semantic_analysis = true
+# Maximum length of the event representations to be passed to the LLM
+#max_event_length = 8000
+
+# 6. Amortized Forgetting Condenser
 #type = "amortized"
 # Number of initial events to always keep (typically includes task description)
 #keep_first = 1
 # Maximum size of history before triggering forgetting
 #max_size = 100
 
-# 6. LLM Attention Condenser
+# 7. LLM Attention Condenser
 #type = "llm_attention"
 # Reference to an LLM config to use for attention scoring
 #llm_config = "condenser"

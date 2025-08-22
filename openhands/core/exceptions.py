@@ -118,6 +118,19 @@ class LLMContextWindowExceedError(RuntimeError):
         super().__init__(message)
 
 
+class TokenLimitExceededError(Exception):
+    def __init__(
+        self,
+        current_tokens: int,
+        limit: int,
+        message: str = 'Token limit exceeded',
+    ) -> None:
+        self.current_tokens = current_tokens
+        self.limit = limit
+        full_message = f'{message}: {current_tokens} tokens exceeds limit of {limit} tokens'
+        super().__init__(full_message)
+
+
 # ============================================
 # LLM function calling Exceptions
 # ============================================

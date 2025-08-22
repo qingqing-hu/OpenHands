@@ -27,6 +27,7 @@ from openhands.core.exceptions import (
     FunctionCallNotExistsError,
     FunctionCallValidationError,
 )
+from openhands.core.json_utils import validate_tool_arguments
 from openhands.core.logger import openhands_logger as logger
 from openhands.events.action import (
     Action,
@@ -129,11 +130,10 @@ def response_to_actions(
             action: Action
             logger.debug(f'Tool call in function_calling.py: {tool_call}')
             try:
-                arguments = json.loads(tool_call.function.arguments)
-            except json.decoder.JSONDecodeError as e:
-                raise FunctionCallValidationError(
-                    f'Failed to parse tool call arguments: {tool_call.function.arguments}'
-                ) from e
+                arguments = validate_tool_arguments(tool_call.function.arguments, tool_call.function.name)
+            except ValueError as e:
+                logger.error(f'Tool call validation failed: {e}')
+                raise FunctionCallValidationError(str(e)) from e
 
             # ================================================
             # AgentFinishAction

@@ -22,7 +22,23 @@ class SecurityAnalyzer:
         self.event_stream = event_stream
 
         def sync_on_event(event: Event) -> None:
-            asyncio.create_task(self.on_event(event))
+            try:
+                # Get the current event loop or create a new one for this thread
+                try:
+                    loop = asyncio.get_event_loop()
+                except RuntimeError:
+                    # No event loop in current thread, create a new one
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+
+                if loop.is_running():
+                    # If loop is already running, create task
+                    asyncio.create_task(self.on_event(event))
+                else:
+                    # If loop is not running, run the coroutine directly
+                    loop.run_until_complete(self.on_event(event))
+            except Exception as e:
+                logger.error(f"Error in SecurityAnalyzer sync_on_event: {e}")
 
         self.event_stream.subscribe(
             EventStreamSubscriber.SECURITY_ANALYZER, sync_on_event, str(uuid4())

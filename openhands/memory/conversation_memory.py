@@ -276,6 +276,9 @@ class ConversationMemory:
                 action.tool_call_metadata = None
             if role not in ('user', 'system', 'assistant', 'tool'):
                 raise ValueError(f'Invalid role: {role}')
+            # Don't create messages with empty thought content
+            if not action.thought or not action.thought.strip():
+                return []
             return [
                 Message(
                     role=role,  # type: ignore[arg-type]
@@ -284,7 +287,7 @@ class ConversationMemory:
             ]
         elif isinstance(action, MessageAction):
             role = 'user' if action.source == 'user' else 'assistant'
-            content = [TextContent(text=action.content or '')]
+            content = [TextContent(text=action.content)] if action.content and action.content.strip() else []
             if vision_is_active and action.image_urls:
                 if role == 'user':
                     for idx, url in enumerate(action.image_urls):
@@ -294,6 +297,9 @@ class ConversationMemory:
                     content.append(ImageContent(image_urls=action.image_urls))
             if role not in ('user', 'system', 'assistant', 'tool'):
                 raise ValueError(f'Invalid role: {role}')
+            # Don't create messages with empty content
+            if not content:
+                return []
             return [
                 Message(
                     role=role,  # type: ignore[arg-type]
@@ -312,6 +318,9 @@ class ConversationMemory:
             ]
         elif isinstance(action, SystemMessageAction):
             # Convert SystemMessageAction to a system message
+            # Don't create system messages with empty content
+            if not action.content or not action.content.strip():
+                return []
             return [
                 Message(
                     role='system',

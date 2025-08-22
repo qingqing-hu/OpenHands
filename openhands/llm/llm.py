@@ -24,7 +24,7 @@ from litellm.exceptions import (
 from litellm.types.utils import CostPerToken, ModelResponse, Usage
 from litellm.utils import create_pretrained_tokenizer
 
-from openhands.core.exceptions import LLMNoResponseError
+from openhands.core.exceptions import LLMNoResponseError, TokenLimitExceededError
 from openhands.core.logger import openhands_logger as logger
 from openhands.core.message import Message
 from openhands.llm.debug_mixin import DebugMixin
@@ -318,8 +318,11 @@ class LLM(RetryMixin, DebugMixin):
                     'The messages list is empty. At least one message is required.'
                 )
 
-            # log the entire LLM prompt
+            # log the entire LLM prompt (DEBUG level)
             self.log_prompt(messages)
+            
+            # log detailed request information (INFO level for debugging)
+            self.log_request_details(messages, self.config.model)
 
             # set litellm modify_params to the configured value
             # True by default to allow litellm to do transformations like adding a default message, when a message is empty
@@ -330,8 +333,18 @@ class LLM(RetryMixin, DebugMixin):
             if 'litellm_proxy' not in self.config.model:
                 kwargs.pop('extra_body', None)
 
+            # Check token limits and log input token count before making the request
+            estimated_input_tokens = self.get_token_count(messages)
+            self._check_token_limits_and_warn(messages, estimated_input_tokens)
+            
             # Record start time for latency measurement
             start_time = time.time()
+            start_timestamp = time.strftime('%H:%M:%S.%f', time.localtime(start_time))[:-3]
+            
+            logger.info(
+                f'LLM Request Start - Time: {start_timestamp} | Model: {self.config.model} | '
+                f'Estimated Input Tokens: {estimated_input_tokens}'
+            )
             # we don't support streaming here, thus we get a ModelResponse
 
             # Suppress httpx deprecation warnings during LiteLLM calls
@@ -349,9 +362,17 @@ class LLM(RetryMixin, DebugMixin):
                 resp: ModelResponse = self._completion_unwrapped(*args, **kwargs)
 
             # Calculate and record latency
-            latency = time.time() - start_time
+            end_time = time.time()
+            latency = end_time - start_time
+            end_timestamp = time.strftime('%H:%M:%S.%f', time.localtime(end_time))[:-3]
             response_id = resp.get('id', 'unknown')
             self.metrics.add_response_latency(latency, response_id)
+            
+            # Log immediate response timing information
+            logger.info(
+                f'LLM Request Complete - Time: {end_timestamp} | Duration: {latency:.3f}s | '
+                f'Model: {self.config.model} | Response ID: {response_id}'
+            )
 
             non_fncall_response = copy.deepcopy(resp)
 
@@ -384,8 +405,11 @@ class LLM(RetryMixin, DebugMixin):
                     + str(resp)
                 )
 
-            # log the LLM response
+            # log the LLM response (DEBUG level)
             self.log_response(resp)
+            
+            # log detailed response information (INFO level for debugging)
+            self.log_response_details(resp)
 
             # post-process the response first to calculate cost
             cost = self._post_completion(resp)
@@ -682,11 +706,92 @@ class LLM(RetryMixin, DebugMixin):
                 response_id=response_id,
             )
 
-        # log the stats
+        # log the stats - upgrade input tokens to INFO level for better visibility
         if stats:
             logger.debug(stats)
+            # Also log a concise summary at INFO level for token monitoring
+            if usage and usage.get('prompt_tokens'):
+                prompt_tokens = usage.get('prompt_tokens', 0)
+                completion_tokens = usage.get('completion_tokens', 0)
+                total_tokens = prompt_tokens + completion_tokens
+                
+                # Calculate token usage percentage relative to limits
+                single_request_limit = self.config.single_request_token_limit
+                conversation_limit = self.config.conversation_token_limit
+                
+                single_usage_pct = (total_tokens / single_request_limit) * 100 if single_request_limit > 0 else 0
+                
+                # Get the most recent latency for this response
+                recent_latency = 0.0
+                if self.metrics.response_latencies:
+                    # Find the latency for this specific response
+                    for lat_record in reversed(self.metrics.response_latencies):
+                        if lat_record.response_id == response_id:
+                            recent_latency = lat_record.latency
+                            break
+                
+                # Calculate tokens per second safely
+                tokens_per_second = (total_tokens / recent_latency) if recent_latency > 0 else 0
+                
+                logger.info(
+                    f'LLM Response Details - Model: {self.config.model} | '
+                    f'Input Tokens: {prompt_tokens} | Output Tokens: {completion_tokens} | '
+                    f'Total Tokens: {total_tokens} | Duration: {recent_latency:.3f}s | '
+                    f'Speed: {tokens_per_second:.1f} tokens/s | '
+                    f'Usage: {single_usage_pct:.1f}% | Cost: {cur_cost:.6f} USD | '
+                    f'Accumulated Cost: {self.metrics.accumulated_cost:.4f} USD | '
+                    f'Response ID: {response_id}'
+                )
+                
+                # Log warning if approaching conversation limit (placeholder for future implementation)
+                if hasattr(self.metrics, 'conversation_tokens'):
+                    conversation_usage_pct = (self.metrics.conversation_tokens / conversation_limit) * 100
+                    if conversation_usage_pct > self.config.token_warning_threshold * 100:
+                        logger.warning(
+                            f'Conversation token usage high: {conversation_usage_pct:.1f}% of {conversation_limit} limit'
+                        )
 
         return cur_cost
+
+    def _check_token_limits_and_warn(self, messages: list[dict], estimated_tokens: int) -> None:
+        """Check token limits and warn if approaching limits."""
+        # Check single request limit
+        if estimated_tokens > self.config.single_request_token_limit:
+            if self.config.auto_compress_on_limit:
+                logger.warning(
+                    f'Single request token limit exceeded: {estimated_tokens} > {self.config.single_request_token_limit}. '
+                    'Auto-compression would be needed but is not yet implemented.'
+                )
+            else:
+                raise TokenLimitExceededError(
+                    current_tokens=estimated_tokens,
+                    limit=self.config.single_request_token_limit,
+                    message='Single request token limit exceeded'
+                )
+        
+        # Check warning threshold
+        warning_threshold_tokens = int(self.config.single_request_token_limit * self.config.token_warning_threshold)
+        if estimated_tokens > warning_threshold_tokens:
+            usage_percentage = (estimated_tokens / self.config.single_request_token_limit) * 100
+            logger.warning(
+                f'Approaching token limit: {estimated_tokens}/{self.config.single_request_token_limit} tokens '
+                f'({usage_percentage:.1f}%). Consider enabling auto-compression or reducing context size.'
+            )
+
+    def _handle_token_limit_exceeded(self, messages: list[dict]) -> list[dict]:
+        """Handle token limit exceeded situation."""
+        if self.config.auto_compress_on_limit:
+            logger.info('Token limit exceeded, auto-compression will be implemented in future versions')
+            # TODO: Implement conversation compression logic
+            # This is a placeholder for the compression logic that would be implemented later
+            return messages
+        else:
+            current_tokens = self.get_token_count(messages)
+            raise TokenLimitExceededError(
+                current_tokens=current_tokens,
+                limit=self.config.single_request_token_limit,
+                message='Token limit exceeded and auto-compression is disabled'
+            )
 
     def get_token_count(self, messages: list[dict] | list[Message]) -> int:
         """Get the number of tokens in a list of messages. Use dicts for better token counting.

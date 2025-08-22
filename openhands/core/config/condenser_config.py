@@ -85,6 +85,43 @@ class LLMSummarizingCondenserConfig(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
 
+class SemanticCondenserConfig(BaseModel):
+    """Configuration for SemanticCondenser."""
+
+    type: Literal['semantic'] = Field(default='semantic')
+    llm_config: LLMConfig = Field(
+        ..., description='Configuration for the LLM to use for semantic condensing.'
+    )
+
+    # at least one event by default, because the best guess is that it's the user task
+    keep_first: int = Field(
+        default=1,
+        description='Number of initial events to always keep in history.',
+        ge=0,
+    )
+    max_size: int = Field(
+        default=100,
+        description='Maximum size of the condensed history before triggering forgetting.',
+        ge=2,
+    )
+    max_event_length: int = Field(
+        default=8_000,
+        description='Maximum length of the event representations to be passed to the LLM.',
+    )
+    max_compression_ratio: float = Field(
+        default=0.3,
+        description='Maximum compression ratio (0-1), controls compression strength.',
+        gt=0.0,
+        le=1.0,
+    )
+    enable_semantic_analysis: bool = Field(
+        default=True,
+        description='Whether to enable semantic analysis for importance scoring.',
+    )
+
+    model_config = ConfigDict(extra='forbid')
+
+
 class AmortizedForgettingCondenserConfig(BaseModel):
     """Configuration for AmortizedForgettingCondenser."""
 
@@ -185,6 +222,7 @@ CondenserConfig = (
     | BrowserOutputCondenserConfig
     | RecentEventsCondenserConfig
     | LLMSummarizingCondenserConfig
+    | SemanticCondenserConfig
     | AmortizedForgettingCondenserConfig
     | LLMAttentionCondenserConfig
     | StructuredSummaryCondenserConfig
@@ -228,7 +266,7 @@ def condenser_config_from_toml_section(
 
         # Handle LLM config reference if needed
         if (
-            condenser_type in ('llm', 'llm_attention')
+            condenser_type in ('llm', 'llm_attention', 'semantic')
             and 'llm_config' in data
             and isinstance(data['llm_config'], str)
         ):
@@ -287,6 +325,7 @@ def create_condenser_config(condenser_type: str, data: dict) -> CondenserConfig:
         'observation_masking': ObservationMaskingCondenserConfig,
         'recent': RecentEventsCondenserConfig,
         'llm': LLMSummarizingCondenserConfig,
+        'semantic': SemanticCondenserConfig,
         'amortized': AmortizedForgettingCondenserConfig,
         'llm_attention': LLMAttentionCondenserConfig,
         'structured': StructuredSummaryCondenserConfig,
