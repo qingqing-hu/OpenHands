@@ -11,7 +11,7 @@ interface MCPObservationContentProps {
 export function MCPObservationContent({ event }: MCPObservationContentProps) {
   const { t } = useTranslation();
 
-  // Parse the content as JSON if possible
+  // Parse the content as JSON if possible to show full structure
   let outputData: unknown;
   try {
     outputData = JSON.parse(event.content);
@@ -20,8 +20,7 @@ export function MCPObservationContent({ event }: MCPObservationContentProps) {
     outputData = event.content;
   }
 
-  const hasArguments =
-    event.extras.arguments && Object.keys(event.extras.arguments).length > 0;
+  const hasArguments = event.extras.arguments !== undefined;
 
   return (
     <div className="flex flex-col gap-4">

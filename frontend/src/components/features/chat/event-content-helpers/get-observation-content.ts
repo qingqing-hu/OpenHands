@@ -29,7 +29,9 @@ const getEditObservationContent = (
   successMessage: boolean,
 ): string => {
   if (successMessage) {
-    return `\`\`\`diff\n${event.extras.diff}\n\`\`\``; // Content is already truncated by the ACI
+    // Use extras.diff if available, otherwise fallback to content
+    const diffContent = event.extras.diff || event.content;
+    return `\`\`\`diff\n${diffContent}\n\`\`\``; // Content is already truncated by the ACI
   }
   return event.content;
 };

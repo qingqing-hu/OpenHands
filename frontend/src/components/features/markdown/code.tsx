@@ -54,7 +54,7 @@ export function code({
 
   return (
     <SyntaxHighlighter
-      className="rounded-lg"
+      className="rounded-lg overflow-x-auto"
       style={vscDarkPlus}
       language={match?.[1]}
       PreTag="div"

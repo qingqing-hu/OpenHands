@@ -47,16 +47,18 @@ export function GenericEventMessage({
 
       {showDetails &&
         (typeof details === "string" ? (
-          <Markdown
-            components={{
-              code,
-              ul,
-              ol,
-            }}
-            remarkPlugins={[remarkGfm, remarkBreaks]}
-          >
-            {details}
-          </Markdown>
+          <div className="text-sm">
+            <Markdown
+              components={{
+                code,
+                ul,
+                ol,
+              }}
+              remarkPlugins={[remarkGfm, remarkBreaks]}
+            >
+              {details}
+            </Markdown>
+          </div>
         ) : (
           details
         ))}
