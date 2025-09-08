@@ -1,0 +1,11 @@
+# 你的代码与源码一致，同事代码与源码不一致的文件（7个）
+# 处理策略：用同事的版本替换（包含功能增强）
+# 优先级：🟢 低风险，同事在源码基础上做了改进
+
+frontend/src/components/features/chat/mcp-observation-content.tsx
+frontend/src/components/features/markdown/code.tsx
+frontend/src/routes.ts
+openhands/core/config/condenser_config.py
+openhands/core/exceptions.py
+openhands/llm/debug_mixin.py
+openhands/memory/condenser/impl/__init__.py

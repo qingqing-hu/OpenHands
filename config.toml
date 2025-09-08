@@ -1,0 +1,35 @@
+[core]
+workspace_base="./workspace"
+
+[llm]
+# 使用内网代理访问kimi-k2模型
+model = "kimi-k2-0711-preview"
+
+# 使用token作为api_key（实际上是JWT token）
+api_key = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjdXJyZW50VGltZSI6MTc1NTUwMTMxODA1OCwiZXhwIjoxNzU2MTA2MTE4LCJ1c2VybmFtZSI6IjMifQ.2CPnYCx5NftL2Xdd8CvvYsf_ltO3yt8QMX_bOFOqs3U"
+
+# 内网代理地址
+base_url = "http://172.21.54.74:28000/vtuber/ai_access/kimi_moonshot/v1"
+
+# 启用token认证模式（关键配置）
+use_token_auth = true
+
+# 指定响应包装字段（响应中实际数据在data字段中）
+response_wrapper_field = "data"
+
+# 可选：添加自定义请求头（使用内联字典格式）
+proxy_headers = {"host" = "arsenal-openai-server", "X-Arsenal-Auth" = "arsenal-tools"}
+
+# 重试配置（内网环境可能需要调整）
+num_retries = 3
+retry_min_wait = 2
+retry_max_wait = 10
+
+[sandbox]
+local_runtime_url = "http://172.17.0.1"
+keep_runtime_alive = true
+
+
+[app]
+port=3000
+frontend_port=3001

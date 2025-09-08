@@ -1,0 +1,52 @@
+services:
+  openhands:
+    build:
+      context: ./
+      dockerfile: ./containers/app/dev/Dockerfile
+      args:
+        VITE_BASE_PATH: /openhands
+    image: openhands:latest
+    container_name: openhands-app-${DATE:-}
+    environment:
+      - SANDBOX_RUNTIME_CONTAINER_IMAGE=${SANDBOX_RUNTIME_CONTAINER_IMAGE:-docker.all-hands.dev/all-hands-ai/runtime:0.50-nikolaik}
+      - RUNTIME_MOUNT=${RUNTIME_MOUNT:-$PWD/workspace:/workspace:rw}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - BACKEND_LOG_FILE=/logs/backend.log
+      - FRONTEND_LOG_FILE=/logs/frontend.log
+      - FRONTEND_BASE_PATH=${FRONTEND_BASE_PATH:-/openhands}
+      - SANDBOX_LOCAL_RUNTIME_URL=http://172.17.0.1
+      - SANDBOX_ENV_OPENAI_BASE_URL=https://api.moonshot.cn/v1
+      - SANDBOX_ENV_OPENAI_API_KEY=sk-Bj0CpfGB8EKPsDrRXxrQd8EzB1LAmmjJJ1dC816DeWxhJAIm
+      - SANDBOX_ENV_OPENAI_MODEL=moonshot/kimi-k2-0905-preview
+      - SANDBOX_ENV_USE_TOKEN_AUTH=false
+      - SANDBOX_ENV_RESPONSE_WRAPPER_FIELD=data
+      - LLM_MODEL=moonshot/kimi-k2-0905-preview
+      - LLM_BASE_URL=https://api.moonshot.cn/v1
+      - LLM_API_KEY=sk-Bj0CpfGB8EKPsDrRXxrQd8EzB1LAmmjJJ1dC816DeWxhJAIm
+      - LLM_USE_TOKEN_AUTH=false
+      - LLM_PROXY_HEADERS={"host":"arsenal-openai-server","X-Arsenal-Auth":"arsenal-tools"}
+      - LLM_RESPONSE_WRAPPER_FIELD=data
+      - port=5002
+      #- EXTERNAL_VSCODE_SERVER_URL=http://10.0.56.134:5003
+      - MOUNT_OPENHANDS_CODE=true
+      - CONTAINER_NAME=openhands-app-dev
+    ports:
+      - "5002:5002"
+      - "5001:5001"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ~/.openhands:/.openhands
+      - ${WORKSPACE_BASE:-$PWD/workspace}:/opt/workspace_base
+      - ./logs:/logs
+      - ./openhands:/app/openhands
+    pull_policy: build
+    network_mode: bridge
+    stdin_open: true
+    tty: true
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "10"
+    labels:
+      - "com.openhands.service=backend"
