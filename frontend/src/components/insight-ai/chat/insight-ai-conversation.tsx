@@ -75,17 +75,6 @@ export function InsightAIConversation({
   const { messages, isConnected, isLoading, error, send } =
     useInsightAIMessages(conversationId);
 
-  // Debug logging for InsightAI conversation
-  React.useEffect(() => {
-    console.log("🔍 [InsightAI Conversation] conversationId:", conversationId);
-    console.log(
-      "🔍 [InsightAI Conversation] messages count:",
-      messages?.length || 0,
-    );
-    console.log("🔍 [InsightAI Conversation] isConnected:", isConnected);
-    console.log("🔍 [InsightAI Conversation] isLoading:", isLoading);
-    console.log("🔍 [InsightAI Conversation] error:", error);
-  }, [conversationId, messages?.length, isConnected, isLoading, error]);
 
   // Handle sending messages
   const handleSendMessage = async (
@@ -116,7 +105,6 @@ export function InsightAIConversation({
         timestamp,
       );
 
-      console.log("发送消息到WebSocket:", messageEvent);
 
       // 发送到WebSocket
       send(messageEvent);

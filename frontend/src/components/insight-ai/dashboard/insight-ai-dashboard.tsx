@@ -42,7 +42,7 @@ export function InsightAIDashboard() {
       title: "Recent Activity",
       description: "View your recent interactions",
       icon: Clock,
-      onClick: () => console.log("View recent activity"),
+      onClick: () => {},
       variant: "secondary" as const,
     },
     {

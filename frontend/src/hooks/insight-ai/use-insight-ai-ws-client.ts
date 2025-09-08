@@ -131,23 +131,10 @@ export function useInsightAIWsClient(
   function send(event: Record<string, unknown>) {
     if (!sioRef.current) {
       EventLogger.error("WebSocket is not connected.");
-      console.error(
-        "🔍 [InsightAI WebSocket] Send failed: no socket connection",
-      );
       return;
     }
-    console.log(
-      "🔍 [InsightAI WebSocket] Sending event:",
-      JSON.stringify(event, null, 2),
-    );
-    console.log(
-      "🔍 [InsightAI WebSocket] Socket connected:",
-      sioRef.current.connected,
-    );
-    console.log("🔍 [InsightAI WebSocket] Socket ID:", sioRef.current.id);
 
     sioRef.current.emit("oh_user_action", event);
-    console.log("🔍 [InsightAI WebSocket] Event emitted successfully");
   }
 
   function handleConnect() {
@@ -156,10 +143,6 @@ export function useInsightAIWsClient(
   }
 
   function handleMessage(event: Record<string, unknown>) {
-    console.log(
-      "🔍 [InsightAI WebSocket] Received event:",
-      JSON.stringify(event, null, 2),
-    );
 
     // Check if this could be a terminal-related event
     if (
@@ -168,9 +151,6 @@ export function useInsightAIWsClient(
       (event as any).content ||
       (event as any).message
     ) {
-      console.log(
-        "🔍 [InsightAI WebSocket] Potential terminal event received!",
-      );
     }
 
     handleAssistantMessage(event);
@@ -199,17 +179,8 @@ export function useInsightAIWsClient(
       }
 
       if (isOpenHandsAction(event) || isOpenHandsObservation(event)) {
-        console.log("🔍 [InsightAI WebSocket] Adding parsed event:", {
-          id: event.id,
-          action: (event as any).action,
-          observation: (event as any).observation,
-          source: (event as any).source,
-        });
         setParsedEvents((prevEvents) => [...prevEvents, event]);
       } else {
-        console.log(
-          "🔍 [InsightAI WebSocket] Event not added to parsedEvents - not action/observation",
-        );
       }
 
       if (isErrorObservation(event)) {
@@ -271,10 +242,6 @@ export function useInsightAIWsClient(
 
     setEvents((prevEvents) => {
       const newEvents = [...prevEvents, event];
-      console.log(
-        "🔍 [InsightAI WebSocket] Total events now:",
-        newEvents.length,
-      );
       return newEvents;
     });
     if (!Number.isNaN(parseInt(event.id as string, 10))) {
@@ -325,9 +292,6 @@ export function useInsightAIWsClient(
       conversationId.trim() === "" ||
       conversationId === "placeholder"
     ) {
-      console.warn(
-        "No valid conversation ID provided, WebSocket connection skipped",
-      );
       setWebSocketStatus("DISCONNECTED");
       setEvents([]);
       setParsedEvents([]);

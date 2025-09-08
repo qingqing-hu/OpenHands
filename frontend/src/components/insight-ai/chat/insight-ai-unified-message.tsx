@@ -9,6 +9,10 @@ import {
   InsightAIMessage,
   InsightAIMessageCategory,
 } from "./insight-ai-message-filter";
+import {
+  isOpenHandsAction,
+  isOpenHandsObservation,
+} from "#/types/core/guards";
 import { decodeHtmlEntities } from "../shared/html-entity-decoder";
 // import { useScrollbarVisibility } from "../../hooks/insight-ai/use-scrollbar-visibility";
 
@@ -230,10 +234,124 @@ export function InsightAIUnifiedMessage({
       return message.detailedContent || null;
     }
 
+    // For MCP messages, ensure we show the detailed content properly
+    if (message.category === "mcp") {
+      
+      // If we have detailedContent, use it; otherwise, extract from originalEvent
+      if (message.detailedContent && message.detailedContent !== message.content) {
+        return message.detailedContent;
+      }
+      
+      // Fallback: generate detailed content from original event
+      if (message.originalEvent) {
+        try {
+          if (isOpenHandsAction(message.originalEvent) && (message.originalEvent as any).action === "call_tool_mcp") {
+            // For MCP actions, show formatted tool call details
+            const args = (message.originalEvent as any).args || {};
+            const name = args.name || "Unknown Tool";
+            const arguments_obj = args.arguments || {};
+            let details = `**MCP Tool Call:** ${name}\n\n`;
+            if (args.thought) {
+              details += `**Thought:**\n${args.thought}\n\n`;
+            }
+            details += `**Arguments:**\n\`\`\`json\n${JSON.stringify(arguments_obj, null, 2)}\n\`\`\``;
+            return details;
+          } else if (isOpenHandsObservation(message.originalEvent) && (message.originalEvent as any).observation === "mcp") {
+            // For MCP observations, extract and show the actual execution result
+            const event = message.originalEvent;
+            let executionResult = "无执行结果";
+            
+            if (event.content) {
+              try {
+                // Parse the outer JSON structure
+                const parsedContent = JSON.parse(event.content);
+                
+                if (parsedContent.content && Array.isArray(parsedContent.content)) {
+                  // Look for the actual tool result in content[0].text
+                  const firstItem = parsedContent.content[0];
+                  if (firstItem && firstItem.text && typeof firstItem.text === 'string') {
+                    try {
+                      // Parse the nested JSON in the text field
+                      const actualResult = JSON.parse(firstItem.text);
+                      
+                      // Format the result nicely - show the important parts
+                      if (actualResult.success) {
+                        // For successful results, show all meaningful fields
+                        const resultObj: any = {
+                          success: actualResult.success,
+                        };
+                        
+                        // Add data if present (for SQL query results)
+                        if (actualResult.data) {
+                          resultObj.data = actualResult.data;
+                        }
+                        
+                        // Add file path if present (for export results)
+                        if (actualResult.file_path) {
+                          resultObj.file_path = actualResult.file_path;
+                        }
+                        
+                        // Add row count if present
+                        if (actualResult.row_count !== null && actualResult.row_count !== undefined) {
+                          resultObj.row_count = actualResult.row_count;
+                        }
+                        
+                        // Add columns if present
+                        if (actualResult.columns) {
+                          resultObj.columns = actualResult.columns;
+                        }
+                        
+                        // Add query type if present
+                        if (actualResult.query_type) {
+                          resultObj.query_type = actualResult.query_type;
+                        }
+                        
+                        // Add message if present
+                        if (actualResult.message) {
+                          resultObj.message = actualResult.message;
+                        }
+                        
+                        executionResult = JSON.stringify(resultObj, null, 2);
+                      } else {
+                        // For failed results, show error info
+                        executionResult = JSON.stringify(actualResult, null, 2);
+                      }
+                    } catch (nestedParseError) {
+                      // If nested parsing fails, use the text as is
+                      executionResult = firstItem.text;
+                    }
+                  }
+                }
+              } catch (e) {
+                // If JSON parsing fails, use content as plain text
+                executionResult = event.content;
+              }
+            }
+            
+            // Include tool name and arguments if available from message extras
+            let details = "";
+            if (message.extras?.tool) {
+              details += `**工具名称:** ${message.extras.tool}\n\n`;
+            }
+            if (message.extras?.arguments) {
+              details += `**调用参数:**\n\`\`\`json\n${JSON.stringify(message.extras.arguments, null, 2)}\n\`\`\`\n\n`;
+            }
+            details += `**执行结果:**\n\`\`\`\n${executionResult}\n\`\`\``;
+            
+            return details;
+          }
+        } catch (error) {
+          console.warn("Failed to generate MCP detailed content:", error);
+        }
+      }
+      
+      return null; // No detailed content available
+    }
+
     const content = message.detailedContent || message.content;
 
     // For non-MCP messages, extract content from code blocks
-    if (message.category !== "mcp" && content.includes("```")) {
+    if ((message.category as string) !== "mcp" && content.includes("```")) {
       // Extract content between ``` markers
       const codeBlockRegex = /```[\s\S]*?\n([\s\S]*?)\n```/g;
       const matches = [...content.matchAll(codeBlockRegex)];
@@ -258,7 +376,8 @@ export function InsightAIUnifiedMessage({
 
   // Check if MCP message has output
   const hasOutput =
-    message.category === "mcp" && message.content && message.content.trim();
+    message.category === "mcp" && 
+    (message.content && message.content.trim() || message.extras?.result);
 
   const detailedContent = getDetailedContent();
   const hasExpandableContent =
@@ -443,21 +562,15 @@ export function InsightAIUnifiedMessage({
                   >
                     <div className="p-3" style={{ paddingBottom: 0 }}>
                       {(() => {
-                        const mcpContent = parseMCPContent(message.content);
-                        const parsedOutput =
-                          typeof mcpContent === "string"
-                            ? mcpContent
-                            : parseContent(message.content);
-
-                        // For MCP messages, if we got string content from parseMCPContent, try to parse it as JSON first
-                        if (typeof mcpContent === "string") {
-                          try {
-                            const jsonContent = JSON.parse(mcpContent);
-                            // If successfully parsed as JSON, render with JSON viewer
+                        // For MCP messages, if we have result in extras, use it directly (like arguments)
+                        if (message.category === "mcp" && message.extras?.result) {
+                          
+                          // If result is already an object, render with ReactJsonView
+                          if (typeof message.extras.result === 'object' && message.extras.result !== null) {
                             return (
                               <ReactJsonView
                                 name={false}
-                                src={processJsonForDisplay(jsonContent)}
+                                src={processJsonForDisplay(message.extras.result)}
                                 theme={INSIGHT_AI_JSON_THEME}
                                 collapsed={false}
                                 displayDataTypes={false}
@@ -466,50 +579,21 @@ export function InsightAIUnifiedMessage({
                                 indentWidth={2}
                               />
                             );
-                          } catch (e) {
-                            // If not valid JSON, render as plain text
+                          } else {
+                            // If result is a string, render as plain text
                             return (
-                              <div
-                                className="text-sm text-gray-800 whitespace-pre-wrap font-mono break-words"
-                                style={{
-                                  wordWrap: "break-word",
-                                  overflowWrap: "break-word",
-                                }}
-                                dangerouslySetInnerHTML={{
-                                  __html: decodeHtmlEntities(
-                                    mcpContent || "无输出内容",
-                                  ),
-                                }}
-                              />
+                              <div className="text-sm text-gray-800 whitespace-pre-wrap font-mono break-words">
+                                {String(message.extras.result)}
+                              </div>
                             );
                           }
                         }
-
-                        // Otherwise, use the original logic for complex objects
-                        return shouldRenderAsJSON(parsedOutput) ? (
-                          <ReactJsonView
-                            name={false}
-                            src={processJsonForDisplay(parsedOutput as object)}
-                            theme={INSIGHT_AI_JSON_THEME}
-                            collapsed={false}
-                            displayDataTypes={false}
-                            displayObjectSize={false}
-                            enableClipboard
-                            indentWidth={2}
-                          />
-                        ) : (
-                          <div
-                            className="text-sm text-gray-800 whitespace-pre-wrap font-mono break-words"
-                            style={{
-                              wordWrap: "break-word",
-                              overflowWrap: "break-word",
-                            }}
-                            dangerouslySetInnerHTML={{
-                              __html: decodeHtmlEntities(
-                                String(parsedOutput) || "无输出内容",
-                              ),
-                            }}
-                          />
+                        
+                        // Fallback: if no extras.result, show a simple placeholder
+                        return (
+                          <div className="text-sm text-gray-600">
+                            执行结果无法显示
+                          </div>
                         );
                       })()}
                     </div>

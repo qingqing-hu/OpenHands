@@ -43,12 +43,10 @@ export function InsightAITerminal({ taskId }: InsightAITerminalProps) {
     if (!command) return;
 
     if (!isConnected) {
-      console.log("🔍 [Terminal] WebSocket not connected");
       return;
     }
 
     const commandEvent = getInsightAITerminalCommand(command);
-    console.log("🔍 [Terminal] Sending command:", command);
 
     try {
       // Add to command history
