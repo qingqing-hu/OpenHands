@@ -18,7 +18,18 @@ export function getInsightAITerminalCommand(
   return event;
 }
 
-export function isTerminalCommand(event: any): boolean {
+interface TerminalEvent {
+  source?: string;
+  observation?: string;
+  action?: string;
+  content?: string;
+  message?: string;
+  extras?: Record<string, unknown>;
+  args?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+export function isTerminalCommand(event: TerminalEvent): boolean {
   const isCommand = event?.action === ActionType.RUN;
   if (isCommand) {
     console.log("🔍 [Terminal Service] Identified as terminal command:", {
@@ -30,7 +41,7 @@ export function isTerminalCommand(event: any): boolean {
   return isCommand;
 }
 
-export function isTerminalOutput(event: any): boolean {
+export function isTerminalOutput(event: TerminalEvent): boolean {
   let isOutput = false;
   let reason = "";
 
@@ -47,7 +58,7 @@ export function isTerminalOutput(event: any): boolean {
   }
 
   // Check for stdout/stderr patterns
-  if (event?.extras?.command_id && (event?.content || event?.message)) {
+  if ((event?.extras as any)?.command_id && (event?.content || event?.message)) {
     isOutput = true;
     reason = "command_id with content/message";
   }
@@ -57,8 +68,8 @@ export function isTerminalOutput(event: any): boolean {
       reason,
       observation: event?.observation,
       source: event?.source,
-      content: event?.content?.substring(0, 100),
-      message: event?.message?.substring(0, 100),
+      content: event?.content?.substring?.(0, 100),
+      message: event?.message?.substring?.(0, 100),
       extras: event?.extras,
     });
   }

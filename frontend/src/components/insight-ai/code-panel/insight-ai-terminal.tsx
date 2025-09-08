@@ -269,13 +269,11 @@ export function InsightAITerminal({ taskId }: InsightAITerminalProps) {
               fontFamily: "inherit",
               fontSize: "inherit",
             }}
-            placeholder={
-              !isConnected
-                ? "Connecting..."
-                : pendingCommand
-                  ? "Executing..."
-                  : ""
-            }
+            placeholder={(() => {
+              if (!isConnected) return "Connecting...";
+              if (pendingCommand) return "Executing...";
+              return "";
+            })()}
             autoComplete="off"
           />
           {!pendingCommand && isConnected && (

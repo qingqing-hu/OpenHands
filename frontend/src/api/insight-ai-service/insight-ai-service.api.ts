@@ -94,14 +94,12 @@ export class InsightAIService {
       id: conversation.conversation_id,
       title: conversation.title || "Untitled Analysis",
       description: `Analysis conversation for ${conversation.selected_repository || "data analysis"}`,
-      status:
-        conversation.status === "STARTING"
-          ? "starting"
-          : conversation.status === "RUNNING"
-            ? "running"
-            : conversation.status === "STOPPED"
-              ? "completed"
-              : "pending",
+      status: (() => {
+        if (conversation.status === "STARTING") return "starting";
+        if (conversation.status === "RUNNING") return "running";
+        if (conversation.status === "STOPPED") return "completed";
+        return "pending";
+      })(),
       results: [
         {
           type: "text",
@@ -195,10 +193,10 @@ export class InsightAIService {
       // 转换事件为日志格式
       const logs = response.data
         .filter(
-          (event: any) =>
+          (event: Record<string, unknown>) =>
             event.type === "observation" || event.type === "action",
         )
-        .map((event: any, index: number) => ({
+        .map((event: Record<string, unknown>, index: number) => ({
           id: `${params.taskId}-${index}`,
           timestamp: event.timestamp || new Date().toISOString(),
           level: event.type === "error" ? "error" : "info",
@@ -286,8 +284,19 @@ export class InsightAIService {
       // 打印前几个原始事件以便调试
       console.log("Sample raw events:", rawEvents.slice(0, 5));
 
+      interface EventData {
+        source?: string;
+        action?: string;
+        message?: string;
+        args?: Record<string, unknown>;
+        timestamp?: string;
+        id?: number;
+        observation?: string;
+        [key: string]: unknown;
+      }
+
       const events = rawEvents
-        .map((event: any, index: number) => {
+        .map((event: EventData, index: number) => {
           // 详细打印每个事件的结构以便调试
           if (index < 3) {
             console.log(`Event ${index}:`, {
@@ -308,22 +317,25 @@ export class InsightAIService {
           if (event.source === "user") {
             type = "user";
             content =
-              event.message || event.args?.content || event.args?.message || "";
+              event.message || 
+              (event.args?.content as string) || 
+              (event.args?.message as string) || 
+              "";
           } else if (event.source === "agent") {
             type = "assistant";
             if (event.action === "message") {
-              content = event.message || event.args?.content || "";
+              content = event.message || (event.args?.content as string) || "";
             } else if (event.action === "finish") {
               content =
-                event.args?.final_thought ||
-                event.args?.thought ||
+                (event.args?.final_thought as string) ||
+                (event.args?.thought as string) ||
                 event.message ||
                 "";
             } else if (
               event.args?.thought &&
               typeof event.args.thought === "string"
             ) {
-              content = event.args.thought;
+              content = event.args.thought as string;
             } else if (event.message) {
               content = event.message;
             } else if (event.action && event.args) {
@@ -340,10 +352,13 @@ export class InsightAIService {
           ) {
             type = "assistant";
             content =
-              event.message || event.args?.outputs || event.args?.content || "";
+              event.message || 
+              (event.args?.outputs as string) || 
+              (event.args?.content as string) || 
+              "";
           } else if (event.args?.content) {
             type = event.source === "user" ? "user" : "assistant";
-            content = event.args.content;
+            content = event.args.content as string;
           } else if (event.message) {
             // 任何有message字段的事件都尝试显示
             type = event.source === "user" ? "user" : "assistant";
@@ -358,7 +373,7 @@ export class InsightAIService {
             source: event.source || "system",
           };
         })
-        .filter((event: any) => event.content.length > 0);
+        .filter((event: { content: string }) => event.content.length > 0);
 
       console.log(`Processed ${events.length} conversation events:`, events);
 

@@ -205,18 +205,18 @@ export function InsightAIConversationManager() {
           <div className="flex flex-col items-center justify-center h-full text-center p-8">
             <MessageSquare className="w-16 h-16 text-insight-text-muted mb-4" />
             <h3 className="text-lg font-semibold text-insight-text-primary mb-2">
-              {searchQuery
-                ? "No conversations found"
-                : showArchived
-                  ? "No archived conversations"
-                  : "No conversations yet"}
+              {(() => {
+                if (searchQuery) return "No conversations found";
+                if (showArchived) return "No archived conversations";
+                return "No conversations yet";
+              })()}
             </h3>
             <p className="text-insight-text-secondary mb-4">
-              {searchQuery
-                ? `No conversations match "${searchQuery}"`
-                : showArchived
-                  ? "You haven't archived any conversations yet."
-                  : "Start a new conversation to begin chatting with AI."}
+              {(() => {
+                if (searchQuery) return `No conversations match "${searchQuery}"`;
+                if (showArchived) return "You haven't archived any conversations yet.";
+                return "Start a new conversation to begin chatting with AI.";
+              })()}
             </p>
             {!searchQuery && !showArchived && (
               <button

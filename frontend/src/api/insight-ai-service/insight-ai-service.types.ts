@@ -20,7 +20,7 @@ export interface TaskItem {
 export interface TaskResult {
   type: "chart" | "table" | "text" | "image";
   title: string;
-  content: any;
+  content: unknown;
   description?: string;
   dataUrl?: string;
 }
@@ -47,7 +47,7 @@ export interface TaskDetails {
     dataPoints?: number;
     processingTime?: string;
     userId?: string;
-    parameters?: Record<string, any>;
+    parameters?: Record<string, unknown>;
   };
   logs?: LogEntry[];
   files?: FileItem[];
@@ -76,10 +76,10 @@ export interface CreateTaskRequest {
   title: string;
   description: string;
   type: "data_analysis" | "query_processing" | "report_generation";
-  parameters?: Record<string, any>;
+  parameters?: Record<string, unknown>;
   dataSource?: {
     type: "file" | "database" | "api";
-    config: Record<string, any>;
+    config: Record<string, unknown>;
   };
 }
 
@@ -100,7 +100,7 @@ export interface GetTaskDetailsResponse extends TaskDetails {}
 
 export interface TaskExecutionRequest {
   action: "start" | "pause" | "stop" | "restart";
-  parameters?: Record<string, any>;
+  parameters?: Record<string, unknown>;
 }
 
 export interface TaskExecutionResponse {
@@ -139,7 +139,7 @@ export interface DownloadFileRequest {
 export interface ApiError {
   code: string;
   message: string;
-  details?: any;
+  details?: unknown;
 }
 
 export interface ApiResponse<T> {
