@@ -12,12 +12,14 @@ interface InsightAISimpleMessagesProps {
 // Ultra-lightweight message renderer - no markdown, no hover effects, just pure performance
 const SimpleMessageItem = React.memo(
   ({ message }: { message: InsightAIMessage }) => {
-    const formatTime = React.useMemo(() => {
-      return message.timestamp.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    }, [message.timestamp]);
+    const formatTime = React.useMemo(
+      () =>
+        message.timestamp.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      [message.timestamp],
+    );
 
     return (
       <div
@@ -102,7 +104,7 @@ export function InsightAISimpleMessages({
       return (
         <div className="flex-1 flex items-center justify-center p-4">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
             <p className="text-gray-600">加载对话历史中...</p>
           </div>
         </div>
@@ -127,7 +129,7 @@ export function InsightAISimpleMessages({
       {/* Loading indicator */}
       {isLoading && (
         <div className="flex items-center justify-center py-4">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600" />
           <span className="ml-2 text-gray-600">Loading...</span>
         </div>
       )}

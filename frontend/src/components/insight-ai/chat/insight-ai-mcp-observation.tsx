@@ -57,19 +57,17 @@ export function InsightAIMCPObservation({
   const toolName = message.extras?.tool || "MCP工具";
 
   return (
-    <div 
+    <div
       className="rounded-lg overflow-hidden insight-ai-message-outer"
-      style={{ backgroundColor: '#fafafa', padding: '8px' }}
+      style={{ backgroundColor: "#fafafa", padding: "8px" }}
     >
       {/* MCP Tool Header - White background content with visible gray background layer */}
-      <div 
+      <div
         className="flex items-center justify-between gap-4 px-3 py-1 rounded-md insight-ai-message-inner"
-        style={{ backgroundColor: '#ffffff' }}
+        style={{ backgroundColor: "#ffffff" }}
       >
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-800">
-            MCP工具调用：{toolName}
-          </span>
+          <span className="text-sm text-gray-800">MCP工具调用：{toolName}</span>
         </div>
         <button
           onClick={() => setIsExpanded(!isExpanded)}
@@ -97,7 +95,10 @@ export function InsightAIMCPObservation({
                   </span>
                 </div>
               </div>
-              <div className="max-h-[200px] overflow-auto" style={{backgroundColor: '#fafafa'}}>
+              <div
+                className="max-h-[200px] overflow-auto"
+                style={{ backgroundColor: "#fafafa" }}
+              >
                 <div className="p-3">
                   <ReactJsonView
                     name={false}
@@ -119,13 +120,16 @@ export function InsightAIMCPObservation({
             <div className="bg-white rounded-md border border-gray-200 overflow-hidden insight-ai-message-inner">
               <div className="bg-gray-50 px-3 py-2">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                  <div className="w-3 h-3 bg-green-400 rounded-full" />
                   <span className="text-sm font-medium text-gray-700">
                     执行结果
                   </span>
                 </div>
               </div>
-              <div className="max-h-[300px] overflow-auto" style={{backgroundColor: '#fafafa'}}>
+              <div
+                className="max-h-[300px] overflow-auto"
+                style={{ backgroundColor: "#fafafa" }}
+              >
                 <div className="p-3">
                   {typeof outputData === "object" && outputData !== null ? (
                     <ReactJsonView
@@ -158,16 +162,17 @@ export function InsightAIMCPObservation({
             <div className="bg-white rounded-md border border-gray-200 overflow-hidden insight-ai-message-inner">
               <div className="bg-gray-50 px-3 py-2">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+                  <div className="w-3 h-3 bg-gray-400 rounded-full" />
                   <span className="text-sm font-medium text-gray-700">
                     执行结果
                   </span>
                 </div>
               </div>
-              <div className="p-3 text-center" style={{backgroundColor: '#fafafa'}}>
-                <div className="text-sm text-gray-500 italic">
-                  暂无输出内容
-                </div>
+              <div
+                className="p-3 text-center"
+                style={{ backgroundColor: "#fafafa" }}
+              >
+                <div className="text-sm text-gray-500 italic">暂无输出内容</div>
               </div>
             </div>
           )}

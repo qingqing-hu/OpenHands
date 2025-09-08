@@ -245,7 +245,7 @@ export function InsightAITaskList({
                       autoFocus
                     />
                   ) : (
-                    <h3 
+                    <h3
                       className="font-semibold text-gray-900 text-sm truncate cursor-pointer"
                       title={task.title}
                     >
@@ -287,7 +287,8 @@ export function InsightAITaskList({
                         )}
 
                         {/* Stop button for running or starting tasks */}
-                        {(task.status === "running" || task.status === "starting") && (
+                        {(task.status === "running" ||
+                          task.status === "starting") && (
                           <button
                             onClick={() => handleMenuAction("stop", task.id)}
                             className="flex items-center w-full px-2 py-1 text-xs text-orange-700 hover:bg-orange-50 transition-colors"

@@ -18,7 +18,7 @@ const DEFAULT_TERMINAL_CONFIG: UseInsightAITerminalConfig = {
 
 const renderCommand = (command: any, terminal: Terminal) => {
   const { content, type } = command;
-  
+
   if (type === "input") {
     terminal.write(`$ ${content}\r\n`);
   } else if (type === "output" && content) {
@@ -36,8 +36,9 @@ export const useInsightAITerminal = ({
   disabled = false,
 }: UseInsightAITerminalConfig = DEFAULT_TERMINAL_CONFIG) => {
   const { send } = useInsightAIWsClient(conversationId);
-  const { commands, addCommand, addOutput, getNextCommand, getPrevCommand } = useInsightAICommandHistory();
-  
+  const { commands, addCommand, addOutput, getNextCommand, getPrevCommand } =
+    useInsightAICommandHistory();
+
   const terminal = React.useRef<Terminal | null>(null);
   const fitAddon = React.useRef<FitAddon | null>(null);
   const ref = React.useRef<HTMLDivElement>(null);
@@ -152,7 +153,7 @@ export const useInsightAITerminal = ({
 
     if (ref.current) {
       initializeTerminal();
-      
+
       // 渲染现有命令历史
       if (commands.length > lastCommandIndex.current) {
         for (let i = lastCommandIndex.current; i < commands.length; i++) {
@@ -160,7 +161,7 @@ export const useInsightAITerminal = ({
         }
         lastCommandIndex.current = commands.length;
       }
-      
+
       // 显示初始提示符
       terminal.current.write("$ ");
     }
@@ -179,7 +180,7 @@ export const useInsightAITerminal = ({
     ) {
       for (let i = lastCommandIndex.current; i < commands.length; i++) {
         renderCommand(commands[i], terminal.current);
-        
+
         // 如果是输出类型且是最后一个，显示新的提示符
         if (i === commands.length - 1 && commands[i].type === "output") {
           terminal.current.write("$ ");
@@ -222,16 +223,18 @@ export const useInsightAITerminal = ({
         keyEventDisposable.current = terminal.current.onKey(
           ({ key, domEvent }) => {
             const { keyCode } = domEvent;
-            
+
             if (domEvent.key === "Enter") {
               handleEnter(commandBuffer);
               commandBuffer = "";
             } else if (domEvent.key === "Backspace") {
               commandBuffer = handleBackspace(commandBuffer);
-            } else if (keyCode === 38) { // 上箭头
+            } else if (keyCode === 38) {
+              // 上箭头
               domEvent.preventDefault();
               commandBuffer = handleArrowUp(commandBuffer);
-            } else if (keyCode === 40) { // 下箭头
+            } else if (keyCode === 40) {
+              // 下箭头
               domEvent.preventDefault();
               commandBuffer = handleArrowDown(commandBuffer);
             } else if (domEvent.key.length === 1) {

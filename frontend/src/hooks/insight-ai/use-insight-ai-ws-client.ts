@@ -108,7 +108,9 @@ export function updateStatusWhenErrorMessagePresent(data: any) {
  * InsightAI专用的WebSocket客户端
  * 复用WsClientProvider的核心逻辑，但避免路由依赖问题
  */
-export function useInsightAIWsClient(conversationId: string): UseInsightAIWsClient {
+export function useInsightAIWsClient(
+  conversationId: string,
+): UseInsightAIWsClient {
   const { removeOptimisticUserMessage } = useOptimisticUserMessage();
   const { setErrorMessage, removeErrorMessage } = useWSErrorMessage();
   const queryClient = useQueryClient();
@@ -129,13 +131,21 @@ export function useInsightAIWsClient(conversationId: string): UseInsightAIWsClie
   function send(event: Record<string, unknown>) {
     if (!sioRef.current) {
       EventLogger.error("WebSocket is not connected.");
-      console.error("🔍 [InsightAI WebSocket] Send failed: no socket connection");
+      console.error(
+        "🔍 [InsightAI WebSocket] Send failed: no socket connection",
+      );
       return;
     }
-    console.log("🔍 [InsightAI WebSocket] Sending event:", JSON.stringify(event, null, 2));
-    console.log("🔍 [InsightAI WebSocket] Socket connected:", sioRef.current.connected);
+    console.log(
+      "🔍 [InsightAI WebSocket] Sending event:",
+      JSON.stringify(event, null, 2),
+    );
+    console.log(
+      "🔍 [InsightAI WebSocket] Socket connected:",
+      sioRef.current.connected,
+    );
     console.log("🔍 [InsightAI WebSocket] Socket ID:", sioRef.current.id);
-    
+
     sioRef.current.emit("oh_user_action", event);
     console.log("🔍 [InsightAI WebSocket] Event emitted successfully");
   }
@@ -146,14 +156,23 @@ export function useInsightAIWsClient(conversationId: string): UseInsightAIWsClie
   }
 
   function handleMessage(event: Record<string, unknown>) {
-    console.log("🔍 [InsightAI WebSocket] Received event:", JSON.stringify(event, null, 2));
-    
+    console.log(
+      "🔍 [InsightAI WebSocket] Received event:",
+      JSON.stringify(event, null, 2),
+    );
+
     // Check if this could be a terminal-related event
-    if ((event as any).action === "run" || (event as any).observation === "run" || 
-        (event as any).content || (event as any).message) {
-      console.log("🔍 [InsightAI WebSocket] Potential terminal event received!");
+    if (
+      (event as any).action === "run" ||
+      (event as any).observation === "run" ||
+      (event as any).content ||
+      (event as any).message
+    ) {
+      console.log(
+        "🔍 [InsightAI WebSocket] Potential terminal event received!",
+      );
     }
-    
+
     handleAssistantMessage(event);
 
     if (isOpenHandsEvent(event)) {
@@ -184,11 +203,13 @@ export function useInsightAIWsClient(conversationId: string): UseInsightAIWsClie
           id: event.id,
           action: (event as any).action,
           observation: (event as any).observation,
-          source: (event as any).source
+          source: (event as any).source,
         });
         setParsedEvents((prevEvents) => [...prevEvents, event]);
       } else {
-        console.log("🔍 [InsightAI WebSocket] Event not added to parsedEvents - not action/observation");
+        console.log(
+          "🔍 [InsightAI WebSocket] Event not added to parsedEvents - not action/observation",
+        );
       }
 
       if (isErrorObservation(event)) {
@@ -250,7 +271,10 @@ export function useInsightAIWsClient(conversationId: string): UseInsightAIWsClie
 
     setEvents((prevEvents) => {
       const newEvents = [...prevEvents, event];
-      console.log("🔍 [InsightAI WebSocket] Total events now:", newEvents.length);
+      console.log(
+        "🔍 [InsightAI WebSocket] Total events now:",
+        newEvents.length,
+      );
       return newEvents;
     });
     if (!Number.isNaN(parseInt(event.id as string, 10))) {
@@ -296,8 +320,14 @@ export function useInsightAIWsClient(conversationId: string): UseInsightAIWsClie
   }, [conversationId]);
 
   React.useEffect(() => {
-    if (!conversationId || conversationId.trim() === "" || conversationId === "placeholder") {
-      console.warn("No valid conversation ID provided, WebSocket connection skipped");
+    if (
+      !conversationId ||
+      conversationId.trim() === "" ||
+      conversationId === "placeholder"
+    ) {
+      console.warn(
+        "No valid conversation ID provided, WebSocket connection skipped",
+      );
       setWebSocketStatus("DISCONNECTED");
       setEvents([]);
       setParsedEvents([]);

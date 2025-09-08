@@ -1,14 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router";
+import { Plus, Menu, Settings, UserCircle } from "lucide-react";
 import { useInsightAI } from "#/components/insight-ai/context/insight-ai-context";
-import {
-  MessageSquare,
-  Plus,
-  Menu,
-  Home,
-  Settings,
-  UserCircle,
-} from "lucide-react";
 
 interface InsightAISidebarProps {
   collapsed: boolean;

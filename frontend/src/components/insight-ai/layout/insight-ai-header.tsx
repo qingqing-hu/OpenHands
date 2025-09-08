@@ -1,7 +1,7 @@
 import React from "react";
+import { Menu } from "lucide-react";
 import { useInsightAI } from "#/components/insight-ai/context/insight-ai-context";
 import { InsightAITabs } from "#/components/insight-ai/tabs/insight-ai-tabs";
-import { Menu } from "lucide-react";
 
 interface InsightAIHeaderProps {
   currentPath: string;

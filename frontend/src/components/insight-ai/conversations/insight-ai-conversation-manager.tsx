@@ -1,6 +1,5 @@
 import React from "react";
 import { Link } from "react-router";
-import { useInsightAI } from "#/components/insight-ai/context/insight-ai-context";
 import {
   Plus,
   Search,
@@ -11,6 +10,7 @@ import {
   Share,
   Calendar,
 } from "lucide-react";
+import { useInsightAI } from "#/components/insight-ai/context/insight-ai-context";
 
 interface Conversation {
   id: string;

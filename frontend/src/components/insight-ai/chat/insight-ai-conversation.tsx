@@ -1,8 +1,5 @@
 import React from "react";
-import {
-  BarChart3,
-  WifiOff,
-} from "lucide-react";
+import { BarChart3, WifiOff } from "lucide-react";
 import { LuPanelLeft, LuPanelRight } from "react-icons/lu";
 import { InsightAICollapsibleMessages } from "./insight-ai-collapsible-message";
 import { InsightAIChatInput } from "./insight-ai-chat-input";
@@ -27,18 +24,19 @@ const ConversationHeader = React.memo(
     onTogglePanel?: () => void;
     isPanelExpanded?: boolean;
   }) => (
-    <div className="bg-white px-6 py-3" style={{ height: '64px' }}>
+    <div className="bg-white px-6 py-3" style={{ height: "64px" }}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 min-w-0">
-          <h2 className="font-semibold text-gray-900 truncate min-w-0" style={{ fontSize: '16px' }}>
+          <h2
+            className="font-semibold text-gray-900 truncate min-w-0"
+            style={{ fontSize: "16px" }}
+          >
             {conversationTitle}
           </h2>
           <div className="text-gray-200 flex-shrink-0">|</div>
           <div className="flex items-center gap-1 px-2 py-0.5 bg-blue-50/50 rounded flex-shrink-0">
             <BarChart3 className="w-3 h-3 text-blue-500" />
-            <span className="text-xs font-normal text-blue-500">
-              数据分析
-            </span>
+            <span className="text-xs font-normal text-blue-500">数据分析</span>
           </div>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
@@ -74,20 +72,32 @@ export function InsightAIConversation({
   // ===== 所有的 React Hooks 必须在组件顶层无条件调用 =====
 
   // 使用简化的InsightAI消息处理hook
-  const { messages, isConnected, isLoading, error, send } = useInsightAIMessages(conversationId);
-  
+  const { messages, isConnected, isLoading, error, send } =
+    useInsightAIMessages(conversationId);
+
   // Debug logging for InsightAI conversation
   React.useEffect(() => {
-    console.log('🔍 [InsightAI Conversation] conversationId:', conversationId);
-    console.log('🔍 [InsightAI Conversation] messages count:', messages?.length || 0);
-    console.log('🔍 [InsightAI Conversation] isConnected:', isConnected);
-    console.log('🔍 [InsightAI Conversation] isLoading:', isLoading);
-    console.log('🔍 [InsightAI Conversation] error:', error);
+    console.log("🔍 [InsightAI Conversation] conversationId:", conversationId);
+    console.log(
+      "🔍 [InsightAI Conversation] messages count:",
+      messages?.length || 0,
+    );
+    console.log("🔍 [InsightAI Conversation] isConnected:", isConnected);
+    console.log("🔍 [InsightAI Conversation] isLoading:", isLoading);
+    console.log("🔍 [InsightAI Conversation] error:", error);
   }, [conversationId, messages?.length, isConnected, isLoading, error]);
 
   // Handle sending messages
-  const handleSendMessage = async (content: string, images?: File[], files?: File[]) => {
-    if (!content.trim() && (!images || images.length === 0) && (!files || files.length === 0)) {
+  const handleSendMessage = async (
+    content: string,
+    images?: File[],
+    files?: File[],
+  ) => {
+    if (
+      !content.trim() &&
+      (!images || images.length === 0) &&
+      (!files || files.length === 0)
+    ) {
       return;
     }
 
@@ -98,16 +108,16 @@ export function InsightAIConversation({
       // 这里需要调用OpenHands的文件上传API
       const imageUrls: string[] = [];
       const fileUrls: string[] = [];
-      
+
       const messageEvent = createChatMessage(
         content,
         imageUrls, // 后续需要实际上传后的URLs
-        fileUrls,  // 后续需要实际上传后的URLs
-        timestamp
+        fileUrls, // 后续需要实际上传后的URLs
+        timestamp,
       );
 
       console.log("发送消息到WebSocket:", messageEvent);
-      
+
       // 发送到WebSocket
       send(messageEvent);
     } catch (error) {
@@ -117,7 +127,7 @@ export function InsightAIConversation({
 
   // ===== 渲染逻辑 - 在所有 hooks 调用之后 =====
 
-  if (isLoading || (!messages || messages.length === 0)) {
+  if (isLoading || !messages || messages.length === 0) {
     return (
       <div className="flex flex-col h-full bg-gray-50 py-2 px-1.5">
         <div className="bg-white rounded-xl shadow-sm h-full flex flex-col overflow-hidden">
@@ -128,7 +138,7 @@ export function InsightAIConversation({
           />
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
               <p className="text-gray-600">加载对话历史中...</p>
             </div>
           </div>
@@ -151,7 +161,9 @@ export function InsightAIConversation({
               <div className="w-16 h-16 mx-auto mb-4 bg-red-50 rounded-2xl flex items-center justify-center">
                 <WifiOff className="w-8 h-8 text-red-400" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">连接错误</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                连接错误
+              </h3>
               <p className="text-gray-600 mb-4">{error}</p>
             </div>
           </div>
@@ -171,7 +183,10 @@ export function InsightAIConversation({
 
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Messages using collapsible renderer (performance optimized) */}
-          <InsightAICollapsibleMessages messages={messages} isLoading={isLoading} />
+          <InsightAICollapsibleMessages
+            messages={messages}
+            isLoading={isLoading}
+          />
 
           {/* Chat input - only show when connected */}
           <InsightAIChatInput
@@ -179,7 +194,6 @@ export function InsightAIConversation({
             disabled={!isConnected}
           />
         </div>
-
       </div>
     </div>
   );

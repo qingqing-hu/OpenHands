@@ -8,16 +8,13 @@ import { InsightAIErrorMessage } from "../shared/insight-ai-error-message";
 import { decodeHtmlEntities } from "../shared/html-entity-decoder";
 
 // Simple markdown detection - avoid heavy markdown parsing for simple text
-const needsMarkdown = (content: string): boolean => {
-  return (
-    content.includes("```") ||
-    content.includes("**") ||
-    content.includes("*") ||
-    content.includes("[") ||
-    content.includes("#") ||
-    content.includes("`")
-  );
-};
+const needsMarkdown = (content: string): boolean =>
+  content.includes("```") ||
+  content.includes("**") ||
+  content.includes("*") ||
+  content.includes("[") ||
+  content.includes("#") ||
+  content.includes("`");
 
 // Memoized simple text renderer with HTML entity decoding
 const SimpleTextRenderer = React.memo(({ content }: { content: string }) => (
@@ -83,20 +80,22 @@ const MessageItem = React.memo(
     onMouseEnter: () => void;
     onMouseLeave: () => void;
   }) => {
-    const formatTime = React.useMemo(() => {
-      return message.timestamp.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    }, [message.timestamp]);
+    const formatTime = React.useMemo(
+      () =>
+        message.timestamp.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      [message.timestamp],
+    );
 
-    const hasComplexContent = React.useMemo(() => {
-      return (
+    const hasComplexContent = React.useMemo(
+      () =>
         needsMarkdown(message.content) ||
         message.imageUrls?.length ||
-        message.fileUrls?.length
-      );
-    }, [message.content, message.imageUrls, message.fileUrls]);
+        message.fileUrls?.length,
+      [message.content, message.imageUrls, message.fileUrls],
+    );
 
     return (
       <div
@@ -139,7 +138,7 @@ const MessageItem = React.memo(
             ${message.type === "user" ? "-left-2 -right-auto" : ""}
           `}
             >
-              <InsightAICopyButton text={message.content} isVisible={true} />
+              <InsightAICopyButton text={message.content} isVisible />
             </div>
           )}
 
@@ -183,7 +182,9 @@ const MessageItem = React.memo(
                 <span>{formatTime}</span>
                 {/* Show system text for system category messages */}
                 {message.category === "system" && (
-                  <span className="text-xs text-blue-600 ml-1 font-medium">system</span>
+                  <span className="text-xs text-blue-600 ml-1 font-medium">
+                    system
+                  </span>
                 )}
               </div>
             </div>
@@ -241,15 +242,15 @@ function InsightAIChatMessagesComponent({
 
           <div className="insight-ai-message assistant">
             <div className="flex items-center gap-1">
-              <div className="insight-ai-skeleton w-2 h-2 rounded-full animate-pulse"></div>
+              <div className="insight-ai-skeleton w-2 h-2 rounded-full animate-pulse" />
               <div
                 className="insight-ai-skeleton w-2 h-2 rounded-full animate-pulse"
                 style={{ animationDelay: "0.2s" }}
-              ></div>
+              />
               <div
                 className="insight-ai-skeleton w-2 h-2 rounded-full animate-pulse"
                 style={{ animationDelay: "0.4s" }}
-              ></div>
+              />
             </div>
           </div>
         </div>

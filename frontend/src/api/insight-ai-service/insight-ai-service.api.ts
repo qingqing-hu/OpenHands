@@ -24,12 +24,12 @@ export class InsightAIService {
     page = 1,
     limit = 20,
     status?: string,
-    type?: string
+    type?: string,
   ): Promise<GetTasksResponse> {
     const params = new URLSearchParams({
       limit: limit.toString(),
     });
-    
+
     if (status) params.append("status", status);
     if (type) params.append("type", type);
 
@@ -37,28 +37,42 @@ export class InsightAIService {
     console.log("InsightAI: Calling getUserConversations()");
     const conversations = await OpenHands.getUserConversations();
     console.log("InsightAI: Received conversations:", conversations.length);
-    
+
     // 转换为 TaskItem 格式，显示所有对话但区分类型
     const tasks: TaskItem[] = conversations
       .slice((page - 1) * limit, page * limit)
-      .map(conv => {
-        const isInsightAI = conv.title?.includes("InsightAI") || conv.title?.includes("Analysis") || conv.title?.includes("Insight");
-        
+      .map((conv) => {
+        const isInsightAI =
+          conv.title?.includes("InsightAI") ||
+          conv.title?.includes("Analysis") ||
+          conv.title?.includes("Insight");
+
         return {
           id: conv.conversation_id,
-          title: isInsightAI ? conv.title || "InsightAI Task" : conv.title || "Conversation",
+          title: isInsightAI
+            ? conv.title || "InsightAI Task"
+            : conv.title || "Conversation",
           subtitle: "",
-          status: conv.status === "STARTING" ? "starting" : conv.status === "RUNNING" ? "running" : conv.status === "STOPPED" ? "completed" : "pending",
+          status:
+            conv.status === "STARTING"
+              ? "starting"
+              : conv.status === "RUNNING"
+                ? "running"
+                : conv.status === "STOPPED"
+                  ? "completed"
+                  : "pending",
           startTime: conv.created_at,
           updateTime: conv.last_updated_at,
-          type: isInsightAI ? "data_analysis" as const : "query_processing" as const,
+          type: isInsightAI
+            ? ("data_analysis" as const)
+            : ("query_processing" as const),
           metadata: {
             processingTime: conv.last_updated_at,
-            isInsightAI: isInsightAI,
+            isInsightAI,
           },
         };
       });
-    
+
     return {
       tasks,
       total: conversations.length,
@@ -70,22 +84,29 @@ export class InsightAIService {
   static async getTaskDetails(taskId: string): Promise<TaskDetails> {
     // 使用现有的 getConversation API
     const conversation = await OpenHands.getConversation(taskId);
-    
+
     if (!conversation) {
       throw new Error("Task not found");
     }
-    
+
     // 转换为 TaskDetails 格式
     return {
       id: conversation.conversation_id,
       title: conversation.title || "Untitled Analysis",
-      description: `Analysis conversation for ${conversation.selected_repository || 'data analysis'}`,
-      status: conversation.status === "STARTING" ? "starting" : conversation.status === "RUNNING" ? "running" : conversation.status === "STOPPED" ? "completed" : "pending",
+      description: `Analysis conversation for ${conversation.selected_repository || "data analysis"}`,
+      status:
+        conversation.status === "STARTING"
+          ? "starting"
+          : conversation.status === "RUNNING"
+            ? "running"
+            : conversation.status === "STOPPED"
+              ? "completed"
+              : "pending",
       results: [
         {
           type: "text",
           title: "Conversation Status",
-          content: `Status: ${conversation.status}\nRepository: ${conversation.selected_repository || 'None'}\nBranch: ${conversation.selected_branch || 'None'}`,
+          content: `Status: ${conversation.status}\nRepository: ${conversation.selected_repository || "None"}\nBranch: ${conversation.selected_branch || "None"}`,
           description: "Current conversation information",
         },
       ],
@@ -93,7 +114,8 @@ export class InsightAIService {
         {
           id: "init",
           title: "Conversation Initialized",
-          content: "This is an InsightAI analysis conversation. The thinking process will be populated as the conversation progresses.",
+          content:
+            "This is an InsightAI analysis conversation. The thinking process will be populated as the conversation progresses.",
           timestamp: conversation.created_at,
           type: "analysis",
           status: "completed",
@@ -107,11 +129,13 @@ export class InsightAIService {
     };
   }
 
-  static async createTask(taskData: CreateTaskRequest): Promise<CreateTaskResponse> {
+  static async createTask(
+    taskData: CreateTaskRequest,
+  ): Promise<CreateTaskResponse> {
     // 使用现有的 createConversation API 创建 InsightAI 类型的 conversation
     const conversation = await OpenHands.createConversation(
       undefined, // selectedRepository
-      undefined, // git_provider  
+      undefined, // git_provider
       `InsightAI: ${taskData.title}\n\n${taskData.description}`, // initialUserMsg
       undefined, // suggested_task
       undefined, // selected_branch
@@ -120,7 +144,7 @@ export class InsightAIService {
         taskData,
       }), // conversationInstructions
     );
-    
+
     return {
       taskId: conversation.conversation_id,
       status: "created",
@@ -130,7 +154,7 @@ export class InsightAIService {
 
   static async executeTaskAction(
     taskId: string,
-    actionData: TaskExecutionRequest
+    actionData: TaskExecutionRequest,
   ): Promise<TaskExecutionResponse> {
     // 使用现有的 OpenHands API
     if (actionData.action === "start") {
@@ -139,7 +163,7 @@ export class InsightAIService {
       await OpenHands.stopConversation(taskId);
     }
     // TODO: 实现其他动作 (pause, restart)
-    
+
     return {
       taskId,
       status: "executed",
@@ -153,7 +177,9 @@ export class InsightAIService {
   }
 
   // Task Logs APIs - 使用现有的事件系统
-  static async getTaskLogs(params: GetTaskLogsRequest): Promise<GetTaskLogsResponse> {
+  static async getTaskLogs(
+    params: GetTaskLogsRequest,
+  ): Promise<GetTaskLogsResponse> {
     try {
       // 使用现有的 conversation events API
       const response = await openHands.get(
@@ -163,12 +189,15 @@ export class InsightAIService {
             limit: params.limit || 100,
             since: params.since,
           },
-        }
+        },
       );
-      
+
       // 转换事件为日志格式
       const logs = response.data
-        .filter((event: any) => event.type === "observation" || event.type === "action")
+        .filter(
+          (event: any) =>
+            event.type === "observation" || event.type === "action",
+        )
         .map((event: any, index: number) => ({
           id: `${params.taskId}-${index}`,
           timestamp: event.timestamp || new Date().toISOString(),
@@ -176,7 +205,7 @@ export class InsightAIService {
           message: event.message || event.content || JSON.stringify(event),
           source: event.source || "system",
         }));
-      
+
       return {
         logs,
         hasMore: logs.length >= (params.limit || 100),
@@ -191,12 +220,15 @@ export class InsightAIService {
   }
 
   // 获取对话历史记录
-  static async getConversationHistory(conversationId: string, params?: {
-    limit?: number;
-    startId?: number;
-    endId?: number;
-    reverse?: boolean;
-  }): Promise<{
+  static async getConversationHistory(
+    conversationId: string,
+    params?: {
+      limit?: number;
+      startId?: number;
+      endId?: number;
+      reverse?: boolean;
+    },
+  ): Promise<{
     events: Array<{
       id: string;
       type: "user" | "assistant" | "system";
@@ -209,37 +241,37 @@ export class InsightAIService {
     try {
       console.log(`Fetching conversation history for: ${conversationId}`);
       console.log("API call with correct OpenHands parameters:", params);
-      
+
       // 使用正确的OpenHands API参数名称
       const apiParams: Record<string, any> = {};
-      
+
       if (params?.limit) {
         apiParams.limit = Math.min(params.limit, 100); // 限制最大值为100
       }
-      
+
       if (params?.startId !== undefined) {
         apiParams.start_id = params.startId; // 注意：使用start_id，不是startId
       }
-      
+
       if (params?.endId !== undefined) {
         apiParams.end_id = params.endId; // 注意：使用end_id，不是endId
       }
-      
+
       if (params?.reverse !== undefined) {
         apiParams.reverse = params.reverse;
       }
-      
+
       console.log("Final API parameters:", apiParams);
-      
+
       const response = await openHands.get(
         `${CONVERSATIONS_BASE_PATH}/${conversationId}/events`,
-        { params: apiParams }
+        { params: apiParams },
       );
-      
+
       console.log("Raw events response:", response.data);
       console.log("Response data type:", typeof response.data);
       console.log("Response data keys:", Object.keys(response.data || {}));
-      
+
       // 处理不同的响应格式
       let rawEvents = [];
       if (Array.isArray(response.data)) {
@@ -253,7 +285,7 @@ export class InsightAIService {
       }
       // 打印前几个原始事件以便调试
       console.log("Sample raw events:", rawEvents.slice(0, 5));
-      
+
       const events = rawEvents
         .map((event: any, index: number) => {
           // 详细打印每个事件的结构以便调试
@@ -265,36 +297,50 @@ export class InsightAIService {
               message: event.message,
               args: event.args,
               id: event.id,
-              timestamp: event.timestamp
+              timestamp: event.timestamp,
             });
           }
-          
+
           let type: "user" | "assistant" | "system" = "system";
           let content = "";
-          
+
           // 更宽松的消息识别逻辑 - 处理所有可能的消息类型
           if (event.source === "user") {
             type = "user";
-            content = event.message || event.args?.content || event.args?.message || "";
+            content =
+              event.message || event.args?.content || event.args?.message || "";
           } else if (event.source === "agent") {
             type = "assistant";
             if (event.action === "message") {
               content = event.message || event.args?.content || "";
             } else if (event.action === "finish") {
-              content = event.args?.final_thought || event.args?.thought || event.message || "";
-            } else if (event.args?.thought && typeof event.args.thought === "string") {
+              content =
+                event.args?.final_thought ||
+                event.args?.thought ||
+                event.message ||
+                "";
+            } else if (
+              event.args?.thought &&
+              typeof event.args.thought === "string"
+            ) {
               content = event.args.thought;
             } else if (event.message) {
               content = event.message;
             } else if (event.action && event.args) {
               // 显示action类型和参数
               const actionName = event.action;
-              const actionArgs = Object.entries(event.args).map(([k, v]) => `${k}: ${v}`).join(", ");
+              const actionArgs = Object.entries(event.args)
+                .map(([k, v]) => `${k}: ${v}`)
+                .join(", ");
               content = `执行操作: ${actionName} (${actionArgs})`;
             }
-          } else if (event.observation === "delegate" || event.observation === "agent_delegate") {
+          } else if (
+            event.observation === "delegate" ||
+            event.observation === "agent_delegate"
+          ) {
             type = "assistant";
-            content = event.message || event.args?.outputs || event.args?.content || "";
+            content =
+              event.message || event.args?.outputs || event.args?.content || "";
           } else if (event.args?.content) {
             type = event.source === "user" ? "user" : "assistant";
             content = event.args.content;
@@ -303,7 +349,7 @@ export class InsightAIService {
             type = event.source === "user" ? "user" : "assistant";
             content = event.message;
           }
-          
+
           return {
             id: event.id?.toString() || `${conversationId}-${index}`,
             type,
@@ -313,16 +359,16 @@ export class InsightAIService {
           };
         })
         .filter((event: any) => event.content.length > 0);
-      
+
       console.log(`Processed ${events.length} conversation events:`, events);
-      
+
       return {
         events,
         hasMore: response.data.has_more || false,
       };
     } catch (error: any) {
       console.error("Failed to fetch conversation history:", error);
-      
+
       // 提供更详细的错误信息
       if (error?.response) {
         console.error("API Error Details:", {
@@ -330,10 +376,10 @@ export class InsightAIService {
           statusText: error.response.statusText,
           data: error.response.data,
           url: error.response.config?.url,
-          params: error.response.config?.params
+          params: error.response.config?.params,
         });
       }
-      
+
       // 返回空的对话历史，不显示模拟消息
       return {
         events: [],
@@ -343,7 +389,9 @@ export class InsightAIService {
   }
 
   // Task Files APIs - 使用现有的文件系统
-  static async getTaskFiles(params: GetTaskFilesRequest): Promise<GetTaskFilesResponse> {
+  static async getTaskFiles(
+    params: GetTaskFilesRequest,
+  ): Promise<GetTaskFilesResponse> {
     try {
       // 使用现有的文件 API
       const response = await openHands.get(
@@ -352,9 +400,9 @@ export class InsightAIService {
           params: {
             path: params.path || "/",
           },
-        }
+        },
       );
-      
+
       return {
         files: response.data.files || [],
         currentPath: params.path || "/",
@@ -375,9 +423,9 @@ export class InsightAIService {
         {
           params: { filePath: params.filePath },
           responseType: "blob",
-        }
+        },
       );
-      
+
       return response.data;
     } catch (error) {
       // 返回空的文件内容
@@ -385,15 +433,18 @@ export class InsightAIService {
     }
   }
 
-  static async getFileContent(taskId: string, filePath: string): Promise<string> {
+  static async getFileContent(
+    taskId: string,
+    filePath: string,
+  ): Promise<string> {
     try {
       const response = await openHands.get(
         `${CONVERSATIONS_BASE_PATH}/${taskId}/files/content`,
         {
           params: { filePath },
-        }
+        },
       );
-      
+
       return response.data.content || response.data;
     } catch (error) {
       // 返回空的文件内容
@@ -405,9 +456,9 @@ export class InsightAIService {
   static async subscribeToTaskUpdates(taskId: string): Promise<EventSource> {
     // 使用现有的 conversation WebSocket 连接
     const eventSource = new EventSource(
-      `${window.location.protocol}//${window.location.host}${CONVERSATIONS_BASE_PATH}/${taskId}/stream`
+      `${window.location.protocol}//${window.location.host}${CONVERSATIONS_BASE_PATH}/${taskId}/stream`,
     );
-    
+
     return eventSource;
   }
 
@@ -461,7 +512,7 @@ export class InsightAIService {
     try {
       // 使用现有的健康检查端点
       const response = await openHands.get("/api/health");
-      
+
       return {
         status: response.data?.status || "ok",
         timestamp: new Date().toISOString(),

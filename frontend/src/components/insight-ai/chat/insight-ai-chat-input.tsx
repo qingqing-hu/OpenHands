@@ -24,7 +24,10 @@ export function InsightAIChatInput({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if ((message.trim() || images.length > 0 || files.length > 0) && !disabled) {
+    if (
+      (message.trim() || images.length > 0 || files.length > 0) &&
+      !disabled
+    ) {
       onSendMessage(message.trim(), images, files);
       setMessage("");
       setImages([]);
@@ -49,9 +52,8 @@ export function InsightAIChatInput({
     // Auto-resize textarea
     const textarea = e.target;
     textarea.style.height = "auto";
-    textarea.style.height = Math.min(textarea.scrollHeight, 200) + "px";
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
   };
-
 
   const handleFileAttach = () => {
     fileInputRef.current?.click();
@@ -106,10 +108,13 @@ export function InsightAIChatInput({
       )}
       {files.length > 0 && (
         <div className="mb-2">
-          <FileList files={files.map(f => f.name)} onRemove={handleRemoveFile} />
+          <FileList
+            files={files.map((f) => f.name)}
+            onRemove={handleRemoveFile}
+          />
         </div>
       )}
-      
+
       <form onSubmit={handleSubmit} className="insight-ai-input-form">
         {/* File attachment button */}
         <button
@@ -148,9 +153,14 @@ export function InsightAIChatInput({
           {/* Send button */}
           <button
             type="submit"
-            disabled={!(message.trim() || images.length > 0 || files.length > 0) || disabled}
+            disabled={
+              !(message.trim() || images.length > 0 || files.length > 0) ||
+              disabled
+            }
             className={`insight-ai-send-button ${
-              (message.trim() || images.length > 0 || files.length > 0) ? 'has-content' : 'no-content'
+              message.trim() || images.length > 0 || files.length > 0
+                ? "has-content"
+                : "no-content"
             }`}
             aria-label="发送提示"
           >

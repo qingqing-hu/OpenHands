@@ -1,6 +1,6 @@
 import React from "react";
-import { useInsightAI } from "#/components/insight-ai/context/insight-ai-context";
 import { MessageSquare, Terminal, Globe, FileText, X } from "lucide-react";
+import { useInsightAI } from "#/components/insight-ai/context/insight-ai-context";
 
 const TAB_ICONS = {
   chat: MessageSquare,

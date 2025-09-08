@@ -8,10 +8,10 @@ interface InsightAITerminalProps {
   disabled?: boolean;
 }
 
-export function InsightAITerminal({ 
-  conversationId, 
+export function InsightAITerminal({
+  conversationId,
   className = "",
-  disabled = false 
+  disabled = false,
 }: InsightAITerminalProps) {
   const { ref } = useInsightAITerminal({
     conversationId,
@@ -29,7 +29,7 @@ export function InsightAITerminal({
           </div>
         </div>
       )}
-      
+
       <div
         ref={ref}
         className={

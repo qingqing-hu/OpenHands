@@ -5,7 +5,10 @@ import { FaRegLightbulb } from "react-icons/fa";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
-import { InsightAIMessage, InsightAIMessageCategory } from "./insight-ai-message-filter";
+import {
+  InsightAIMessage,
+  InsightAIMessageCategory,
+} from "./insight-ai-message-filter";
 import { decodeHtmlEntities } from "../shared/html-entity-decoder";
 // import { useScrollbarVisibility } from "../../hooks/insight-ai/use-scrollbar-visibility";
 
@@ -29,7 +32,6 @@ const INSIGHT_AI_JSON_THEME = {
   base0F: "#dc3545", // red for deprecated
 };
 
-
 interface InsightAIUnifiedMessageProps {
   message: InsightAIMessage;
 }
@@ -45,7 +47,7 @@ const getCategoryDisplayConfig = (category: InsightAIMessageCategory) => {
       };
     case "code":
       return {
-        title: "代码执行", 
+        title: "代码执行",
         headerBg: "bg-purple-50",
         textColor: "text-purple-700",
       };
@@ -104,45 +106,43 @@ const parseContent = (content: string) => {
 };
 
 // Process JSON data without modifying escape characters
-const processJsonForDisplay = (obj: any): any => {
+const processJsonForDisplay = (obj: any): any =>
   // Just return the original object without any string processing
-  return obj;
-};
-
+  obj;
 // Parse MCP tool call result content and extract the actual content
 const parseMCPContent = (content: string) => {
   try {
     const parsed = JSON.parse(content.trim());
-    
+
     // Check if this is a CallToolResult structure
-    if (parsed && typeof parsed === 'object') {
+    if (parsed && typeof parsed === "object") {
       // Handle error case
       if (parsed.isError) {
         return parsed.error || "工具执行失败";
       }
-      
+
       // Handle content array
       if (Array.isArray(parsed.content) && parsed.content.length > 0) {
         // Process each content block
         const contentParts: string[] = [];
-        
+
         for (const block of parsed.content) {
-          if (block && typeof block === 'object') {
+          if (block && typeof block === "object") {
             switch (block.type) {
-              case 'text':
-                contentParts.push(block.text || '');
+              case "text":
+                contentParts.push(block.text || "");
                 break;
-              case 'image':
-                contentParts.push(`[图片: ${block.mimeType || 'unknown'}]`);
+              case "image":
+                contentParts.push(`[图片: ${block.mimeType || "unknown"}]`);
                 break;
-              case 'audio':
-                contentParts.push(`[音频: ${block.mimeType || 'unknown'}]`);
+              case "audio":
+                contentParts.push(`[音频: ${block.mimeType || "unknown"}]`);
                 break;
-              case 'resource':
-                contentParts.push(`[资源: ${block.uri || 'unknown'}]`);
+              case "resource":
+                contentParts.push(`[资源: ${block.uri || "unknown"}]`);
                 break;
-              case 'embedded_resource':
-                contentParts.push(`[嵌入资源: ${block.mimeType || 'unknown'}]`);
+              case "embedded_resource":
+                contentParts.push(`[嵌入资源: ${block.mimeType || "unknown"}]`);
                 break;
               default:
                 // Unknown content type, try to stringify
@@ -150,16 +150,16 @@ const parseMCPContent = (content: string) => {
             }
           }
         }
-        
-        return contentParts.join('\n\n');
+
+        return contentParts.join("\n\n");
       }
-      
+
       // If no content array, check for structured content
       if (parsed.structuredContent) {
         return JSON.stringify(parsed.structuredContent, null, 2);
       }
     }
-    
+
     // Fallback to original parsed content
     return parsed;
   } catch {
@@ -169,57 +169,58 @@ const parseMCPContent = (content: string) => {
 };
 
 // Check if content should be rendered as JSON
-const shouldRenderAsJSON = (content: unknown) => {
-  return (
-    typeof content === "object" &&
-    content !== null
-  );
-};
+const shouldRenderAsJSON = (content: unknown) =>
+  typeof content === "object" && content !== null;
 
 export function InsightAIUnifiedMessage({
   message,
 }: InsightAIUnifiedMessageProps) {
-  const [isExpanded, setIsExpanded] = React.useState(message.category === "think");
+  const [isExpanded, setIsExpanded] = React.useState(
+    message.category === "think",
+  );
   // const mcpArgsScrollRef = useScrollbarVisibility<HTMLDivElement>();
   // const mcpOutputScrollRef = useScrollbarVisibility<HTMLDivElement>();
   // const expandedContentScrollRef = useScrollbarVisibility<HTMLDivElement>();
-  
+
   const config = getCategoryDisplayConfig(message.category);
-  
+
   // Extract title from message content
   const getTitle = () => {
     if (message.category === "mcp" && message.extras?.tool) {
       return `${config.title}：${message.extras.tool}`;
     }
-    
+
     // For error messages, use a simplified format instead of full content
     if (message.category === "error") {
       // Extract error type from original event if available
-      const originalEvent = message.originalEvent;
+      const { originalEvent } = message;
       if (originalEvent && (originalEvent as any).extras?.error_id) {
         const errorId = (originalEvent as any).extras.error_id;
         const errorMessages: Record<string, string> = {
-          "AGENT_ERROR$ERROR_ACTION_NOT_EXECUTED": "操作未执行",
-          "AGENT_ERROR$ERROR_TIMEOUT": "操作超时", 
-          "AGENT_ERROR$ERROR_INVALID_INPUT": "输入无效",
-          "AGENT_ERROR$ERROR_PERMISSION_DENIED": "权限不足",
-          "AGENT_ERROR$ERROR_FILE_NOT_FOUND": "文件未找到",
-          "AGENT_ERROR$ERROR_NETWORK_FAILURE": "网络连接失败",
-          "AGENT_ERROR$ERROR_PARSE_FAILURE": "解析失败",
-          "AGENT_ERROR$ERROR_UNKNOWN": "未知错误",
+          AGENT_ERROR$ERROR_ACTION_NOT_EXECUTED: "操作未执行",
+          AGENT_ERROR$ERROR_TIMEOUT: "操作超时",
+          AGENT_ERROR$ERROR_INVALID_INPUT: "输入无效",
+          AGENT_ERROR$ERROR_PERMISSION_DENIED: "权限不足",
+          AGENT_ERROR$ERROR_FILE_NOT_FOUND: "文件未找到",
+          AGENT_ERROR$ERROR_NETWORK_FAILURE: "网络连接失败",
+          AGENT_ERROR$ERROR_PARSE_FAILURE: "解析失败",
+          AGENT_ERROR$ERROR_UNKNOWN: "未知错误",
         };
         const errorType = errorMessages[errorId] || "未知错误";
         return `智能体遇到错误 - ${errorType}`;
       }
       return "智能体遇到错误";
     }
-    
-    const firstLine = message.content.split('\n')[0].trim() || message.content.trim();
+
+    const firstLine =
+      message.content.split("\n")[0].trim() || message.content.trim();
     if (firstLine === "Output:") {
       return "输出内容";
     }
-    
-    return firstLine.length > 80 ? `${firstLine.substring(0, 80)}...` : firstLine;
+
+    return firstLine.length > 80
+      ? `${firstLine.substring(0, 80)}...`
+      : firstLine;
   };
 
   // Get detailed content for expansion
@@ -228,55 +229,61 @@ export function InsightAIUnifiedMessage({
     if (message.category === "message") {
       return message.detailedContent || null;
     }
-    
+
     const content = message.detailedContent || message.content;
-    
+
     // For non-MCP messages, extract content from code blocks
     if (message.category !== "mcp" && content.includes("```")) {
       // Extract content between ``` markers
       const codeBlockRegex = /```[\s\S]*?\n([\s\S]*?)\n```/g;
       const matches = [...content.matchAll(codeBlockRegex)];
-      
+
       if (matches.length > 0) {
         // If there are multiple code blocks, join them
-        const extractedContent = matches.map(match => match[1].trim()).join('\n\n');
+        const extractedContent = matches
+          .map((match) => match[1].trim())
+          .join("\n\n");
         return extractedContent || content;
       }
     }
-    
+
     return content;
   };
 
   // Check if MCP message has arguments
-  const hasArguments = message.category === "mcp" && 
-    message.extras?.arguments && 
+  const hasArguments =
+    message.category === "mcp" &&
+    message.extras?.arguments &&
     Object.keys(message.extras.arguments).length > 0;
-  
+
   // Check if MCP message has output
-  const hasOutput = message.category === "mcp" && 
-    message.content && message.content.trim();
+  const hasOutput =
+    message.category === "mcp" && message.content && message.content.trim();
 
   const detailedContent = getDetailedContent();
-  const hasExpandableContent = detailedContent && (
-    message.hasExpandableContent || 
-    message.content.includes("```") ||
-    message.category !== "message"
-  );
+  const hasExpandableContent =
+    detailedContent &&
+    (message.hasExpandableContent ||
+      message.content.includes("```") ||
+      message.category !== "message");
 
   // Check if this is an agent, environment, or user message
   // Both agent and environment messages should use the same styling (gray background + white with gray text)
-  const isAgentMessage = message.originalEvent?.source === 'agent' || message.originalEvent?.source === 'environment';
-  const isUserMessage = message.originalEvent?.source === 'user';
+  const isAgentMessage =
+    message.originalEvent?.source === "agent" ||
+    message.originalEvent?.source === "environment";
+  const isUserMessage = message.originalEvent?.source === "user";
 
   return (
-    <div 
+    <div
       className="rounded-lg overflow-hidden insight-ai-message-outer"
-      style={{ 
-        backgroundColor: (isAgentMessage || isUserMessage) ? '#f5f5f5' : '#fafafa', 
-        padding: '4px', 
-        minWidth: '200px',
-        maxWidth: '100%',
-        width: '100%'
+      style={{
+        backgroundColor:
+          isAgentMessage || isUserMessage ? "#f5f5f5" : "#fafafa",
+        padding: "4px",
+        minWidth: "200px",
+        maxWidth: "100%",
+        width: "100%",
       }}
     >
       {/* For regular messages, show content in header style. For think messages, show content directly. For technical messages, show header with title */}
@@ -284,39 +291,67 @@ export function InsightAIUnifiedMessage({
         <div className="bg-white px-3 py-2 rounded-md insight-ai-message-inner">
           {(() => {
             // Check if content is primarily English for font optimization
-            const isEnglishContent = /^[\x00-\x7F\s]*$/.test(message.content) && 
-              /\b(the|and|or|to|of|in|for|with|on|at|by|from|as|is|was|are|were|be|been|have|has|had|do|does|did|will|would|could|should|can|may|might)\b/i.test(message.content);
-            
+            const isEnglishContent =
+              /^[\x00-\x7F\s]*$/.test(message.content) &&
+              /\b(the|and|or|to|of|in|for|with|on|at|by|from|as|is|was|are|were|be|been|have|has|had|do|does|did|will|would|could|should|can|may|might)\b/i.test(
+                message.content,
+              );
+
             return (
-              <div className={`text-black text-sm ${isEnglishContent ? 'leading-6 font-sans' : 'leading-relaxed'} break-words`} 
-                   style={{
-                     ...(isEnglishContent ? {fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'} : {}),
-                     wordWrap: 'break-word',
-                     overflowWrap: 'break-word'
-                   }}>
+              <div
+                className={`text-black text-sm ${isEnglishContent ? "leading-6 font-sans" : "leading-relaxed"} break-words`}
+                style={{
+                  ...(isEnglishContent
+                    ? {
+                        fontFamily:
+                          'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                      }
+                    : {}),
+                  wordWrap: "break-word",
+                  overflowWrap: "break-word",
+                }}
+              >
                 <Markdown
                   remarkPlugins={[remarkGfm, remarkBreaks]}
                   components={{
                     // Override pre to ensure code blocks wrap properly
                     pre: ({ children }) => (
-                      <pre className="text-xs whitespace-pre-wrap p-2 rounded bg-gray-100 overflow-x-auto" 
-                           style={{ wordWrap: 'break-word', overflowWrap: 'break-word', whiteSpace: 'pre-wrap' }}>
+                      <pre
+                        className="text-xs whitespace-pre-wrap p-2 rounded bg-gray-100 overflow-x-auto"
+                        style={{
+                          wordWrap: "break-word",
+                          overflowWrap: "break-word",
+                          whiteSpace: "pre-wrap",
+                        }}
+                      >
                         {children}
                       </pre>
                     ),
                     // Override code to ensure inline code wraps
                     code: ({ children, ...props }) => (
-                      <code {...props} className="bg-gray-100 px-1 py-0.5 rounded text-xs break-words"
-                            style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>
+                      <code
+                        {...props}
+                        className="bg-gray-100 px-1 py-0.5 rounded text-xs break-words"
+                        style={{
+                          wordWrap: "break-word",
+                          overflowWrap: "break-word",
+                        }}
+                      >
                         {children}
                       </code>
                     ),
                     // Override paragraphs to ensure proper wrapping
                     p: ({ children }) => (
-                      <p className="mb-2 break-words" style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>
+                      <p
+                        className="mb-2 break-words"
+                        style={{
+                          wordWrap: "break-word",
+                          overflowWrap: "break-word",
+                        }}
+                      >
                         {children}
                       </p>
-                    )
+                    ),
                   }}
                 >
                   {message.content}
@@ -332,7 +367,9 @@ export function InsightAIUnifiedMessage({
               <FaRegLightbulb className="w-3 h-3 text-orange-400" />
             )}
             <span className="text-sm text-black">
-              {message.category === "think" ? "思考过程" : decodeHtmlEntities(getTitle())}
+              {message.category === "think"
+                ? "思考过程"
+                : decodeHtmlEntities(getTitle())}
             </span>
           </div>
           {hasExpandableContent && (
@@ -352,7 +389,10 @@ export function InsightAIUnifiedMessage({
 
       {/* Expanded content */}
       {isExpanded && hasExpandableContent && (
-        <div className="px-0 pt-1" style={{ maxWidth: '100%', overflow: 'hidden' }}>
+        <div
+          className="px-0 pt-1"
+          style={{ maxWidth: "100%", overflow: "hidden" }}
+        >
           {message.category === "mcp" ? (
             <>
               {/* MCP Arguments section */}
@@ -361,21 +401,24 @@ export function InsightAIUnifiedMessage({
                   <div className="bg-blue-50 px-3 py-1">
                     <div className="flex items-center gap-2">
                       <Play className="w-3 h-3 text-yellow-400" />
-                      <span className="text-sm text-gray-600">
-                        调用参数
-                      </span>
+                      <span className="text-sm text-gray-600">调用参数</span>
                     </div>
                   </div>
-                  <div className="max-h-60 overflow-auto insight-ai-scrollbar" style={{backgroundColor: '#fafafa'}}>
+                  <div
+                    className="max-h-60 overflow-auto insight-ai-scrollbar"
+                    style={{ backgroundColor: "#fafafa" }}
+                  >
                     <div className="p-3" style={{ paddingBottom: 0 }}>
                       <ReactJsonView
                         name={false}
-                        src={processJsonForDisplay(message.extras!.arguments as object)}
+                        src={processJsonForDisplay(
+                          message.extras!.arguments as object,
+                        )}
                         theme={INSIGHT_AI_JSON_THEME}
                         collapsed={false}
                         displayDataTypes={false}
                         displayObjectSize={false}
-                        enableClipboard={true}
+                        enableClipboard
                         indentWidth={2}
                       />
                     </div>
@@ -385,23 +428,29 @@ export function InsightAIUnifiedMessage({
 
               {/* MCP Output section */}
               {hasOutput && (
-                <div className={`bg-white rounded-md border border-gray-200 overflow-hidden insight-ai-message-inner ${hasArguments ? 'mt-2' : ''}`}>
+                <div
+                  className={`bg-white rounded-md border border-gray-200 overflow-hidden insight-ai-message-inner ${hasArguments ? "mt-2" : ""}`}
+                >
                   <div className="bg-blue-50 px-3 py-1">
                     <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                      <span className="text-sm text-gray-600">
-                        执行结果
-                      </span>
+                      <div className="w-3 h-3 bg-green-400 rounded-full" />
+                      <span className="text-sm text-gray-600">执行结果</span>
                     </div>
                   </div>
-                  <div className="max-h-80 overflow-auto insight-ai-scrollbar" style={{backgroundColor: '#fafafa'}}>
+                  <div
+                    className="max-h-80 overflow-auto insight-ai-scrollbar"
+                    style={{ backgroundColor: "#fafafa" }}
+                  >
                     <div className="p-3" style={{ paddingBottom: 0 }}>
                       {(() => {
                         const mcpContent = parseMCPContent(message.content);
-                        const parsedOutput = typeof mcpContent === 'string' ? mcpContent : parseContent(message.content);
-                        
+                        const parsedOutput =
+                          typeof mcpContent === "string"
+                            ? mcpContent
+                            : parseContent(message.content);
+
                         // For MCP messages, if we got string content from parseMCPContent, try to parse it as JSON first
-                        if (typeof mcpContent === 'string') {
+                        if (typeof mcpContent === "string") {
                           try {
                             const jsonContent = JSON.parse(mcpContent);
                             // If successfully parsed as JSON, render with JSON viewer
@@ -413,7 +462,7 @@ export function InsightAIUnifiedMessage({
                                 collapsed={false}
                                 displayDataTypes={false}
                                 displayObjectSize={false}
-                                enableClipboard={true}
+                                enableClipboard
                                 indentWidth={2}
                               />
                             );
@@ -422,15 +471,20 @@ export function InsightAIUnifiedMessage({
                             return (
                               <div
                                 className="text-sm text-gray-800 whitespace-pre-wrap font-mono break-words"
-                                style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
+                                style={{
+                                  wordWrap: "break-word",
+                                  overflowWrap: "break-word",
+                                }}
                                 dangerouslySetInnerHTML={{
-                                  __html: decodeHtmlEntities(mcpContent || "无输出内容"),
+                                  __html: decodeHtmlEntities(
+                                    mcpContent || "无输出内容",
+                                  ),
                                 }}
                               />
                             );
                           }
                         }
-                        
+
                         // Otherwise, use the original logic for complex objects
                         return shouldRenderAsJSON(parsedOutput) ? (
                           <ReactJsonView
@@ -440,13 +494,16 @@ export function InsightAIUnifiedMessage({
                             collapsed={false}
                             displayDataTypes={false}
                             displayObjectSize={false}
-                            enableClipboard={true}
+                            enableClipboard
                             indentWidth={2}
                           />
                         ) : (
                           <div
                             className="text-sm text-gray-800 whitespace-pre-wrap font-mono break-words"
-                            style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
+                            style={{
+                              wordWrap: "break-word",
+                              overflowWrap: "break-word",
+                            }}
                             dangerouslySetInnerHTML={{
                               __html: decodeHtmlEntities(
                                 String(parsedOutput) || "无输出内容",
@@ -459,16 +516,22 @@ export function InsightAIUnifiedMessage({
                   </div>
                 </div>
               )}
-
             </>
           ) : (
             /* Non-MCP messages - unified content display using think message format */
-            <div className="px-3 py-2 max-h-80 overflow-auto insight-ai-scrollbar" style={{backgroundColor: '#fafafa', maxWidth: '100%', width: '100%'}}>
+            <div
+              className="px-3 py-2 max-h-80 overflow-auto insight-ai-scrollbar"
+              style={{
+                backgroundColor: "#fafafa",
+                maxWidth: "100%",
+                width: "100%",
+              }}
+            >
               {(() => {
                 const content = detailedContent || message.content;
-                
+
                 // Check if content is already an object (JSON)
-                if (typeof content === 'object' && content !== null) {
+                if (typeof content === "object" && content !== null) {
                   return (
                     <div style={{ marginBottom: 0, paddingBottom: 0 }}>
                       <ReactJsonView
@@ -478,15 +541,15 @@ export function InsightAIUnifiedMessage({
                         collapsed={false}
                         displayDataTypes={false}
                         displayObjectSize={false}
-                        enableClipboard={true}
+                        enableClipboard
                         indentWidth={2}
                       />
                     </div>
                   );
                 }
-                
+
                 // If content is a string, try to parse as JSON
-                if (typeof content === 'string') {
+                if (typeof content === "string") {
                   try {
                     const jsonContent = JSON.parse(content);
                     return (
@@ -498,7 +561,7 @@ export function InsightAIUnifiedMessage({
                           collapsed={false}
                           displayDataTypes={false}
                           displayObjectSize={false}
-                          enableClipboard={true}
+                          enableClipboard
                           indentWidth={2}
                         />
                       </div>
@@ -506,30 +569,57 @@ export function InsightAIUnifiedMessage({
                   } catch (e) {
                     // Not JSON, render as Markdown with think message format
                     return (
-                      <div className="text-sm leading-relaxed break-words" style={{ color: '#666666', marginBottom: 0, paddingBottom: 0, wordWrap: 'break-word', overflowWrap: 'break-word' }}>
+                      <div
+                        className="text-sm leading-relaxed break-words"
+                        style={{
+                          color: "#666666",
+                          marginBottom: 0,
+                          paddingBottom: 0,
+                          wordWrap: "break-word",
+                          overflowWrap: "break-word",
+                        }}
+                      >
                         <Markdown
                           remarkPlugins={[remarkGfm, remarkBreaks]}
                           components={{
                             // Override pre to ensure code blocks wrap properly
                             pre: ({ children }) => (
-                              <pre className="text-xs whitespace-pre-wrap p-2 rounded bg-gray-100 overflow-x-auto" 
-                                   style={{ wordWrap: 'break-word', overflowWrap: 'break-word', whiteSpace: 'pre-wrap' }}>
+                              <pre
+                                className="text-xs whitespace-pre-wrap p-2 rounded bg-gray-100 overflow-x-auto"
+                                style={{
+                                  wordWrap: "break-word",
+                                  overflowWrap: "break-word",
+                                  whiteSpace: "pre-wrap",
+                                }}
+                              >
                                 {children}
                               </pre>
                             ),
                             // Override code to ensure inline code wraps
                             code: ({ children, ...props }) => (
-                              <code {...props} className="bg-gray-100 px-1 py-0.5 rounded text-xs break-words"
-                                    style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>
+                              <code
+                                {...props}
+                                className="bg-gray-100 px-1 py-0.5 rounded text-xs break-words"
+                                style={{
+                                  wordWrap: "break-word",
+                                  overflowWrap: "break-word",
+                                }}
+                              >
                                 {children}
                               </code>
                             ),
                             // Override paragraphs to ensure proper wrapping
                             p: ({ children }) => (
-                              <p className="mb-2 break-words" style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>
+                              <p
+                                className="mb-2 break-words"
+                                style={{
+                                  wordWrap: "break-word",
+                                  overflowWrap: "break-word",
+                                }}
+                              >
                                 {children}
                               </p>
-                            )
+                            ),
                           }}
                         >
                           {content}
@@ -538,33 +628,60 @@ export function InsightAIUnifiedMessage({
                     );
                   }
                 }
-                
+
                 // Fallback: render as Markdown with think message format
                 return (
-                  <div className="text-sm leading-relaxed break-words" style={{ color: '#666666', marginBottom: 0, paddingBottom: 0, wordWrap: 'break-word', overflowWrap: 'break-word' }}>
+                  <div
+                    className="text-sm leading-relaxed break-words"
+                    style={{
+                      color: "#666666",
+                      marginBottom: 0,
+                      paddingBottom: 0,
+                      wordWrap: "break-word",
+                      overflowWrap: "break-word",
+                    }}
+                  >
                     <Markdown
                       remarkPlugins={[remarkGfm, remarkBreaks]}
                       components={{
                         // Override pre to ensure code blocks wrap properly
                         pre: ({ children }) => (
-                          <pre className="text-xs whitespace-pre-wrap p-2 rounded bg-gray-100 overflow-x-auto" 
-                               style={{ wordWrap: 'break-word', overflowWrap: 'break-word', whiteSpace: 'pre-wrap' }}>
+                          <pre
+                            className="text-xs whitespace-pre-wrap p-2 rounded bg-gray-100 overflow-x-auto"
+                            style={{
+                              wordWrap: "break-word",
+                              overflowWrap: "break-word",
+                              whiteSpace: "pre-wrap",
+                            }}
+                          >
                             {children}
                           </pre>
                         ),
                         // Override code to ensure inline code wraps
                         code: ({ children, ...props }) => (
-                          <code {...props} className="bg-gray-100 px-1 py-0.5 rounded text-xs break-words"
-                                style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>
+                          <code
+                            {...props}
+                            className="bg-gray-100 px-1 py-0.5 rounded text-xs break-words"
+                            style={{
+                              wordWrap: "break-word",
+                              overflowWrap: "break-word",
+                            }}
+                          >
                             {children}
                           </code>
                         ),
                         // Override paragraphs to ensure proper wrapping
                         p: ({ children }) => (
-                          <p className="mb-2 break-words" style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}>
+                          <p
+                            className="mb-2 break-words"
+                            style={{
+                              wordWrap: "break-word",
+                              overflowWrap: "break-word",
+                            }}
+                          >
                             {children}
                           </p>
-                        )
+                        ),
                       }}
                     >
                       {String(content) || "无内容"}

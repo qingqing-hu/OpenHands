@@ -1,6 +1,6 @@
 import { Link } from "react-router";
-import { useInsightAI } from "#/components/insight-ai/context/insight-ai-context";
 import { MessageSquare, Plus, Clock, BookOpen } from "lucide-react";
+import { useInsightAI } from "#/components/insight-ai/context/insight-ai-context";
 
 export function InsightAIDashboard() {
   const { createTab } = useInsightAI();

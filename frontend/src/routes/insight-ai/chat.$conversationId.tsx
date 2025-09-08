@@ -4,7 +4,7 @@ import { InsightAIConversation } from "#/components/insight-ai/chat/insight-ai-c
 
 export default function InsightAIChatRoute() {
   const { conversationId } = useParams<{ conversationId: string }>();
-  
+
   if (!conversationId) {
     return (
       <div className="insight-ai-content flex items-center justify-center">

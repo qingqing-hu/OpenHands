@@ -8,104 +8,143 @@ const insightAITheme = {
   ...vs,
   'code[class*="language-"]': {
     ...vs['code[class*="language-"]'],
-    color: '#495057',
-    background: '#f8f9fa',
-    fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+    color: "#495057",
+    background: "#f8f9fa",
+    fontFamily:
+      'ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
   },
   'pre[class*="language-"]': {
     ...vs['pre[class*="language-"]'],
-    color: '#495057',
-    background: '#f8f9fa',
-    borderRadius: '6px',
+    color: "#495057",
+    background: "#f8f9fa",
+    borderRadius: "6px",
   },
-  'token.comment': {
-    color: '#6c757d',
-    fontStyle: 'italic',
+  "token.comment": {
+    color: "#6c757d",
+    fontStyle: "italic",
   },
-  'token.keyword': {
-    color: '#6f42c1',
-    fontWeight: 'bold',
+  "token.keyword": {
+    color: "#6f42c1",
+    fontWeight: "bold",
   },
-  'token.string': {
-    color: '#198754',
+  "token.string": {
+    color: "#198754",
   },
-  'token.number': {
-    color: '#fd7e14',
+  "token.number": {
+    color: "#fd7e14",
   },
-  'token.function': {
-    color: '#0d6efd',
+  "token.function": {
+    color: "#0d6efd",
   },
-  'token.operator': {
-    color: '#495057',
+  "token.operator": {
+    color: "#495057",
   },
-  'token.punctuation': {
-    color: '#6c757d',
+  "token.punctuation": {
+    color: "#6c757d",
   },
 };
 
 // Content type detection
 const detectLanguage = (content: string): string => {
   const trimmedContent = content.trim();
-  
+
   // JSON detection
-  if ((trimmedContent.startsWith('{') && trimmedContent.endsWith('}')) ||
-      (trimmedContent.startsWith('[') && trimmedContent.endsWith(']'))) {
+  if (
+    (trimmedContent.startsWith("{") && trimmedContent.endsWith("}")) ||
+    (trimmedContent.startsWith("[") && trimmedContent.endsWith("]"))
+  ) {
     try {
       JSON.parse(trimmedContent);
-      return 'json';
+      return "json";
     } catch {
       // Not valid JSON, continue detection
     }
   }
-  
+
   // SQL detection (case insensitive)
-  const sqlKeywords = ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'CREATE', 'DROP', 'ALTER', 'FROM', 'WHERE'];
+  const sqlKeywords = [
+    "SELECT",
+    "INSERT",
+    "UPDATE",
+    "DELETE",
+    "CREATE",
+    "DROP",
+    "ALTER",
+    "FROM",
+    "WHERE",
+  ];
   const upperContent = trimmedContent.toUpperCase();
-  if (sqlKeywords.some(keyword => upperContent.includes(keyword))) {
-    return 'sql';
+  if (sqlKeywords.some((keyword) => upperContent.includes(keyword))) {
+    return "sql";
   }
-  
+
   // Python detection
-  if (trimmedContent.includes('def ') || trimmedContent.includes('import ') || 
-      trimmedContent.includes('from ') || trimmedContent.includes('print(') ||
-      trimmedContent.includes('if __name__')) {
-    return 'python';
+  if (
+    trimmedContent.includes("def ") ||
+    trimmedContent.includes("import ") ||
+    trimmedContent.includes("from ") ||
+    trimmedContent.includes("print(") ||
+    trimmedContent.includes("if __name__")
+  ) {
+    return "python";
   }
-  
+
   // JavaScript/TypeScript detection
-  if (trimmedContent.includes('function ') || trimmedContent.includes('const ') ||
-      trimmedContent.includes('let ') || trimmedContent.includes('var ') ||
-      trimmedContent.includes('=>') || trimmedContent.includes('console.log')) {
-    return 'javascript';
+  if (
+    trimmedContent.includes("function ") ||
+    trimmedContent.includes("const ") ||
+    trimmedContent.includes("let ") ||
+    trimmedContent.includes("var ") ||
+    trimmedContent.includes("=>") ||
+    trimmedContent.includes("console.log")
+  ) {
+    return "javascript";
   }
-  
+
   // HTML detection
-  if (trimmedContent.includes('<') && trimmedContent.includes('>') &&
-      (trimmedContent.includes('<html>') || trimmedContent.includes('<div') || 
-       trimmedContent.includes('<span') || trimmedContent.includes('<!DOCTYPE'))) {
-    return 'html';
+  if (
+    trimmedContent.includes("<") &&
+    trimmedContent.includes(">") &&
+    (trimmedContent.includes("<html>") ||
+      trimmedContent.includes("<div") ||
+      trimmedContent.includes("<span") ||
+      trimmedContent.includes("<!DOCTYPE"))
+  ) {
+    return "html";
   }
-  
+
   // CSS detection
-  if (trimmedContent.includes('{') && trimmedContent.includes('}') &&
-      (trimmedContent.includes(':') && trimmedContent.includes(';'))) {
-    return 'css';
+  if (
+    trimmedContent.includes("{") &&
+    trimmedContent.includes("}") &&
+    trimmedContent.includes(":") &&
+    trimmedContent.includes(";")
+  ) {
+    return "css";
   }
-  
+
   // XML detection
-  if (trimmedContent.includes('<?xml') || 
-      (trimmedContent.includes('<') && trimmedContent.includes('/>') && !trimmedContent.includes('html'))) {
-    return 'xml';
+  if (
+    trimmedContent.includes("<?xml") ||
+    (trimmedContent.includes("<") &&
+      trimmedContent.includes("/>") &&
+      !trimmedContent.includes("html"))
+  ) {
+    return "xml";
   }
-  
+
   // Markdown detection
-  if (trimmedContent.includes('#') || trimmedContent.includes('**') || 
-      trimmedContent.includes('*') || trimmedContent.includes('[') && trimmedContent.includes('](')) {
-    return 'markdown';
+  if (
+    trimmedContent.includes("#") ||
+    trimmedContent.includes("**") ||
+    trimmedContent.includes("*") ||
+    (trimmedContent.includes("[") && trimmedContent.includes("]("))
+  ) {
+    return "markdown";
   }
-  
+
   // Default to text
-  return 'text';
+  return "text";
 };
 
 /**
@@ -157,7 +196,7 @@ export function insightAICode({
 
   // Auto-detect language if not specified
   const detectedLanguage = match?.[1] || detectLanguage(String(children));
-  
+
   return (
     <div className="max-w-full overflow-x-auto">
       <SyntaxHighlighter
@@ -166,11 +205,11 @@ export function insightAICode({
         language={detectedLanguage}
         PreTag="div"
         customStyle={{
-          maxWidth: '100%',
-          overflowX: 'auto',
-          background: '#f8f9fa',
-          borderRadius: '6px',
-          color: '#495057'
+          maxWidth: "100%",
+          overflowX: "auto",
+          background: "#f8f9fa",
+          borderRadius: "6px",
+          color: "#495057",
         }}
       >
         {String(children).replace(/\n$/, "")}

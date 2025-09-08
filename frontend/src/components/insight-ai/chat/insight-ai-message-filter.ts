@@ -149,9 +149,16 @@ export const actionShouldWaitForObservation = (
 ): boolean => {
   // Actions that typically generate observations
   const actionsThatGenerateObservations = [
-    "read", "write", "edit", "run", "browse", "delegate", "call_tool_mcp", "think"
+    "read",
+    "write",
+    "edit",
+    "run",
+    "browse",
+    "delegate",
+    "call_tool_mcp",
+    "think",
   ];
-  
+
   return actionsThatGenerateObservations.includes(action.action);
 };
 
@@ -223,21 +230,24 @@ const getDetailedContent = (
     // For error events, return the Chinese detailed message instead of JSON
     if (isErrorObservation(event) || (event as any).extras?.error_id) {
       // For error events, directly use i18n to get Chinese content
-      const errorId = ((event as any).extras as any)?.error_id as string | undefined;
+      const errorId = ((event as any).extras as any)?.error_id as
+        | string
+        | undefined;
       if (errorId && i18n.exists(errorId)) {
         const chineseContent = i18n.t(errorId);
         return chineseContent;
       }
-      
+
       // Fallback to localized content
       const localizedContent = getLocalizedMessageContent(event);
       return localizedContent || event.message || "发生了未知错误。";
     }
-    
+
     if (isOpenHandsAction(event)) {
       const content = getActionContent(event);
       return content && content.trim() ? content : undefined;
-    } else if (isOpenHandsObservation(event)) {
+    }
+    if (isOpenHandsObservation(event)) {
       const content = getObservationContent(event);
       return content && content.trim() ? content : undefined;
     }
@@ -252,19 +262,19 @@ const getDetailedContent = (
  */
 const getErrorMessageContent = (event: OpenHandsObservation): string => {
   const errorId = (event.extras as any)?.error_id as string | undefined;
-  
+
   if (errorId) {
     const errorMessages: Record<string, string> = {
-      "AGENT_ERROR$ERROR_ACTION_NOT_EXECUTED": "操作未执行",
-      "AGENT_ERROR$ERROR_TIMEOUT": "操作超时", 
-      "AGENT_ERROR$ERROR_INVALID_INPUT": "输入无效",
-      "AGENT_ERROR$ERROR_PERMISSION_DENIED": "权限不足",
-      "AGENT_ERROR$ERROR_FILE_NOT_FOUND": "文件未找到",
-      "AGENT_ERROR$ERROR_NETWORK_FAILURE": "网络连接失败",
-      "AGENT_ERROR$ERROR_PARSE_FAILURE": "解析失败",
-      "AGENT_ERROR$ERROR_UNKNOWN": "未知错误",
+      AGENT_ERROR$ERROR_ACTION_NOT_EXECUTED: "操作未执行",
+      AGENT_ERROR$ERROR_TIMEOUT: "操作超时",
+      AGENT_ERROR$ERROR_INVALID_INPUT: "输入无效",
+      AGENT_ERROR$ERROR_PERMISSION_DENIED: "权限不足",
+      AGENT_ERROR$ERROR_FILE_NOT_FOUND: "文件未找到",
+      AGENT_ERROR$ERROR_NETWORK_FAILURE: "网络连接失败",
+      AGENT_ERROR$ERROR_PARSE_FAILURE: "解析失败",
+      AGENT_ERROR$ERROR_UNKNOWN: "未知错误",
     };
-    
+
     const errorType = errorMessages[errorId] || "未知错误";
     return `智能体遇到错误 - ${errorType}`;
   }
@@ -302,7 +312,7 @@ const parseMessageContent = (
   // Check if this is a user message with file attachments
   if (event.source === "user" && (event as any).args?.file_urls) {
     // Remove file attachment metadata (similar to OpenHands parseMessageFromEvent)
-    const message = event.message;
+    const { message } = event;
     const delimiter = "Files attached:"; // Simplified delimiter
     const parts = message.split(delimiter);
     return parts[0].trim();
@@ -384,32 +394,37 @@ const getMessageCategory = (
 const getMessageStatus = (
   event: OpenHandsAction | OpenHandsObservation,
 ): InsightAIStatusType | undefined => {
-
   if (isErrorObservation(event)) {
     return "error";
   }
 
   // Check if event has isError field (for MCP and other events)
-  if ('isError' in event && typeof event.isError === 'boolean') {
+  if ("isError" in event && typeof event.isError === "boolean") {
     return event.isError ? "error" : "success";
   }
 
   // Special handling for MCP observations - parse nested content for success indicators
   if (isOpenHandsObservation(event) && event.observation === "mcp") {
     const content = event.content || "";
-    
+
     try {
       // Try to parse the outer JSON structure
       const parsedContent = JSON.parse(content);
       if (parsedContent?.content && Array.isArray(parsedContent.content)) {
         // Look for success field in the nested text content
         for (const item of parsedContent.content) {
-          if (item?.text && typeof item.text === 'string') {
+          if (item?.text && typeof item.text === "string") {
             const textContent = item.text;
-            if (textContent.includes('"success": true') || textContent.includes('"success":true')) {
+            if (
+              textContent.includes('"success": true') ||
+              textContent.includes('"success":true')
+            ) {
               return "success";
             }
-            if (textContent.includes('"success": false') || textContent.includes('"success":false')) {
+            if (
+              textContent.includes('"success": false') ||
+              textContent.includes('"success":false')
+            ) {
               return "error";
             }
           }
@@ -417,10 +432,16 @@ const getMessageStatus = (
       }
     } catch (e) {
       // If JSON parsing fails, fall back to simple string search
-      if (content.includes('"success": true') || content.includes('"success":true')) {
+      if (
+        content.includes('"success": true') ||
+        content.includes('"success":true')
+      ) {
         return "success";
       }
-      if (content.includes('"success": false') || content.includes('"success":false')) {
+      if (
+        content.includes('"success": false') ||
+        content.includes('"success":false')
+      ) {
         return "error";
       }
     }
@@ -443,14 +464,12 @@ const getMessageStatus = (
   return undefined;
 };
 
-
 /**
  * Converts OpenHands events to InsightAI message format with filtering
  */
 export const convertEventsToInsightAIMessages = (
   events: (OpenHandsAction | OpenHandsObservation)[],
 ): InsightAIMessage[] => {
-
   const filteredEvents = events.filter(shouldRenderInsightAIEvent);
 
   const convertedMessages: InsightAIMessage[] = [];
@@ -458,21 +477,24 @@ export const convertEventsToInsightAIMessages = (
   // For single event processing (typical WebSocket case), apply OpenHands native logic
   if (events.length === 1) {
     const event = events[0];
-    
+
     // Special handling for actions that will have observations in single event processing
     if (isOpenHandsAction(event) && actionShouldWaitForObservation(event)) {
       const thought = extractThought(event);
-      
+
       // If no thought, don't create a message - wait for the observation
       if (!thought) {
         return [];
       }
-      
+
       // Create thought message (for both think and other actions like MCP)
       convertedMessages.push({
         id: event.id.toString(),
         type: "assistant",
-        category: (event.action === "think" || (event as any).action === "condensation") ? getMessageCategory(event) : "message", // Only think and condensation show icons
+        category:
+          event.action === "think" || (event as any).action === "condensation"
+            ? getMessageCategory(event)
+            : "message", // Only think and condensation show icons
         content: thought,
         timestamp: new Date(event.timestamp),
         originalEvent: event,
@@ -485,10 +507,10 @@ export const convertEventsToInsightAIMessages = (
         detailedContent: undefined,
         hasExpandableContent: false,
       });
-      
+
       return convertedMessages;
     }
-    
+
     // For all other single events (observations, actions without observations, etc.)
     // proceed with standard processing below
   }
@@ -497,7 +519,7 @@ export const convertEventsToInsightAIMessages = (
   // Check if we have action-observation pairs in this batch
   const actionMap = new Map<number, OpenHandsAction>();
   const observationMap = new Map<number, OpenHandsObservation>();
-  
+
   filteredEvents.forEach((event) => {
     if (isOpenHandsAction(event)) {
       actionMap.set(event.id, event);
@@ -508,12 +530,11 @@ export const convertEventsToInsightAIMessages = (
 
   filteredEvents.forEach((event) => {
     const eventArgs = (event as any).args || {};
-    
 
     // Handle action-observation pairs (batch processing)
     if (isOpenHandsAction(event) && observationMap.has(event.id)) {
       const observation = observationMap.get(event.id)!;
-      
+
       // Special handling for think action - only show thought content, hide observation
       if (event.action === "think") {
         const thought = extractThought(event);
@@ -537,10 +558,10 @@ export const convertEventsToInsightAIMessages = (
         }
         return; // Skip observation processing for think action
       }
-      
+
       // Create a combined message with action thought and observation content
       const thought = extractThought(event);
-      
+
       // If there's a thought, show it as a separate message first
       if (thought) {
         convertedMessages.push({
@@ -564,7 +585,7 @@ export const convertEventsToInsightAIMessages = (
       // Create the main message showing the observation result
       const observationStatus = getMessageStatus(observation);
       const observationCategory = getMessageCategory(observation);
-      
+
       convertedMessages.push({
         id: observation.id.toString(),
         type: "observation",
@@ -584,16 +605,22 @@ export const convertEventsToInsightAIMessages = (
 
       return; // Skip individual processing
     }
-    
+
     // Skip observations that are paired with actions (batch processing)
-    if (isOpenHandsObservation(event) && event.cause && actionMap.has(event.cause)) {
+    if (
+      isOpenHandsObservation(event) &&
+      event.cause &&
+      actionMap.has(event.cause)
+    ) {
       return; // Already handled as part of action-observation pair
     }
 
     // Handle standalone events (no action-observation pairing)
     // Check if this is an MCP-related event (either action or observation)
-    const isMCPAction = isOpenHandsAction(event) && event.action === "call_tool_mcp";
-    const isMCPObservation = isOpenHandsObservation(event) && event.observation === "mcp";
+    const isMCPAction =
+      isOpenHandsAction(event) && event.action === "call_tool_mcp";
+    const isMCPObservation =
+      isOpenHandsObservation(event) && event.observation === "mcp";
 
     let messageType: "user" | "assistant" | "observation" = "assistant";
     let extras: { tool?: string; arguments?: Record<string, any> } | undefined;
@@ -603,7 +630,7 @@ export const convertEventsToInsightAIMessages = (
     } else if (isMCPAction) {
       // MCP actions are assistant messages (showing thoughts/intent)
       messageType = "assistant";
-      
+
       // Extract MCP tool info from action args
       const eventArgs = (event as any).args || {};
       if (eventArgs.name || eventArgs.arguments) {
@@ -615,7 +642,7 @@ export const convertEventsToInsightAIMessages = (
     } else if (isMCPObservation) {
       // MCP observations are tool results/output
       messageType = "observation";
-      
+
       // Extract MCP tool info from observation extras
       const eventExtras = (event as any).extras || {};
       if (eventExtras.name || eventExtras.arguments) {
@@ -675,7 +702,7 @@ export const convertEventsToInsightAIMessages = (
       const eventStatus = getMessageStatus(event);
       const eventCategory = getMessageCategory(event);
       const isErrorEvent = isErrorObservation(event);
-      
+
       convertedMessages.push({
         id: event.id.toString(),
         type: messageType,

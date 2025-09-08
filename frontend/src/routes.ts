@@ -29,11 +29,14 @@ export default [
     ]),
     route("microagent-management", "routes/microagent-management.tsx"),
   ]),
-  
+
   // InsightAI routes
   layout("routes/insight-ai-layout.tsx", [
     route("insight_ai", "routes/insight-ai/index.tsx"),
     route("insight_ai/conversations", "routes/insight-ai/conversations.tsx"),
-    route("insight_ai/chat/:conversationId", "routes/insight-ai/chat.$conversationId.tsx"),
+    route(
+      "insight_ai/chat/:conversationId",
+      "routes/insight-ai/chat.$conversationId.tsx",
+    ),
   ]),
 ] satisfies RouteConfig;
