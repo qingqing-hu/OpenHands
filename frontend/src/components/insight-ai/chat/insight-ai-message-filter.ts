@@ -250,22 +250,22 @@ const getDetailedContent = (
       if (event.action === "call_tool_mcp") {
         let detailedContent = "";
         const eventArgs = (event as any).args || {};
-        
+
         if (eventArgs.name) {
           detailedContent += `**工具名称:** ${eventArgs.name}\n\n`;
         }
-        
+
         if (eventArgs.thought) {
           detailedContent += `**思考过程:**\n${eventArgs.thought}\n\n`;
         }
-        
+
         if (eventArgs.arguments) {
           detailedContent += `**调用参数:**\n\`\`\`json\n${JSON.stringify(eventArgs.arguments, null, 2)}\n\`\`\``;
         }
-        
+
         return detailedContent;
       }
-      
+
       const content = getActionContent(event);
       return content && content.trim() ? content : undefined;
     }
@@ -274,25 +274,26 @@ const getDetailedContent = (
       // The execution result is now handled separately via extras.result
       if (event.observation === "mcp") {
         let detailedContent = "";
-        
+
         // Use paired action info if available (for action-observation pairs)
         const actionArgs = pairedAction ? (pairedAction as any).args || {} : {};
         const eventExtras = (event as any).extras || {};
-        
-        const toolName = actionArgs.name || eventExtras.name || eventExtras.tool;
+
+        const toolName =
+          actionArgs.name || eventExtras.name || eventExtras.tool;
         const toolArgs = actionArgs.arguments || eventExtras.arguments;
-        
+
         if (toolName) {
           detailedContent += `**工具名称:** ${toolName}\n\n`;
         }
-        
+
         if (toolArgs) {
           detailedContent += `**调用参数:**\n\`\`\`json\n${JSON.stringify(toolArgs, null, 2)}\n\`\`\``;
         }
-        
+
         return detailedContent;
       }
-      
+
       const content = getObservationContent(event);
       return content && content.trim() ? content : undefined;
     }
@@ -386,7 +387,7 @@ const getMessageCategory = (
     if ((event as any).action === "condensation") {
       return "system";
     }
-    
+
     switch (event.action) {
       case "run":
         return "command";
@@ -634,16 +635,18 @@ export const convertEventsToInsightAIMessages = (
       // Create the main message showing the observation result
       const observationStatus = getMessageStatus(observation);
       const observationCategory = getMessageCategory(observation);
-      
+
       // For MCP action-observation pairs, include action parameters and execution result in observation extras
-      let observationExtras: { tool?: string; arguments?: Record<string, any>; result?: any } | undefined;
+      let observationExtras:
+        | { tool?: string; arguments?: Record<string, any>; result?: any }
+        | undefined;
       if (event.action === "call_tool_mcp") {
         // Extract execution result from observation content
         let executionResult = null;
         if (observation.content) {
           try {
             const parsedContent = JSON.parse(observation.content);
-            
+
             // Check if this is the complex InsightAI structure with content array
             if (parsedContent.content && Array.isArray(parsedContent.content)) {
               // Process each content item based on its type
@@ -660,7 +663,10 @@ export const convertEventsToInsightAIMessages = (
                   }
                 } else if (item.type === "image") {
                   // Handle image content type
-                  executionResult = { type: "image", source: item.source || "image data" };
+                  executionResult = {
+                    type: "image",
+                    source: item.source || "image data",
+                  };
                 } else if (item.type === "json") {
                   // Handle direct JSON content type
                   executionResult = item.data || item;
@@ -678,7 +684,7 @@ export const convertEventsToInsightAIMessages = (
             executionResult = observation.content;
           }
         }
-        
+
         observationExtras = {
           tool: eventArgs.name,
           arguments: eventArgs.arguments,
@@ -747,7 +753,7 @@ export const convertEventsToInsightAIMessages = (
       const eventExtras = (event as any).extras || {};
       let toolName = eventExtras.name || eventExtras.tool;
       let toolArgs = eventExtras.arguments;
-      
+
       // If not found in extras, try to parse from content
       if (!toolName && event.content) {
         try {
@@ -755,7 +761,7 @@ export const convertEventsToInsightAIMessages = (
           if (parsedContent.content && Array.isArray(parsedContent.content)) {
             // Look for tool info in nested content
             for (const item of parsedContent.content) {
-              if (item.text && typeof item.text === 'string') {
+              if (item.text && typeof item.text === "string") {
                 try {
                   const nestedData = JSON.parse(item.text);
                   if (nestedData.tool_name) {
@@ -774,7 +780,7 @@ export const convertEventsToInsightAIMessages = (
           // If parsing fails, we'll use what we have
         }
       }
-      
+
       if (toolName || toolArgs) {
         extras = {
           tool: toolName,

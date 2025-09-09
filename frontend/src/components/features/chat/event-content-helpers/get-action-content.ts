@@ -98,7 +98,9 @@ const getFinishActionContent = (event: FinishAction): string => {
 
 const getNoContentActionContent = (): string => "";
 
-const getCondensationActionContent = (event: OpenHandsAction | Record<string, unknown>): string =>
+const getCondensationActionContent = (
+  event: OpenHandsAction | Record<string, unknown>,
+): string =>
   // For condensation actions, return the complete event object as JSON (like OpenHands native)
   `\`\`\`json\n${JSON.stringify(event, null, 2)}\n\`\`\``;
 export const getActionContent = (event: OpenHandsAction): string => {

@@ -25,9 +25,17 @@ export function useInsightAIMessages(conversationId: string) {
   // Always call the WebSocket hook, but pass safe defaults
   const safeConversationId =
     conversationId && conversationId !== "placeholder" ? conversationId : "";
-  const { webSocketStatus, isLoadingMessages, parsedEvents, send, events } =
-    useInsightAIWsClient(safeConversationId);
-
+  const {
+    webSocketStatus,
+    isLoadingMessages,
+    parsedEvents,
+    send,
+    events,
+    conversationData,
+    hasConnectionError,
+    reconnect,
+    dismissConnectionError,
+  } = useInsightAIWsClient(safeConversationId);
 
   // Check if we have a valid conversation ID
   const hasValidConversationId = Boolean(
@@ -41,7 +49,6 @@ export function useInsightAIMessages(conversationId: string) {
     if (!hasValidConversationId || !parsedEvents || parsedEvents.length === 0) {
       return [];
     }
-
 
     // Filter events that should be displayed in InsightAI
     const filteredEvents = parsedEvents.filter(shouldRenderInsightAIEvent);
@@ -61,7 +68,6 @@ export function useInsightAIMessages(conversationId: string) {
     const entries: TerminalEntry[] = [];
 
     parsedEvents.forEach((event) => {
-
       if (isTerminalCommand(event as any)) {
         const command = (event as any).args?.command || "";
         entries.push({
@@ -90,11 +96,8 @@ export function useInsightAIMessages(conversationId: string) {
   // Connection status
   const isConnected = hasValidConversationId && webSocketStatus === "CONNECTED";
   const isLoading = hasValidConversationId && isLoadingMessages;
-  const error =
-    hasValidConversationId && webSocketStatus === "DISCONNECTED" && !isLoading
-      ? "WebSocket连接已断开"
-      : null;
-
+  // 移除error设置，让loading state来处理错误显示，避免重复显示
+  const error = null;
 
   return {
     messages,
@@ -107,5 +110,10 @@ export function useInsightAIMessages(conversationId: string) {
     webSocketStatus,
     rawEvents: events,
     parsedEvents,
+    conversationData, // Expose conversation data
+    // WebSocket error modal properties
+    hasConnectionError,
+    reconnect,
+    dismissConnectionError,
   };
 }

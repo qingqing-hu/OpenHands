@@ -168,13 +168,6 @@ export function InsightAIChatInput({
           </button>
         </div>
       </form>
-
-      {/* Status indicators */}
-      {disabled && (
-        <div className="insight-ai-status">
-          <div className="text-insight-warning">AI is thinking...</div>
-        </div>
-      )}
     </div>
   );
 }

@@ -43,7 +43,10 @@ export function isTerminalOutput(event: TerminalEvent): boolean {
   }
 
   // Check for stdout/stderr patterns
-  if ((event?.extras as any)?.command_id && (event?.content || event?.message)) {
+  if (
+    (event?.extras as any)?.command_id &&
+    (event?.content || event?.message)
+  ) {
     isOutput = true;
   }
 

@@ -103,14 +103,12 @@ export function InsightAIErrorMessage({ message }: InsightAIErrorMessageProps) {
             </div>
             {/* Error details content - adaptive height based on content length */}
             <div
-              className={`p-3 overflow-y-auto insight-ai-scrollbar text-gray-600 text-sm ${
-                (() => {
-                  if (errorDetails.length <= 200) return "max-h-[120px]";
-                  if (errorDetails.length <= 500) return "max-h-[200px]";
-                  if (errorDetails.length <= 1000) return "max-h-[300px]";
-                  return "max-h-[400px]";
-                })()
-              } min-h-[80px]`}
+              className={`p-3 overflow-y-auto insight-ai-scrollbar text-gray-600 text-sm ${(() => {
+                if (errorDetails.length <= 200) return "max-h-[120px]";
+                if (errorDetails.length <= 500) return "max-h-[200px]";
+                if (errorDetails.length <= 1000) return "max-h-[300px]";
+                return "max-h-[400px]";
+              })()} min-h-[80px]`}
               style={{ backgroundColor: "#fafafa" }}
             >
               <div
