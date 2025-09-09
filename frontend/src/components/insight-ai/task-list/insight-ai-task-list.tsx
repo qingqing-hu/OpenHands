@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   Clock,
   Play,
@@ -32,10 +33,15 @@ interface InsightAITaskListProps {
   tasks: Task[];
   selectedTaskId?: string;
   onTaskSelect: (taskId: string) => void;
-  onEditTitle?: (taskId: string, newTitle: string) => void;
+  onEditTitle?: (
+    taskId: string,
+    newTitle: string,
+  ) => Promise<boolean> | boolean | void;
   onDeleteTask?: (taskId: string) => void;
   onStopTask?: (taskId: string) => void;
   onStartTask?: (taskId: string) => void;
+  startingTaskIds?: Set<string>;
+  stoppingTaskIds?: Set<string>;
 }
 
 const statusConfig = {
@@ -52,15 +58,15 @@ const statusConfig = {
     label: "启动中",
   },
   running: {
-    icon: Play,
-    bgColor: "bg-blue-100",
-    textColor: "text-blue-800",
-    label: "运行中",
-  },
-  completed: {
     icon: CheckCircle,
     bgColor: "bg-green-100",
     textColor: "text-green-800",
+    label: "运行中",
+  },
+  completed: {
+    icon: Square,
+    bgColor: "bg-gray-100",
+    textColor: "text-gray-700",
     label: "已停止",
   },
   error: {
@@ -84,6 +90,11 @@ const formatTimeAgo = (date: Date): string => {
   return `${Math.floor(diffInDays)}天前`;
 };
 
+// Modal Portal Component
+const ModalPortal: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return createPortal(children, document.body);
+};
+
 export function InsightAITaskList({
   tasks,
   selectedTaskId,
@@ -92,6 +103,8 @@ export function InsightAITaskList({
   onDeleteTask,
   onStopTask,
   onStartTask,
+  startingTaskIds = new Set(),
+  stoppingTaskIds = new Set(),
 }: InsightAITaskListProps) {
   const { t } = useTranslation();
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
@@ -100,6 +113,8 @@ export function InsightAITaskList({
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [stopConfirmId, setStopConfirmId] = useState<string | null>(null);
   const [startConfirmId, setStartConfirmId] = useState<string | null>(null);
+  const [isStartingTask, setIsStartingTask] = useState<string | null>(null);
+  const [isStoppingTask, setIsStoppingTask] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Close menu when clicking outside
@@ -122,12 +137,21 @@ export function InsightAITaskList({
     setShowMenu(null);
   };
 
-  const handleEditSave = (taskId: string) => {
+  const handleEditSave = async (taskId: string) => {
     if (onEditTitle && editTitle.trim()) {
-      onEditTitle(taskId, editTitle.trim());
+      const success = await onEditTitle(taskId, editTitle.trim());
+
+      // 只有在成功时才清除编辑状态
+      if (success !== false) {
+        setEditingTaskId(null);
+        setEditTitle("");
+      }
+      // 如果失败，保持编辑状态，用户可以重试或取消
+    } else {
+      // 如果没有有效标题，直接取消编辑
+      setEditingTaskId(null);
+      setEditTitle("");
     }
-    setEditingTaskId(null);
-    setEditTitle("");
   };
 
   const handleEditCancel = () => {
@@ -154,9 +178,14 @@ export function InsightAITaskList({
     setStopConfirmId(taskId);
   };
 
-  const handleStopConfirm = (taskId: string) => {
+  const handleStopConfirm = async (taskId: string) => {
+    setIsStoppingTask(taskId);
     if (onStopTask) {
-      onStopTask(taskId);
+      try {
+        await onStopTask(taskId);
+      } finally {
+        setIsStoppingTask(null);
+      }
     }
     setStopConfirmId(null);
   };
@@ -169,9 +198,14 @@ export function InsightAITaskList({
     setStartConfirmId(taskId);
   };
 
-  const handleStartConfirm = (taskId: string) => {
+  const handleStartConfirm = async (taskId: string) => {
+    setIsStartingTask(taskId);
     if (onStartTask) {
-      onStartTask(taskId);
+      try {
+        await onStartTask(taskId);
+      } finally {
+        setIsStartingTask(null);
+      }
     }
     setStartConfirmId(null);
   };
@@ -279,10 +313,24 @@ export function InsightAITaskList({
                         {task.status === "completed" && (
                           <button
                             onClick={() => handleMenuAction("start", task.id)}
-                            className="flex items-center w-full px-2 py-1 text-xs text-green-700 hover:bg-green-50 transition-colors"
+                            disabled={
+                              startingTaskIds.has(task.id) ||
+                              isStartingTask === task.id
+                            }
+                            className="flex items-center w-full px-2 py-1 text-xs text-green-700 hover:bg-green-50 disabled:text-green-400 disabled:cursor-not-allowed transition-colors"
                           >
-                            <Play className="w-3 h-3 mr-1" />
-                            启动对话
+                            {startingTaskIds.has(task.id) ||
+                            isStartingTask === task.id ? (
+                              <>
+                                <div className="animate-spin rounded-full h-2 w-2 border border-green-400 border-t-transparent mr-1" />
+                                启动中...
+                              </>
+                            ) : (
+                              <>
+                                <Play className="w-3 h-3 mr-1" />
+                                启动对话
+                              </>
+                            )}
                           </button>
                         )}
 
@@ -291,10 +339,24 @@ export function InsightAITaskList({
                           task.status === "starting") && (
                           <button
                             onClick={() => handleMenuAction("stop", task.id)}
-                            className="flex items-center w-full px-2 py-1 text-xs text-orange-700 hover:bg-orange-50 transition-colors"
+                            disabled={
+                              stoppingTaskIds.has(task.id) ||
+                              isStoppingTask === task.id
+                            }
+                            className="flex items-center w-full px-2 py-1 text-xs text-orange-700 hover:bg-orange-50 disabled:text-orange-400 disabled:cursor-not-allowed transition-colors"
                           >
-                            <Square className="w-3 h-3 mr-1" />
-                            停止对话
+                            {stoppingTaskIds.has(task.id) ||
+                            isStoppingTask === task.id ? (
+                              <>
+                                <div className="animate-spin rounded-full h-2 w-2 border border-orange-400 border-t-transparent mr-1" />
+                                停止中...
+                              </>
+                            ) : (
+                              <>
+                                <Square className="w-3 h-3 mr-1" />
+                                停止对话
+                              </>
+                            )}
                           </button>
                         )}
 
@@ -377,18 +439,19 @@ export function InsightAITaskList({
 
       {/* Delete Confirmation Dialog */}
       {deleteConfirmId && (
-        <div className="relative">
-          {/* Backdrop overlay with 50% opacity */}
-          <div
-            className="fixed inset-0 z-40"
-            style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-            onClick={handleDeleteCancel}
-          />
+        <ModalPortal>
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            {/* Backdrop overlay with 50% opacity */}
+            <div
+              className="absolute inset-0"
+              style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+              onClick={handleDeleteCancel}
+            />
 
-          {/* Centered dialog box */}
-          <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-2xl border border-gray-200 p-6 max-w-sm w-full">
-              <div className="flex items-start gap-3 mb-4">
+            {/* Centered dialog box */}
+            <div className="relative z-10 p-4 w-full max-w-sm">
+              <div className="bg-white rounded-xl shadow-2xl border border-gray-200 p-6">
+                <div className="flex items-start gap-3 mb-4">
                 <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
                   <AlertCircle className="w-4 h-4 text-red-600" />
                 </div>
@@ -415,26 +478,28 @@ export function InsightAITaskList({
                 >
                   删除
                 </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </ModalPortal>
       )}
 
       {/* Stop Confirmation Dialog */}
       {stopConfirmId && (
-        <div className="relative">
-          {/* Backdrop overlay with 50% opacity */}
-          <div
-            className="fixed inset-0 z-40"
-            style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-            onClick={handleStopCancel}
-          />
+        <ModalPortal>
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            {/* Backdrop overlay with 50% opacity */}
+            <div
+              className="absolute inset-0"
+              style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+              onClick={handleStopCancel}
+            />
 
-          {/* Centered dialog box */}
-          <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-2xl border border-gray-200 p-6 max-w-sm w-full">
-              <div className="flex items-start gap-3 mb-4">
+            {/* Centered dialog box */}
+            <div className="relative z-10 p-4 w-full max-w-sm">
+              <div className="bg-white rounded-xl shadow-2xl border border-gray-200 p-6">
+                <div className="flex items-start gap-3 mb-4">
                 <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
                   <Square className="w-4 h-4 text-orange-600" />
                 </div>
@@ -457,34 +522,44 @@ export function InsightAITaskList({
                 </button>
                 <button
                   onClick={() => handleStopConfirm(stopConfirmId)}
-                  className="px-3 py-1.5 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-md transition-colors"
+                  disabled={isStoppingTask === stopConfirmId}
+                  className="px-3 py-1.5 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 disabled:bg-orange-600 disabled:cursor-not-allowed rounded-md transition-colors flex items-center gap-1"
                 >
-                  停止
+                  {isStoppingTask === stopConfirmId ? (
+                    <>
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white" />
+                      停止中...
+                    </>
+                  ) : (
+                    "停止"
+                  )}
                 </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </ModalPortal>
       )}
 
       {/* Start Confirmation Dialog */}
       {startConfirmId && (
-        <div className="relative">
-          {/* Backdrop overlay with 50% opacity */}
-          <div
-            className="fixed inset-0 z-40"
-            style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-            onClick={handleStartCancel}
-          />
+        <ModalPortal>
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            {/* Backdrop overlay with 50% opacity */}
+            <div
+              className="absolute inset-0"
+              style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+              onClick={handleStartCancel}
+            />
 
-          {/* Centered dialog box */}
-          <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-2xl border border-gray-200 p-6 max-w-sm w-full">
-              <div className="flex items-start gap-3 mb-4">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Play className="w-4 h-4 text-green-600" />
-                </div>
-                <div className="flex-1">
+            {/* Centered dialog box */}
+            <div className="relative z-10 p-4 w-full max-w-sm">
+              <div className="bg-white rounded-xl shadow-2xl border border-gray-200 p-6">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Play className="w-4 h-4 text-green-600" />
+                  </div>
+                  <div className="flex-1">
                   <h3 className="text-base font-semibold text-gray-900 mb-1">
                     启动对话
                   </h3>
@@ -503,14 +578,23 @@ export function InsightAITaskList({
                 </button>
                 <button
                   onClick={() => handleStartConfirm(startConfirmId)}
-                  className="px-3 py-1.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors"
+                  disabled={isStartingTask === startConfirmId}
+                  className="px-3 py-1.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:bg-green-600 disabled:cursor-not-allowed rounded-md transition-colors flex items-center gap-1"
                 >
-                  启动
+                  {isStartingTask === startConfirmId ? (
+                    <>
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white" />
+                      启动中...
+                    </>
+                  ) : (
+                    "启动"
+                  )}
                 </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </ModalPortal>
       )}
     </div>
   );

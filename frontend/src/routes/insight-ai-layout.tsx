@@ -7,6 +7,7 @@ import {
 } from "react-icons/bi";
 import { MdDragIndicator } from "react-icons/md";
 import { LuPanelLeft, LuPanelRight } from "react-icons/lu";
+import { useQueryClient } from "@tanstack/react-query";
 import { InsightAIProvider } from "#/components/insight-ai/context/insight-ai-context";
 import { InsightAITaskList } from "#/components/insight-ai/task-list/insight-ai-task-list";
 import { InsightAIConversation } from "#/components/insight-ai/chat/insight-ai-conversation";
@@ -17,6 +18,7 @@ import {
   useDeleteInsightAITask,
 } from "#/hooks/insight-ai/use-insight-ai-tasks";
 import { InsightAIService } from "#/api/insight-ai-service/insight-ai-service.api";
+import OpenHands from "#/api/open-hands";
 import "#/styles/insight-ai-theme.css";
 
 export default function InsightAILayout() {
@@ -38,6 +40,12 @@ export default function InsightAILayout() {
   const [isResizing, setIsResizing] = useState(false);
   const [middlePanelExpanded, setMiddlePanelExpanded] = useState(false);
   const [savedRightPanelWidth, setSavedRightPanelWidth] = useState(0);
+  const [startingTaskIds, setStartingTaskIds] = useState<Set<string>>(
+    new Set(),
+  );
+  const [stoppingTaskIds, setStoppingTaskIds] = useState<Set<string>>(
+    new Set(),
+  );
 
   // Custom hooks - 确保永远在顶层调用
   const {
@@ -49,6 +57,89 @@ export default function InsightAILayout() {
 
   const createTaskMutation = useCreateInsightAITask();
   const deleteTaskMutation = useDeleteInsightAITask();
+  const queryClient = useQueryClient();
+
+  // 添加页面焦点监听，用于跨前端状态同步
+  React.useEffect(() => {
+    const handleFocus = () => {
+      // 当页面重新获得焦点时，刷新任务列表以同步状态
+      refetchTasks();
+
+      // 同时刷新当前选中对话的详细数据
+      if (selectedTaskId) {
+        queryClient.invalidateQueries({
+          queryKey: ["user", "conversation", selectedTaskId],
+        });
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      // 当页面变为可见时，刷新任务列表
+      if (!document.hidden) {
+        refetchTasks();
+
+        // 同时刷新当前选中对话的详细数据
+        if (selectedTaskId) {
+          queryClient.invalidateQueries({
+            queryKey: ["user", "conversation", selectedTaskId],
+          });
+        }
+      }
+    };
+
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [refetchTasks, selectedTaskId, queryClient]);
+
+  // 添加对原生OpenHands查询的监听，实现跨前端状态同步
+  React.useEffect(() => {
+    const handleQueryUpdate = (event: CustomEvent) => {
+      // 当原生前端更新对话状态时，刷新InsightAI任务列表
+      if (
+        event.detail?.queryKey &&
+        (event.detail.queryKey.includes("conversations") ||
+          event.detail.queryKey.includes("conversation"))
+      ) {
+        refetchTasks();
+
+        // 同时刷新当前选中对话的详细数据
+        if (selectedTaskId) {
+          queryClient.invalidateQueries({
+            queryKey: ["user", "conversation", selectedTaskId],
+          });
+        }
+      }
+    };
+
+    // 监听查询更新事件（如果有的话）
+    // 注意：这个事件可能不存在，需要根据实际情况调整
+    window.addEventListener("tanstack-query-update" as any, handleQueryUpdate);
+
+    // 定期轮询作为后备方案，但频率要低
+    const pollInterval = setInterval(() => {
+      refetchTasks();
+
+      // 同时刷新当前选中对话的详细数据
+      if (selectedTaskId) {
+        queryClient.invalidateQueries({
+          queryKey: ["user", "conversation", selectedTaskId],
+        });
+      }
+    }, 30000); // 30秒轮询一次
+
+    return () => {
+      window.removeEventListener(
+        "tanstack-query-update" as any,
+        handleQueryUpdate,
+      );
+      clearInterval(pollInterval);
+    };
+  }, [refetchTasks, selectedTaskId, queryClient]);
 
   // useMemo hooks - 确保永远在顶层调用
   const tasks = React.useMemo(() => {
@@ -90,7 +181,7 @@ export default function InsightAILayout() {
   React.useEffect(() => {
     const windowWidth =
       typeof window !== "undefined" ? window.innerWidth : 1440;
-    const currentSidebarWidth = sidebarCollapsed ? 48 : 288; // w-12 : w-72
+    const currentSidebarWidth = sidebarCollapsed ? 40 : 288; // w-10 : w-72
     const availableWidth = windowWidth - currentSidebarWidth;
     const newRightPanelWidth = Math.floor((availableWidth * 2) / 5); // Right panel gets 2/5
     setRightPanelWidth(newRightPanelWidth);
@@ -138,12 +229,35 @@ export default function InsightAILayout() {
   };
 
   // Handle edit task title
-  const handleEditTitle = async (_taskId: string, _newTitle: string) => {
+  const handleEditTitle = async (taskId: string, newTitle: string) => {
     try {
-      // For now, we'll update locally - this would need API support
-      // TODO: Implement actual title update API call
+      console.log(
+        `[Layout] Updating conversation ${taskId} title to: ${newTitle}`,
+      );
+
+      // 调用OpenHands API更新对话标题
+      await OpenHands.updateConversation(taskId, { title: newTitle });
+
+      console.log(`[Layout] Successfully updated conversation ${taskId} title`);
+
+      // 刷新任务列表以显示更新后的标题
+      refetchTasks();
+
+      // 同时刷新当前选中对话的详细数据
+      if (selectedTaskId === taskId) {
+        queryClient.invalidateQueries({
+          queryKey: ["user", "conversation", taskId],
+        });
+      }
+
+      return true; // 表示成功
     } catch (error) {
-      // Handle edit error
+      console.error(
+        `[Layout] Failed to update conversation ${taskId} title:`,
+        error,
+      );
+      // TODO: 可以添加错误提示给用户
+      return false; // 表示失败
     }
   };
 
@@ -173,27 +287,67 @@ export default function InsightAILayout() {
 
   // Handle stop task
   const handleStopTask = async (taskId: string) => {
+    // Add task to stopping set
+    setStoppingTaskIds((prev) => new Set([...prev, taskId]));
+
     try {
       // Call the stop conversation API
       await InsightAIService.executeTaskAction(taskId, { action: "stop" });
 
       // Refetch tasks to update the list
       refetchTasks();
+
+      // Also invalidate the specific conversation query to update middle panel
+      queryClient.invalidateQueries({
+        queryKey: ["user", "conversation", taskId],
+      });
+
+      // And invalidate the general conversations list
+      queryClient.invalidateQueries({
+        queryKey: ["user", "conversations"],
+      });
     } catch (error) {
       // Handle stop error
+    } finally {
+      // Remove task from stopping set
+      setStoppingTaskIds((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(taskId);
+        return newSet;
+      });
     }
   };
 
   // Handle start task
   const handleStartTask = async (taskId: string) => {
+    // Add task to starting set
+    setStartingTaskIds((prev) => new Set([...prev, taskId]));
+
     try {
       // Call the start conversation API
       await InsightAIService.executeTaskAction(taskId, { action: "start" });
 
       // Refetch tasks to update the list
       refetchTasks();
+
+      // Also invalidate the specific conversation query to update middle panel
+      queryClient.invalidateQueries({
+        queryKey: ["user", "conversation", taskId],
+      });
+
+      // And invalidate the general conversations list
+      queryClient.invalidateQueries({
+        queryKey: ["user", "conversations"],
+      });
     } catch (error) {
       // Handle start error
+    } finally {
+      // Remove task from starting set
+      setStartingTaskIds((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(taskId);
+        return newSet;
+      });
     }
   };
 
@@ -222,7 +376,7 @@ export default function InsightAILayout() {
       if (!isResizing) return;
 
       const windowWidth = window.innerWidth;
-      const sidebarWidth = sidebarCollapsed ? 48 : 288; // w-12 : w-72
+      const sidebarWidth = sidebarCollapsed ? 40 : 288; // w-10 : w-72
       const mouseX = e.clientX;
 
       // Calculate new right panel width (distance from right edge)
@@ -278,17 +432,17 @@ export default function InsightAILayout() {
         <div className="flex h-full overflow-hidden">
           {/* Left Column - Conversation Management */}
           <div
-            className={`bg-gray-50 flex flex-col transition-all duration-300 flex-shrink-0 overflow-hidden ${sidebarCollapsed ? "w-12" : "w-72"}`}
+            className={`bg-gray-50 flex flex-col transition-all duration-500 ease-in-out flex-shrink-0 overflow-hidden ${sidebarCollapsed ? "w-10" : "w-72"}`}
           >
-            <div
-              className={`layout-header p-4 ${sidebarCollapsed ? "border-b border-gray-200" : ""}`}
-            >
-              <div className="flex items-baseline justify-between">
-                <div className="layout-title flex items-center gap-2">
-                  {!sidebarCollapsed && (
-                    <>
+            <div className={`layout-header transition-all duration-500 ease-in-out ${sidebarCollapsed ? 'p-2' : 'p-4'}`}>
+              <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-between items-baseline'}`}>
+                {!sidebarCollapsed && (
+                  <div className="layout-title flex items-center gap-2 overflow-hidden">
+                    <div 
+                      className="flex items-center gap-2 transition-all duration-500 ease-in-out transform opacity-100 translate-x-0 scale-100"
+                    >
                       <h2
-                        className="text-xl font-bold text-gray-900"
+                        className="text-xl font-bold text-gray-900 whitespace-nowrap"
                         style={{ lineHeight: "2rem" }}
                       >
                         对话管理
@@ -303,7 +457,7 @@ export default function InsightAILayout() {
                             setTimeout(() => setIsRefreshing(false), 500);
                           }
                         }}
-                        className="hover:bg-gray-200 rounded transition-colors flex items-center justify-center w-6 h-6 p-0"
+                        className="hover:bg-gray-200 rounded transition-all duration-300 flex items-center justify-center w-6 h-6 p-0"
                         title="刷新对话列表"
                         disabled={isRefreshing}
                       >
@@ -311,25 +465,41 @@ export default function InsightAILayout() {
                           className={`w-4 h-4 text-gray-500 transition-transform duration-500 ${isRefreshing ? "animate-spin" : ""}`}
                         />
                       </button>
-                    </>
-                  )}
-                </div>
+                    </div>
+                  </div>
+                )}
                 <button
                   onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                  className="hover:bg-gray-200 rounded transition-colors flex items-center justify-center w-8 h-8 p-0 ml-2"
-                  style={{ marginTop: "0.25rem" }}
+                  className={`hover:bg-gray-200 rounded transition-all duration-300 flex items-center justify-center w-8 h-8 p-0 ${sidebarCollapsed ? '' : 'ml-2'}`}
+                  style={sidebarCollapsed ? {} : { marginTop: "0.25rem" }}
                   title={sidebarCollapsed ? "展开对话栏" : "收起对话栏"}
                 >
-                  {sidebarCollapsed ? (
-                    <BiRightIndent className="w-5 h-5 text-gray-600" />
-                  ) : (
-                    <BiLeftIndent className="w-5 h-5 text-gray-600" />
-                  )}
+                  <div className="relative w-5 h-5">
+                    <BiRightIndent 
+                      className={`absolute inset-0 w-5 h-5 text-gray-600 transition-all duration-300 transform ${
+                        sidebarCollapsed 
+                          ? 'opacity-100 rotate-0 scale-100' 
+                          : 'opacity-0 -rotate-180 scale-75'
+                      }`} 
+                    />
+                    <BiLeftIndent 
+                      className={`absolute inset-0 w-5 h-5 text-gray-600 transition-all duration-300 transform ${
+                        !sidebarCollapsed 
+                          ? 'opacity-100 rotate-0 scale-100' 
+                          : 'opacity-0 rotate-180 scale-75'
+                      }`} 
+                    />
+                  </div>
                 </button>
               </div>
             </div>
-            {!sidebarCollapsed && (
-              <div className="flex-1 overflow-y-auto py-4 px-1.5 insight-ai-scrollbar">
+            <div 
+              className={`flex-1 overflow-y-auto transition-all duration-500 ease-in-out ${
+                sidebarCollapsed 
+                  ? 'opacity-0 transform scale-95 pointer-events-none' 
+                  : 'opacity-100 transform scale-100 py-4 px-1.5'
+              } insight-ai-scrollbar`}
+            >
                 {/* 新增对话按钮 */}
                 <div
                   className="layout-add-action flex bg-white rounded-xl border border-gray-200 items-center gap-1 p-4 cursor-pointer hover:border-blue-200 transition-all duration-200 mb-3"
@@ -363,10 +533,11 @@ export default function InsightAILayout() {
                     onDeleteTask={handleDeleteTask}
                     onStopTask={handleStopTask}
                     onStartTask={handleStartTask}
+                    startingTaskIds={startingTaskIds}
+                    stoppingTaskIds={stoppingTaskIds}
                   />
                 )}
-              </div>
-            )}
+            </div>
           </div>
 
           {/* Middle Column - Conversation History */}
