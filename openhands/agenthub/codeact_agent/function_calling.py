@@ -19,13 +19,16 @@ from openhands.agenthub.codeact_agent.tools import (
     create_cmd_run_tool,
     create_str_replace_editor_tool,
 )
+from openhands.agenthub.codeact_agent.tools.security_utils import RISK_LEVELS
 from openhands.core.exceptions import (
     FunctionCallNotExistsError,
     FunctionCallValidationError,
 )
+from openhands.core.json_utils import validate_tool_arguments
 from openhands.core.logger import openhands_logger as logger
 from openhands.events.action import (
     Action,
+    ActionSecurityRisk,
     AgentDelegateAction,
     AgentFinishAction,
     AgentThinkAction,
@@ -40,6 +43,15 @@ from openhands.events.action.agent import CondensationRequestAction
 from openhands.events.action.mcp import MCPAction
 from openhands.events.event import FileEditSource, FileReadSource
 from openhands.events.tool import ToolCallMetadata
+# from openhands.llm.tool_names import TASK_TRACKER_TOOL_NAME  # TODO: Implement task tracking
+
+
+def set_security_risk(action: Action, arguments: dict) -> None:
+    """Set security risk level for the action based on the tool arguments."""
+    if 'security_risk' in arguments:
+        risk_level = arguments['security_risk']
+        if risk_level in RISK_LEVELS:
+            action.security_risk = ActionSecurityRisk(risk_level)
 
 
 def combine_thought(action: Action, thought: str) -> Action:
@@ -74,11 +86,10 @@ def response_to_actions(
             action: Action
             logger.debug(f'Tool call in function_calling.py: {tool_call}')
             try:
-                arguments = json.loads(tool_call.function.arguments)
-            except json.decoder.JSONDecodeError as e:
-                raise FunctionCallValidationError(
-                    f'Failed to parse tool call arguments: {tool_call.function.arguments}'
-                ) from e
+                arguments = validate_tool_arguments(tool_call.function.arguments, tool_call.function.name)
+            except ValueError as e:
+                logger.error(f'Tool call validation failed: {e}')
+                raise FunctionCallValidationError(str(e)) from e
 
             # ================================================
             # CmdRunTool (Bash)
@@ -177,7 +188,7 @@ def response_to_actions(
                         other_kwargs.pop('view_range')
 
                     # Filter out unexpected arguments
-                    valid_kwargs = {}
+                    valid_kwargs_for_editor = {}
                     # Get valid parameters from the str_replace_editor tool definition
                     str_replace_editor_tool = create_str_replace_editor_tool()
                     valid_params = set(
@@ -185,9 +196,12 @@ def response_to_actions(
                             'properties'
                         ].keys()
                     )
+
                     for key, value in other_kwargs.items():
                         if key in valid_params:
-                            valid_kwargs[key] = value
+                            # security_risk is valid but should NOT be part of editor kwargs
+                            if key != 'security_risk':
+                                valid_kwargs_for_editor[key] = value
                         else:
                             raise FunctionCallValidationError(
                                 f'Unexpected argument {key} in tool call {tool_call.function.name}. Allowed arguments are: {valid_params}'
@@ -197,8 +211,10 @@ def response_to_actions(
                         path=path,
                         command=command,
                         impl_source=FileEditSource.OH_ACI,
-                        **valid_kwargs,
+                        **valid_kwargs_for_editor,
                     )
+
+                set_security_risk(action, arguments)
             # ================================================
             # AgentThinkAction
             # ================================================
@@ -220,7 +236,23 @@ def response_to_actions(
                         f'Missing required argument "code" in tool call {tool_call.function.name}'
                     )
                 action = BrowseInteractiveAction(browser_actions=arguments['code'])
+                set_security_risk(action, arguments)
 
+            # ================================================
+            # Task Tracking - TODO: Implement TaskTrackingAction
+            # ================================================
+            elif tool_call.function.name == 'task_tracker':
+                # Temporarily use MessageAction until TaskTrackingAction is implemented
+                command = arguments.get('command', '')
+                task_list = arguments.get('task_list', [])
+                message_content = f"Task tracking: {command}"
+                if task_list:
+                    message_content += f" with {len(task_list)} tasks"
+                
+                action = MessageAction(
+                    content=message_content,
+                    thought=f"Processing task tracking command: {command}"
+                )
 
             # ================================================
             # MCPAction (MCP)

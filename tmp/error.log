@@ -1,59 +1,65 @@
-openhands-app-  | 02:11:04 - openhands:INFO: files.py:245 - Getting git changes in /workspace
-openhands-app-  | 02:11:07 - openhands:ERROR: agent_controller.py:306 - [Agent Controller a3eca362e1e142279bb60ab4b012b280] Error while running the agent (session ID: a3eca362e1e142279bb60ab4b012b280): litellm.BadRequestError: MoonshotException - Invalid request: the message at position 7 with role 'assistant' must not be empty. Traceback: Traceback (most recent call last):
-openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/litellm/llms/openai/openai.py", line 725, in completion
-openhands-app-  |     raise e
-openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/litellm/llms/openai/openai.py", line 653, in completion
-openhands-app-  |     ) = self.make_sync_openai_chat_completion_request(
-openhands-app-  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/litellm/litellm_core_utils/logging_utils.py", line 149, in sync_wrapper
-openhands-app-  |     result = func(*args, **kwargs)
-openhands-app-  |              ^^^^^^^^^^^^^^^^^^^^^
-openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/litellm/llms/openai/openai.py", line 471, in make_sync_openai_chat_completion_request
-openhands-app-  |     raise e
-openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/litellm/llms/openai/openai.py", line 453, in make_sync_openai_chat_completion_request
-openhands-app-  |     raw_response = openai_client.chat.completions.with_raw_response.create(
-openhands-app-  |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/openai/_legacy_response.py", line 364, in wrapped
-openhands-app-  |     return cast(LegacyAPIResponse[R], func(*args, **kwargs))
-openhands-app-  |                                       ^^^^^^^^^^^^^^^^^^^^^
-openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/openai/_utils/_utils.py", line 287, in wrapper
-openhands-app-  |     return func(*args, **kwargs)
-openhands-app-  |            ^^^^^^^^^^^^^^^^^^^^^
-openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/openai/resources/chat/completions/completions.py", line 1087, in create
-openhands-app-  |     return self._post(
-openhands-app-  |            ^^^^^^^^^^^
-openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/openai/_base_client.py", line 1256, in post
-openhands-app-  |     return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
-openhands-app-  |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/openai/_base_client.py", line 1044, in request
-openhands-app-  |     raise self._make_status_error_from_response(err.response) from None
-openhands-app-  | openai.BadRequestError: Error code: 400 - {'error': {'message': "Invalid request: the message at position 7 with role 'assistant' must not be empty", 'type': 'invalid_request_error'}}
+openhands-app-  | 03:15:54 - openhands:ERROR: agent_session.py:388 - [DEBUG] AgentSession._create_runtime: Runtime连接失败: Container openhands-runtime-76e3796d84f943eaaa2ecf4c0cff1e66 has exited.
+openhands-app-  | 03:15:55 - openhands:ERROR: session.py:383 - Agent status error: Container openhands-runtime-76e3796d84f943eaaa2ecf4c0cff1e66 has exited.
+openhands-app-  | 03:15:55 - openhands:INFO: base.py:818 - [runtime 76e3796d84f943eaaa2ecf4c0cff1e66] Selected repo: None, loading microagents from /workspace/.openhands/microagents (inside runtime)
+openhands-app-  | 03:15:55 - openhands:ERROR: agent_session.py:215 - Agent session start failed in 23.732077836990356s
+openhands-app-  | 03:15:55 - openhands:ERROR: session.py:247 - Error creating agent_session: [Errno 111] Connection refused
+openhands-app-  | Traceback (most recent call last):
+openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/httpx/_transports/default.py", line 101, in map_httpcore_exceptions
+openhands-app-  |     yield
+openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/httpx/_transports/default.py", line 250, in handle_request
+openhands-app-  |     resp = self._pool.handle_request(req)
+openhands-app-  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/httpcore/_sync/connection_pool.py", line 256, in handle_request
+openhands-app-  |     raise exc from None
+openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/httpcore/_sync/connection_pool.py", line 236, in handle_request
+openhands-app-  |     response = connection.handle_request(
+openhands-app-  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/httpcore/_sync/connection.py", line 101, in handle_request
+openhands-app-  |     raise exc
+openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/httpcore/_sync/connection.py", line 78, in handle_request
+openhands-app-  |     stream = self._connect(request)
+openhands-app-  |              ^^^^^^^^^^^^^^^^^^^^^^
+openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/httpcore/_sync/connection.py", line 124, in _connect
+openhands-app-  |     stream = self._network_backend.connect_tcp(**kwargs)
+openhands-app-  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/httpcore/_backends/sync.py", line 207, in connect_tcp
+openhands-app-  |     with map_exceptions(exc_map):
+openhands-app-  |          ^^^^^^^^^^^^^^^^^^^^^^^
+openhands-app-  |   File "/usr/local/lib/python3.12/contextlib.py", line 158, in __exit__
+openhands-app-  |     self.gen.throw(value)
+openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/httpcore/_exceptions.py", line 14, in map_exceptions
+openhands-app-  |     raise to_exc(exc) from exc
+openhands-app-  | httpcore.ConnectError: [Errno 111] Connection refused
 openhands-app-  |
-openhands-app-  | During handling of the above exception, another exception occurred:
+openhands-app-  | The above exception was the direct cause of the following exception:
 openhands-app-  |
 openhands-app-  | Traceback (most recent call last):
-openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/litellm/main.py", line 1969, in completion
-openhands-app-  |     raise e
-openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/litellm/main.py", line 1942, in completion
-openhands-app-  |     response = openai_chat_completions.completion(
-openhands-app-  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/litellm/llms/openai/openai.py", line 736, in completion
-openhands-app-  |     raise OpenAIError(
-openhands-app-  | litellm.llms.openai.common_utils.OpenAIError: Error code: 400 - {'error': {'message': "Invalid request: the message at position 7 with role 'assistant' must not be empty", 'type': 'invalid_request_error'}}
-openhands-app-  |
-openhands-app-  | During handling of the above exception, another exception occurred:
-openhands-app-  |
-openhands-app-  | Traceback (most recent call last):
-openhands-app-  |   File "/app/openhands/controller/agent_controller.py", line 304, in _step_with_exception_handling
-openhands-app-  |     await self._step()
-openhands-app-  |   File "/app/openhands/controller/agent_controller.py", line 858, in _step
-openhands-app-  |     raise e
-openhands-app-  |   File "/app/openhands/controller/agent_controller.py", line 813, in _step
-openhands-app-  |     action = self.agent.step(self.state)
-openhands-app-  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-openhands-app-  |   File "/app/openhands/agenthub/codeact_agent/codeact_agent.py", line 197, in step
-openhands-app-  |     response = self.llm.completion(**params)
-openhands-app-  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+openhands-app-  |   File "/app/openhands/server/session/session.py", line 212, in initialize_agent
+openhands-app-  |     await self.agent_session.start(
+openhands-app-  |   File "/app/openhands/server/session/agent_session.py", line 152, in start
+openhands-app-  |     self.memory = await self._create_memory(
+openhands-app-  |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+openhands-app-  |   File "/app/openhands/server/session/agent_session.py", line 489, in _create_memory
+openhands-app-  |     microagents: list[BaseMicroagent] = await call_sync_from_async(
+openhands-app-  |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+openhands-app-  |   File "/app/openhands/utils/async_utils.py", line 18, in call_sync_from_async
+openhands-app-  |     result = await coro
+openhands-app-  |              ^^^^^^^^^^
+openhands-app-  |   File "/usr/local/lib/python3.12/concurrent/futures/thread.py", line 59, in run
+openhands-app-  |     result = self.fn(*self.args, **self.kwargs)
+openhands-app-  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+openhands-app-  |   File "/app/openhands/utils/async_utils.py", line 17, in <lambda>
+openhands-app-  |     coro = loop.run_in_executor(None, lambda: fn(*args, **kwargs))
+openhands-app-  |                                               ^^^^^^^^^^^^^^^^^^^
+openhands-app-  |   File "/app/openhands/runtime/base.py", line 825, in get_microagents_from_selected_repo
+openhands-app-  |     obs = self.read(
+openhands-app-  |           ^^^^^^^^^^
+openhands-app-  |   File "/app/openhands/runtime/impl/action_execution/action_execution_client.py", line 343, in read
+openhands-app-  |     return self.send_action_for_execution(action)
+openhands-app-  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+openhands-app-  |   File "/app/openhands/runtime/impl/action_execution/action_execution_client.py", line 317, in send_action_for_execution
+openhands-app-  |     response = self._send_action_server_request(
+openhands-app-  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/tenacity/__init__.py", line 338, in wrapped_f
 openhands-app-  |     return copy(f, *args, **kw)
 openhands-app-  |            ^^^^^^^^^^^^^^^^^^^^
@@ -74,25 +80,55 @@ openhands-app-  |     raise self._exception
 openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/tenacity/__init__.py", line 480, in __call__
 openhands-app-  |     result = fn(*args, **kwargs)
 openhands-app-  |              ^^^^^^^^^^^^^^^^^^^
-openhands-app-  |   File "/app/openhands/llm/llm.py", line 346, in wrapper
-openhands-app-  |     resp: ModelResponse = self._completion_unwrapped(*args, **kwargs)
-openhands-app-  |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/litellm/utils.py", line 1309, in wrapper
-openhands-app-  |     raise e
-openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/litellm/utils.py", line 1184, in wrapper
-openhands-app-  |     result = original_function(*args, **kwargs)
-openhands-app-  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/litellm/main.py", line 3430, in completion
-openhands-app-  |     raise exception_type(
-openhands-app-  |           ^^^^^^^^^^^^^^^
-openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2301, in exception_type
-openhands-app-  |     raise e
-openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 391, in exception_type
-openhands-app-  |     raise BadRequestError(
-openhands-app-  | litellm.exceptions.BadRequestError: litellm.BadRequestError: MoonshotException - Invalid request: the message at position 7 with role 'assistant' must not be empty
-openhands-app-  |
-openhands-app-  | 02:11:07 - openhands:INFO: agent_controller.py:575 - [Agent Controller a3eca362e1e142279bb60ab4b012b280] Setting agent(CodeActAgent) state from AgentState.RUNNING to AgentState.ERROR
-openhands-app-  | 02:11:07 - openhands:INFO: agent_controller.py:575 - [Agent Controller a3eca362e1e142279bb60ab4b012b280] Setting agent(CodeActAgent) state from AgentState.ERROR to AgentState.ERROR
-openhands-app-  | 02:11:07 - openhands:ERROR: session.py:383 - Agent status error: BadRequestError: litellm.BadRequestError: MoonshotException - Invalid request: the message at position 7 with role 'assistant' must not be empty
-openhands-app-  | 02:11:07 - openhands:ERROR: session.py:322 - Agent status error: BadRequestError: litellm.BadRequestError: MoonshotException - Invalid request: the message at position 7 with role 'assistant' must not be empty
-openhands-app-  | INFO:     192.168.65.1:32512 - "GET /openhands/api/conversations/a3eca362e1e142279bb60ab4b012b280/git/changes HTTP/1.1" 200 OK
+openhands-app-  |   File "/app/openhands/runtime/impl/action_execution/action_execution_client.py", line 126, in _send_action_server_request
+openhands-app-  |     return send_request(self.session, method, url, **kwargs)
+openhands-app-  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/tenacity/__init__.py", line 338, in wrapped_f
+openhands-app-  |     return copy(f, *args, **kw)
+openhands-app-  |            ^^^^^^^^^^^^^^^^^^^^
+openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/tenacity/__init__.py", line 477, in __call__
+openhands-app-  |     do = self.iter(retry_state=retry_state)
+openhands-app-  |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/tenacity/__init__.py", line 378, in iter
+openhands-app-  |     result = action(retry_state)
+openhands-app-  |              ^^^^^^^^^^^^^^^^^^^
+openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/tenacity/__init__.py", line 400, in <lambda>
+openhands-app-  |     self._add_action_func(lambda rs: rs.outcome.result())
+openhands-app-  |                                      ^^^^^^^^^^^^^^^^^^^
+openhands-app-  |   File "/usr/local/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+openhands-app-  |     return self.__get_result()
+openhands-app-  |            ^^^^^^^^^^^^^^^^^^^
+openhands-app-  |   File "/usr/local/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+openhands-app-  |     raise self._exception
+openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/tenacity/__init__.py", line 480, in __call__
+openhands-app-  |     result = fn(*args, **kwargs)
+openhands-app-  |              ^^^^^^^^^^^^^^^^^^^
+openhands-app-  |   File "/app/openhands/runtime/utils/request.py", line 44, in send_request
+openhands-app-  |     response = session.request(method, url, timeout=timeout, **kwargs)
+openhands-app-  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+openhands-app-  |   File "/app/openhands/utils/http_session.py", line 31, in request
+openhands-app-  |     return CLIENT.request(*args, **kwargs)
+openhands-app-  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/httpx/_client.py", line 825, in request
+openhands-app-  |     return self.send(request, auth=auth, follow_redirects=follow_redirects)
+openhands-app-  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/httpx/_client.py", line 914, in send
+openhands-app-  |     response = self._send_handling_auth(
+openhands-app-  |                ^^^^^^^^^^^^^^^^^^^^^^^^^
+openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/httpx/_client.py", line 942, in _send_handling_auth
+openhands-app-  |     response = self._send_handling_redirects(
+openhands-app-  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/httpx/_client.py", line 979, in _send_handling_redirects
+openhands-app-  |     response = self._send_single_request(request)
+openhands-app-  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/httpx/_client.py", line 1014, in _send_single_request
+openhands-app-  |     response = transport.handle_request(request)
+openhands-app-  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/httpx/_transports/default.py", line 249, in handle_request
+openhands-app-  |     with map_httpcore_exceptions():
+openhands-app-  |          ^^^^^^^^^^^^^^^^^^^^^^^^^
+openhands-app-  |   File "/usr/local/lib/python3.12/contextlib.py", line 158, in __exit__
+openhands-app-  |     self.gen.throw(value)
+openhands-app-  |   File "/app/.venv/lib/python3.12/site-packages/httpx/_transports/default.py", line 118, in map_httpcore_exceptions
+openhands-app-  |     raise mapped_exc(message) from exc
+openhands-app-  | httpx.ConnectError: [Errno 111] Connection refused

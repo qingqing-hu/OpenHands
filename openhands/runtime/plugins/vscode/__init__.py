@@ -26,7 +26,7 @@ class VSCodePlugin(Plugin):
     vscode_connection_token: Optional[str] = None
     gateway_process: asyncio.subprocess.Process
 
-    async def initialize(self, username: str) -> None:
+    async def initialize(self, username: str, runtime_id: str = None) -> None:
         # Check if we're on Windows - VSCode plugin is not supported on Windows
         if os.name == 'nt' or sys.platform == 'win32':
             self.vscode_port = None

@@ -155,9 +155,8 @@ def _execute_file_editor(
         return f'ERROR:\n{str(e)}', (None, None)
 
     if result.error:
-        # Enhance error message with self-repair guidance for LLMs
-        enhanced_error = _enhance_error_message_for_llm_self_repair(result.error, command, path, file_text)
-        return f'ERROR:\n{enhanced_error}', (None, None)
+        # Return error message directly (enhanced error function removed)
+        return f'ERROR:\n{result.error}', (None, None)
 
     if not result.output:
         logger.warning(f'No output from file_editor for {path}')
@@ -339,7 +338,12 @@ class ActionExecutor:
         assert self.bash_session is not None
         
         try:
-            await plugin.initialize(self.username)
+            # VSCode plugin needs runtime_id for path-based routing when using Gateway API
+            if isinstance(plugin, VSCodePlugin):
+                runtime_id = os.environ.get('RUNTIME_ID')
+                await plugin.initialize(self.username, runtime_id=runtime_id)
+            else:
+                await plugin.initialize(self.username)
             self.plugins[plugin.name] = plugin
             logger.info(f'[DEBUG] ActionExecutor._init_plugin: 插件初始化成功: {plugin.name}')
         except Exception as e:
