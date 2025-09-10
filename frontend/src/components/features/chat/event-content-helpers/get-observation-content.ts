@@ -120,6 +120,9 @@ export const getObservationContent = (event: OpenHandsObservation): string => {
       return getBrowseObservationContent(event);
     case "recall":
       return getRecallObservationContent(event);
+    case "mcp":
+      // For MCP observations, always return the full JSON content
+      return getDefaultEventContent(event);
     default:
       return getDefaultEventContent(event);
   }

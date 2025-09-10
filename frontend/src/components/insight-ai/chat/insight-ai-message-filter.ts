@@ -194,6 +194,7 @@ export interface InsightAIMessage {
   extras?: {
     tool?: string;
     arguments?: Record<string, any>;
+    result?: any;
   };
   // New fields for enhanced content
   thought?: string; // Separated thought content
@@ -225,6 +226,7 @@ const extractThought = (
  */
 const getDetailedContent = (
   event: OpenHandsAction | OpenHandsObservation,
+  pairedAction?: OpenHandsAction,
 ): string | undefined => {
   try {
     // For error events, return the Chinese detailed message instead of JSON
@@ -244,10 +246,54 @@ const getDetailedContent = (
     }
 
     if (isOpenHandsAction(event)) {
+      // For MCP actions, we want to show tool name, arguments and thought
+      if (event.action === "call_tool_mcp") {
+        let detailedContent = "";
+        const eventArgs = (event as any).args || {};
+
+        if (eventArgs.name) {
+          detailedContent += `**工具名称:** ${eventArgs.name}\n\n`;
+        }
+
+        if (eventArgs.thought) {
+          detailedContent += `**思考过程:**\n${eventArgs.thought}\n\n`;
+        }
+
+        if (eventArgs.arguments) {
+          detailedContent += `**调用参数:**\n\`\`\`json\n${JSON.stringify(eventArgs.arguments, null, 2)}\n\`\`\``;
+        }
+
+        return detailedContent;
+      }
+
       const content = getActionContent(event);
       return content && content.trim() ? content : undefined;
     }
     if (isOpenHandsObservation(event)) {
+      // For MCP observations, create simplified detailed content (tool name + arguments only)
+      // The execution result is now handled separately via extras.result
+      if (event.observation === "mcp") {
+        let detailedContent = "";
+
+        // Use paired action info if available (for action-observation pairs)
+        const actionArgs = pairedAction ? (pairedAction as any).args || {} : {};
+        const eventExtras = (event as any).extras || {};
+
+        const toolName =
+          actionArgs.name || eventExtras.name || eventExtras.tool;
+        const toolArgs = actionArgs.arguments || eventExtras.arguments;
+
+        if (toolName) {
+          detailedContent += `**工具名称:** ${toolName}\n\n`;
+        }
+
+        if (toolArgs) {
+          detailedContent += `**调用参数:**\n\`\`\`json\n${JSON.stringify(toolArgs, null, 2)}\n\`\`\``;
+        }
+
+        return detailedContent;
+      }
+
       const content = getObservationContent(event);
       return content && content.trim() ? content : undefined;
     }
@@ -305,8 +351,9 @@ const parseMessageContent = (
   }
 
   if (isMCPObservation) {
-    // For MCP observations, return the content (tool output)
-    return event.content || "";
+    // For MCP observations, use the localized content which provides proper Chinese display
+    // The detailed raw output will be available in the expandable section
+    return getLocalizedMessageContent(event);
   }
 
   // Check if this is a user message with file attachments
@@ -336,6 +383,11 @@ const getMessageCategory = (
 
   // Action types direct mapping
   if (isOpenHandsAction(event)) {
+    // Special handling for condensation actions (not in standard OpenHands types)
+    if ((event as any).action === "condensation") {
+      return "system";
+    }
+
     switch (event.action) {
       case "run":
         return "command";
@@ -351,8 +403,6 @@ const getMessageCategory = (
         return "think";
       case "system":
         return "system";
-      // case "condensation":
-      //   return "system"; // Condensation actions should be treated as system messages
       case "message":
         return "message";
       default:
@@ -586,6 +636,62 @@ export const convertEventsToInsightAIMessages = (
       const observationStatus = getMessageStatus(observation);
       const observationCategory = getMessageCategory(observation);
 
+      // For MCP action-observation pairs, include action parameters and execution result in observation extras
+      let observationExtras:
+        | { tool?: string; arguments?: Record<string, any>; result?: any }
+        | undefined;
+      if (event.action === "call_tool_mcp") {
+        // Extract execution result from observation content
+        let executionResult = null;
+        if (observation.content) {
+          try {
+            const parsedContent = JSON.parse(observation.content);
+
+            // Check if this is the complex InsightAI structure with content array
+            if (parsedContent.content && Array.isArray(parsedContent.content)) {
+              // Process each content item based on its type
+              for (const item of parsedContent.content) {
+                if (item.type === "text" && item.text) {
+                  try {
+                    // Try to parse the text as JSON (tool result)
+                    const textResult = JSON.parse(item.text);
+                    executionResult = textResult;
+                    break; // Use the first successfully parsed text result
+                  } catch (e) {
+                    // If not JSON, use as plain text
+                    executionResult = item.text;
+                  }
+                } else if (item.type === "image") {
+                  // Handle image content type
+                  executionResult = {
+                    type: "image",
+                    source: item.source || "image data",
+                  };
+                } else if (item.type === "json") {
+                  // Handle direct JSON content type
+                  executionResult = item.data || item;
+                } else {
+                  // Handle other content types
+                  executionResult = item;
+                }
+              }
+            } else {
+              // This is the simple OpenHands native structure - use directly
+              executionResult = parsedContent;
+            }
+          } catch (e) {
+            // If parsing fails, use raw content as fallback
+            executionResult = observation.content;
+          }
+        }
+
+        observationExtras = {
+          tool: eventArgs.name,
+          arguments: eventArgs.arguments,
+          result: executionResult,
+        };
+      }
+
       convertedMessages.push({
         id: observation.id.toString(),
         type: "observation",
@@ -597,10 +703,10 @@ export const convertEventsToInsightAIMessages = (
         fileUrls: eventArgs.file_urls || undefined,
         status: observationStatus,
         isError: isErrorObservation(observation),
-        extras: undefined,
+        extras: observationExtras,
         thought: undefined,
-        detailedContent: getDetailedContent(observation),
-        hasExpandableContent: !!getDetailedContent(observation),
+        detailedContent: getDetailedContent(observation, event),
+        hasExpandableContent: !!getDetailedContent(observation, event),
       });
 
       return; // Skip individual processing
@@ -643,12 +749,42 @@ export const convertEventsToInsightAIMessages = (
       // MCP observations are tool results/output
       messageType = "observation";
 
-      // Extract MCP tool info from observation extras
+      // Extract MCP tool info from observation extras or content
       const eventExtras = (event as any).extras || {};
-      if (eventExtras.name || eventExtras.arguments) {
+      let toolName = eventExtras.name || eventExtras.tool;
+      let toolArgs = eventExtras.arguments;
+
+      // If not found in extras, try to parse from content
+      if (!toolName && event.content) {
+        try {
+          const parsedContent = JSON.parse(event.content);
+          if (parsedContent.content && Array.isArray(parsedContent.content)) {
+            // Look for tool info in nested content
+            for (const item of parsedContent.content) {
+              if (item.text && typeof item.text === "string") {
+                try {
+                  const nestedData = JSON.parse(item.text);
+                  if (nestedData.tool_name) {
+                    toolName = nestedData.tool_name;
+                  }
+                  if (nestedData.arguments) {
+                    toolArgs = nestedData.arguments;
+                  }
+                } catch (e) {
+                  // Continue parsing other items
+                }
+              }
+            }
+          }
+        } catch (e) {
+          // If parsing fails, we'll use what we have
+        }
+      }
+
+      if (toolName || toolArgs) {
         extras = {
-          tool: eventExtras.name, // Tool name is in extras.name for observations
-          arguments: eventExtras.arguments,
+          tool: toolName,
+          arguments: toolArgs,
         };
       }
     }

@@ -1,0 +1,182 @@
+[
+  {
+    "path": "frontend/src/components/insight-ai/chat/insight-ai-chat-input.tsx",
+    "your_modified": "2025-09-08T21:13:23",
+    "colleague_modified": "2025-09-10T01:42:01",
+    "colleague_size": 5351,
+    "your_size": 5545,
+    "colleague_full_path": "/tmp/colleague-analysis-2/OpenHands/frontend/src/components/insight-ai/chat/insight-ai-chat-input.tsx",
+    "your_full_path": "/Users/yddyf/Documents/code/openhands8/OpenHands-main-3/frontend/src/components/insight-ai/chat/insight-ai-chat-input.tsx"
+  },
+  {
+    "path": "frontend/src/i18n/declaration.ts",
+    "your_modified": "2025-09-09T10:48:07.815566",
+    "colleague_modified": "2025-09-08T10:56:20",
+    "colleague_size": 45244,
+    "your_size": 50704,
+    "colleague_full_path": "/tmp/colleague-analysis-2/OpenHands/frontend/src/i18n/declaration.ts",
+    "your_full_path": "/Users/yddyf/Documents/code/openhands8/OpenHands-main-3/frontend/src/i18n/declaration.ts"
+  },
+  {
+    "path": "frontend/src/i18n/translation.json",
+    "your_modified": "2025-09-10T15:02:15",
+    "colleague_modified": "2025-09-08T10:56:20",
+    "colleague_size": 584663,
+    "your_size": 626968,
+    "colleague_full_path": "/tmp/colleague-analysis-2/OpenHands/frontend/src/i18n/translation.json",
+    "your_full_path": "/Users/yddyf/Documents/code/openhands8/OpenHands-main-3/frontend/src/i18n/translation.json"
+  },
+  {
+    "path": "frontend/src/components/features/chat/event-content-helpers/get-observation-content.ts",
+    "your_modified": "2025-09-10T15:02:15",
+    "colleague_modified": "2025-09-08T17:57:18",
+    "colleague_size": 4200,
+    "your_size": 4073,
+    "colleague_full_path": "/tmp/colleague-analysis-2/OpenHands/frontend/src/components/features/chat/event-content-helpers/get-observation-content.ts",
+    "your_full_path": "/Users/yddyf/Documents/code/openhands8/OpenHands-main-3/frontend/src/components/features/chat/event-content-helpers/get-observation-content.ts"
+  },
+  {
+    "path": "frontend/src/components/insight-ai/dashboard/insight-ai-dashboard.tsx",
+    "your_modified": "2025-09-08T21:13:23",
+    "colleague_modified": "2025-09-08T17:57:18",
+    "colleague_size": 8249,
+    "your_size": 8282,
+    "colleague_full_path": "/tmp/colleague-analysis-2/OpenHands/frontend/src/components/insight-ai/dashboard/insight-ai-dashboard.tsx",
+    "your_full_path": "/Users/yddyf/Documents/code/openhands8/OpenHands-main-3/frontend/src/components/insight-ai/dashboard/insight-ai-dashboard.tsx"
+  },
+  {
+    "path": "frontend/src/routes/insight-ai-layout.tsx",
+    "your_modified": "2025-09-08T21:13:23",
+    "colleague_modified": "2025-09-10T01:37:43",
+    "colleague_size": 25802,
+    "your_size": 19729,
+    "colleague_full_path": "/tmp/colleague-analysis-2/OpenHands/frontend/src/routes/insight-ai-layout.tsx",
+    "your_full_path": "/Users/yddyf/Documents/code/openhands8/OpenHands-main-3/frontend/src/routes/insight-ai-layout.tsx"
+  },
+  {
+    "path": "frontend/src/components/insight-ai/shared/insight-ai-error-message.tsx",
+    "your_modified": "2025-09-08T21:13:23",
+    "colleague_modified": "2025-09-10T01:42:01",
+    "colleague_size": 4680,
+    "your_size": 4722,
+    "colleague_full_path": "/tmp/colleague-analysis-2/OpenHands/frontend/src/components/insight-ai/shared/insight-ai-error-message.tsx",
+    "your_full_path": "/Users/yddyf/Documents/code/openhands8/OpenHands-main-3/frontend/src/components/insight-ai/shared/insight-ai-error-message.tsx"
+  },
+  {
+    "path": "frontend/src/components/insight-ai/chat/insight-ai-conversation.tsx",
+    "your_modified": "2025-09-08T21:13:23",
+    "colleague_modified": "2025-09-10T01:42:01",
+    "colleague_size": 10455,
+    "your_size": 6900,
+    "colleague_full_path": "/tmp/colleague-analysis-2/OpenHands/frontend/src/components/insight-ai/chat/insight-ai-conversation.tsx",
+    "your_full_path": "/Users/yddyf/Documents/code/openhands8/OpenHands-main-3/frontend/src/components/insight-ai/chat/insight-ai-conversation.tsx"
+  },
+  {
+    "path": "frontend/src/api/insight-ai-service/insight-ai-service.api.ts",
+    "your_modified": "2025-09-08T21:13:23",
+    "colleague_modified": "2025-09-10T01:42:01",
+    "colleague_size": 16788,
+    "your_size": 16933,
+    "colleague_full_path": "/tmp/colleague-analysis-2/OpenHands/frontend/src/api/insight-ai-service/insight-ai-service.api.ts",
+    "your_full_path": "/Users/yddyf/Documents/code/openhands8/OpenHands-main-3/frontend/src/api/insight-ai-service/insight-ai-service.api.ts"
+  },
+  {
+    "path": "frontend/src/components/features/chat/event-content-helpers/get-action-content.ts",
+    "your_modified": "2025-09-10T15:02:15",
+    "colleague_modified": "2025-09-10T01:42:01",
+    "colleague_size": 4177,
+    "your_size": 4172,
+    "colleague_full_path": "/tmp/colleague-analysis-2/OpenHands/frontend/src/components/features/chat/event-content-helpers/get-action-content.ts",
+    "your_full_path": "/Users/yddyf/Documents/code/openhands8/OpenHands-main-3/frontend/src/components/features/chat/event-content-helpers/get-action-content.ts"
+  },
+  {
+    "path": "frontend/src/services/insight-ai-terminal-service.ts",
+    "your_modified": "2025-09-08T21:13:23",
+    "colleague_modified": "2025-09-10T01:42:01",
+    "colleague_size": 1314,
+    "your_size": 2108,
+    "colleague_full_path": "/tmp/colleague-analysis-2/OpenHands/frontend/src/services/insight-ai-terminal-service.ts",
+    "your_full_path": "/Users/yddyf/Documents/code/openhands8/OpenHands-main-3/frontend/src/services/insight-ai-terminal-service.ts"
+  },
+  {
+    "path": "frontend/src/components/insight-ai/task-list/insight-ai-task-list.tsx",
+    "your_modified": "2025-09-08T21:13:23",
+    "colleague_modified": "2025-09-10T01:37:43",
+    "colleague_size": 21792,
+    "your_size": 18124,
+    "colleague_full_path": "/tmp/colleague-analysis-2/OpenHands/frontend/src/components/insight-ai/task-list/insight-ai-task-list.tsx",
+    "your_full_path": "/Users/yddyf/Documents/code/openhands8/OpenHands-main-3/frontend/src/components/insight-ai/task-list/insight-ai-task-list.tsx"
+  },
+  {
+    "path": "frontend/src/hooks/insight-ai/use-insight-ai-messages.ts",
+    "your_modified": "2025-09-08T21:13:23",
+    "colleague_modified": "2025-09-10T01:42:01",
+    "colleague_size": 3598,
+    "your_size": 5670,
+    "colleague_full_path": "/tmp/colleague-analysis-2/OpenHands/frontend/src/hooks/insight-ai/use-insight-ai-messages.ts",
+    "your_full_path": "/Users/yddyf/Documents/code/openhands8/OpenHands-main-3/frontend/src/hooks/insight-ai/use-insight-ai-messages.ts"
+  },
+  {
+    "path": "frontend/src/components/insight-ai/chat/insight-ai-message-filter.ts",
+    "your_modified": "2025-09-08T21:13:23",
+    "colleague_modified": "2025-09-10T01:42:01",
+    "colleague_size": 28881,
+    "your_size": 23769,
+    "colleague_full_path": "/tmp/colleague-analysis-2/OpenHands/frontend/src/components/insight-ai/chat/insight-ai-message-filter.ts",
+    "your_full_path": "/Users/yddyf/Documents/code/openhands8/OpenHands-main-3/frontend/src/components/insight-ai/chat/insight-ai-message-filter.ts"
+  },
+  {
+    "path": "frontend/src/components/insight-ai/code-panel/insight-ai-terminal.tsx",
+    "your_modified": "2025-09-08T21:13:23",
+    "colleague_modified": "2025-09-10T01:42:01",
+    "colleague_size": 10337,
+    "your_size": 9541,
+    "colleague_full_path": "/tmp/colleague-analysis-2/OpenHands/frontend/src/components/insight-ai/code-panel/insight-ai-terminal.tsx",
+    "your_full_path": "/Users/yddyf/Documents/code/openhands8/OpenHands-main-3/frontend/src/components/insight-ai/code-panel/insight-ai-terminal.tsx"
+  },
+  {
+    "path": "frontend/src/hooks/insight-ai/use-insight-ai-ws-client.ts",
+    "your_modified": "2025-09-08T21:13:23",
+    "colleague_modified": "2025-09-10T01:42:01",
+    "colleague_size": 17421,
+    "your_size": 12219,
+    "colleague_full_path": "/tmp/colleague-analysis-2/OpenHands/frontend/src/hooks/insight-ai/use-insight-ai-ws-client.ts",
+    "your_full_path": "/Users/yddyf/Documents/code/openhands8/OpenHands-main-3/frontend/src/hooks/insight-ai/use-insight-ai-ws-client.ts"
+  },
+  {
+    "path": "frontend/src/components/insight-ai/chat/insight-ai-collapsible-message.tsx",
+    "your_modified": "2025-09-08T21:13:23",
+    "colleague_modified": "2025-09-10T01:42:01",
+    "colleague_size": 17129,
+    "your_size": 17460,
+    "colleague_full_path": "/tmp/colleague-analysis-2/OpenHands/frontend/src/components/insight-ai/chat/insight-ai-collapsible-message.tsx",
+    "your_full_path": "/Users/yddyf/Documents/code/openhands8/OpenHands-main-3/frontend/src/components/insight-ai/chat/insight-ai-collapsible-message.tsx"
+  },
+  {
+    "path": "frontend/src/components/features/chat/chat-message.tsx",
+    "your_modified": "2025-09-10T15:02:15",
+    "colleague_modified": "2025-09-08T10:56:20",
+    "colleague_size": 2732,
+    "your_size": 3448,
+    "colleague_full_path": "/tmp/colleague-analysis-2/OpenHands/frontend/src/components/features/chat/chat-message.tsx",
+    "your_full_path": "/Users/yddyf/Documents/code/openhands8/OpenHands-main-3/frontend/src/components/features/chat/chat-message.tsx"
+  },
+  {
+    "path": "frontend/src/components/insight-ai/chat/insight-ai-unified-message.tsx",
+    "your_modified": "2025-09-08T21:13:23",
+    "colleague_modified": "2025-09-10T01:42:01",
+    "colleague_size": 30930,
+    "your_size": 26956,
+    "colleague_full_path": "/tmp/colleague-analysis-2/OpenHands/frontend/src/components/insight-ai/chat/insight-ai-unified-message.tsx",
+    "your_full_path": "/Users/yddyf/Documents/code/openhands8/OpenHands-main-3/frontend/src/components/insight-ai/chat/insight-ai-unified-message.tsx"
+  },
+  {
+    "path": "frontend/src/components/insight-ai/conversations/insight-ai-conversation-manager.tsx",
+    "your_modified": "2025-09-08T21:13:23",
+    "colleague_modified": "2025-09-10T01:42:01",
+    "colleague_size": 13858,
+    "your_size": 13822,
+    "colleague_full_path": "/tmp/colleague-analysis-2/OpenHands/frontend/src/components/insight-ai/conversations/insight-ai-conversation-manager.tsx",
+    "your_full_path": "/Users/yddyf/Documents/code/openhands8/OpenHands-main-3/frontend/src/components/insight-ai/conversations/insight-ai-conversation-manager.tsx"
+  }
+]

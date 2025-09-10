@@ -213,8 +213,10 @@ export function InsightAIConversationManager() {
             </h3>
             <p className="text-insight-text-secondary mb-4">
               {(() => {
-                if (searchQuery) return `No conversations match "${searchQuery}"`;
-                if (showArchived) return "You haven't archived any conversations yet.";
+                if (searchQuery)
+                  return `No conversations match "${searchQuery}"`;
+                if (showArchived)
+                  return "You haven't archived any conversations yet.";
                 return "Start a new conversation to begin chatting with AI.";
               })()}
             </p>

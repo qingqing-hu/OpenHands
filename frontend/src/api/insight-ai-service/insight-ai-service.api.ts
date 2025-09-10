@@ -34,9 +34,7 @@ export class InsightAIService {
     if (type) params.append("type", type);
 
     // 获取所有 conversations，显示全部但区分 InsightAI 类型
-    console.log("InsightAI: Calling getUserConversations()");
     const conversations = await OpenHands.getUserConversations();
-    console.log("InsightAI: Received conversations:", conversations.length);
 
     // 转换为 TaskItem 格式，显示所有对话但区分类型
     const tasks: TaskItem[] = conversations
@@ -317,9 +315,9 @@ export class InsightAIService {
           if (event.source === "user") {
             type = "user";
             content =
-              event.message || 
-              (event.args?.content as string) || 
-              (event.args?.message as string) || 
+              event.message ||
+              (event.args?.content as string) ||
+              (event.args?.message as string) ||
               "";
           } else if (event.source === "agent") {
             type = "assistant";
@@ -352,9 +350,9 @@ export class InsightAIService {
           ) {
             type = "assistant";
             content =
-              event.message || 
-              (event.args?.outputs as string) || 
-              (event.args?.content as string) || 
+              event.message ||
+              (event.args?.outputs as string) ||
+              (event.args?.content as string) ||
               "";
           } else if (event.args?.content) {
             type = event.source === "user" ? "user" : "assistant";

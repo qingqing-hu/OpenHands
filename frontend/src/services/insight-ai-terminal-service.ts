@@ -11,10 +11,6 @@ export function getInsightAITerminalCommand(
     args: { command, hidden },
     source: "user", // Valid EventSource value for user-initiated commands
   };
-  console.log(
-    "🔍 [Terminal Service] Creating terminal command event:",
-    JSON.stringify(event),
-  );
   return event;
 }
 
@@ -30,48 +26,28 @@ interface TerminalEvent {
 }
 
 export function isTerminalCommand(event: TerminalEvent): boolean {
-  const isCommand = event?.action === ActionType.RUN;
-  if (isCommand) {
-    console.log("🔍 [Terminal Service] Identified as terminal command:", {
-      action: event.action,
-      args: event.args,
-      source: event.source,
-    });
-  }
-  return isCommand;
+  return event?.action === ActionType.RUN;
 }
 
 export function isTerminalOutput(event: TerminalEvent): boolean {
   let isOutput = false;
-  let reason = "";
 
   // Check for command output patterns
   if (event?.source === "agent" && event?.content) {
     isOutput = true;
-    reason = "agent source with content";
   }
 
   // Check for observation type that contains command output
   if (event?.observation === "run" && event?.content) {
     isOutput = true;
-    reason = "run observation with content";
   }
 
   // Check for stdout/stderr patterns
-  if ((event?.extras as any)?.command_id && (event?.content || event?.message)) {
+  if (
+    (event?.extras as any)?.command_id &&
+    (event?.content || event?.message)
+  ) {
     isOutput = true;
-    reason = "command_id with content/message";
-  }
-
-  if (isOutput) {
-    console.log("🔍 [Terminal Service] Identified as terminal output:", {
-      reason,
-      observation: event?.observation,
-      source: event?.source,
-      content: event?.content?.substring?.(0, 100),
-      message: event?.message?.substring?.(0, 100),
-      extras: event?.extras,
-    });
   }
 
   return isOutput;

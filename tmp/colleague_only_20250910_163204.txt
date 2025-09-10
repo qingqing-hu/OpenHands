@@ -1,0 +1,4 @@
+# 同事独有的文件列表
+frontend/src/components/insight-ai/shared/websocket-error-modal.tsx
+frontend/src/hooks/insight-ai/use-conversation-loading-state.ts
+frontend/src/components/insight-ai/shared/insight-ai-loading-states.tsx

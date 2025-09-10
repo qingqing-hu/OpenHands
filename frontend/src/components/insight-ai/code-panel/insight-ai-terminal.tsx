@@ -15,9 +15,13 @@ export function InsightAITerminal({ taskId }: InsightAITerminalProps) {
   const terminalRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { terminalEntries, send, isConnected } = useInsightAIMessages(
-    taskId || "",
-  );
+  const {
+    terminalEntries,
+    send,
+    isConnected,
+    webSocketStatus,
+    hasConnectionError,
+  } = useInsightAIMessages(taskId || "");
 
   // Combine real terminal entries with pending command
   const displayEntries = React.useMemo(() => {
@@ -43,12 +47,10 @@ export function InsightAITerminal({ taskId }: InsightAITerminalProps) {
     if (!command) return;
 
     if (!isConnected) {
-      console.log("🔍 [Terminal] WebSocket not connected");
       return;
     }
 
     const commandEvent = getInsightAITerminalCommand(command);
-    console.log("🔍 [Terminal] Sending command:", command);
 
     try {
       // Add to command history
@@ -189,10 +191,21 @@ export function InsightAITerminal({ taskId }: InsightAITerminalProps) {
         <div className="mb-2 text-sm opacity-75">
           <span style={{ color: "#89DDFF" }}>InsightAI Terminal</span>
           <span
-            className="ml-4"
-            style={{ color: isConnected ? "#C3E88D" : "#FF5370" }}
+            className={`ml-4 ${webSocketStatus === "CONNECTING" ? "animate-pulse" : ""}`}
+            style={{
+              color:
+                webSocketStatus === "CONNECTED"
+                  ? "#C3E88D"
+                  : webSocketStatus === "CONNECTING"
+                    ? "#FFCB6B"
+                    : "#FF5370",
+            }}
           >
-            {isConnected ? "● Connected" : "● Disconnected"}
+            {webSocketStatus === "CONNECTED"
+              ? "● Connected"
+              : webSocketStatus === "CONNECTING"
+                ? "● Connecting..."
+                : "● Disconnected"}
           </span>
         </div>
 
@@ -224,8 +237,8 @@ export function InsightAITerminal({ taskId }: InsightAITerminalProps) {
           </div>
         ))}
 
-        {/* Welcome message when no terminal data */}
-        {displayEntries.length === 0 && (
+        {/* Welcome message when connected and no terminal data */}
+        {displayEntries.length === 0 && isConnected && (
           <div className="mb-4 opacity-75">
             <div style={{ color: "#89DDFF" }}>
               Welcome to InsightAI Terminal
@@ -235,6 +248,18 @@ export function InsightAITerminal({ taskId }: InsightAITerminalProps) {
             </div>
             <div className="mt-1 text-xs" style={{ color: "#808080" }}>
               Use ↑/↓ for command history
+            </div>
+          </div>
+        )}
+
+        {/* WebSocket connection error message - only show if connection failed */}
+        {hasConnectionError && displayEntries.length === 0 && (
+          <div className="mb-4">
+            <div className="flex items-center gap-2">
+              <span style={{ color: "#FF5370" }}>⚠️</span>
+              <div style={{ color: "#FF5370" }} className="font-medium">
+                WebSocket连接异常
+              </div>
             </div>
           </div>
         )}
@@ -249,39 +274,37 @@ export function InsightAITerminal({ taskId }: InsightAITerminalProps) {
           </div>
         )}
 
-        {/* Current command input line */}
-        <div className="flex items-center">
-          <span style={{ color: "#FFCB6B" }}>insight-ai@workspace</span>
-          <span style={{ color: "#89DDFF" }}>:</span>
-          <span style={{ color: "#89DDFF" }}>~</span>
-          <span style={{ color: "#89DDFF" }}>$ </span>
-          <input
-            ref={inputRef}
-            type="text"
-            value={commandInput}
-            onChange={(e) => setCommandInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={!isConnected}
-            readOnly={!!pendingCommand}
-            className="flex-1 bg-transparent border-none outline-none text-inherit"
-            style={{
-              color: "#EEFFFF",
-              fontFamily: "inherit",
-              fontSize: "inherit",
-            }}
-            placeholder={(() => {
-              if (!isConnected) return "Connecting...";
-              if (pendingCommand) return "Executing...";
-              return "";
-            })()}
-            autoComplete="off"
-          />
-          {!pendingCommand && isConnected && (
-            <span className="animate-pulse" style={{ color: "#89DDFF" }}>
-              _
-            </span>
-          )}
-        </div>
+        {/* Current command input line - only show when connected */}
+        {isConnected && (
+          <div className="flex items-center">
+            <span style={{ color: "#FFCB6B" }}>insight-ai@workspace</span>
+            <span style={{ color: "#89DDFF" }}>:</span>
+            <span style={{ color: "#89DDFF" }}>~</span>
+            <span style={{ color: "#89DDFF" }}>$ </span>
+            <input
+              ref={inputRef}
+              type="text"
+              value={commandInput}
+              onChange={(e) => setCommandInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={!isConnected}
+              readOnly={!!pendingCommand}
+              className="flex-1 bg-transparent border-none outline-none text-inherit"
+              style={{
+                color: "#EEFFFF",
+                fontFamily: "inherit",
+                fontSize: "inherit",
+              }}
+              placeholder={pendingCommand ? "Executing..." : ""}
+              autoComplete="off"
+            />
+            {!pendingCommand && (
+              <span className="animate-pulse" style={{ color: "#89DDFF" }}>
+                _
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Spacer to ensure there's always scrollable space */}
         <div className="h-4" />

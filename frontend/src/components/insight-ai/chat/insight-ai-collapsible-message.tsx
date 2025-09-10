@@ -11,7 +11,6 @@ import { insightAICode } from "../markdown/insight-ai-code";
 import { InsightAIStatusIndicator } from "../shared/insight-ai-status-indicator";
 import { InsightAIUnifiedMessage } from "./insight-ai-unified-message";
 import { InsightAIErrorMessage } from "../shared/insight-ai-error-message";
-import { decodeHtmlEntities } from "../shared/html-entity-decoder";
 // import { useScrollbarVisibility } from "../../hooks/insight-ai/use-scrollbar-visibility";
 
 interface InsightAICollapsibleMessageProps {
@@ -359,11 +358,18 @@ const CollapsibleMessageItem = React.memo(
     const shouldShowCollapsed = shouldBeCollapsible();
 
     return (
-      <div className="mb-4">
+      <div
+        className="mb-4"
+        style={
+          message.type === "user"
+            ? { width: "100%" }
+            : { maxWidth: "80%", width: "fit-content" }
+        }
+      >
         {message.type === "user" ? (
           // User message layout (no avatar, right-aligned)
-          <div className="flex items-start justify-end">
-            <div className="flex flex-col items-end">
+          <div className="flex items-start justify-end w-full">
+            <div className="flex flex-col items-end w-full">
               {/* Timestamp */}
               <div className="flex items-center gap-2 mb-1 justify-end">
                 <div className="text-xs text-gray-500">{formatTime}</div>
@@ -372,7 +378,11 @@ const CollapsibleMessageItem = React.memo(
               {/* User message content */}
               <div
                 className="px-3 py-2 rounded-lg shadow-sm bg-blue-600 text-white"
-                style={{ minHeight: "38px" }}
+                style={{
+                  minHeight: "38px",
+                  maxWidth: "80%",
+                  width: "fit-content",
+                }}
               >
                 <div className="text-sm leading-relaxed">
                   <Markdown remarkPlugins={[remarkGfm, remarkBreaks]}>
@@ -424,11 +434,11 @@ const CollapsibleMessageItem = React.memo(
             </div>
 
             {/* Message content row - aligned with avatar position */}
-            <div style={{ minWidth: "200px", maxWidth: "100%", width: "100%" }}>
+            <div style={{ minWidth: "200px", width: "100%" }}>
               {/* Message content with inline status indicator for MCP tools */}
               <div
                 className="flex items-center gap-2"
-                style={{ maxWidth: "100%", width: "100%" }}
+                style={{ width: "100%" }}
               >
                 {/* Message content */}
                 <div className="inline-block">
@@ -436,17 +446,8 @@ const CollapsibleMessageItem = React.memo(
                   {message.isError ? (
                     // Error messages - use dedicated error component
                     <InsightAIErrorMessage message={message} />
-                  ) : (message as any).type === "user" ? (
-                    // User messages - simple text display
-                    <div
-                      className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere word-break p-3 rounded-lg shadow-sm text-gray-900"
-                      style={{ backgroundColor: "#fafafa" }}
-                      dangerouslySetInnerHTML={{
-                        __html: decodeHtmlEntities(message.content),
-                      }}
-                    />
                   ) : (
-                    // All other messages - use unified renderer
+                    // All non-user messages - use unified renderer
                     <InsightAIUnifiedMessage message={message} />
                   )}
                 </div>
