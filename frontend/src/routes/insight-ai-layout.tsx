@@ -457,12 +457,12 @@ export default function InsightAILayout() {
                             setTimeout(() => setIsRefreshing(false), 500);
                           }
                         }}
-                        className="hover:bg-gray-200 rounded transition-all duration-300 flex items-center justify-center w-6 h-6 p-0"
+                        className="hover:bg-gray-200 rounded transition-all duration-300 flex items-center justify-center w-8 h-8 p-0"
                         title="刷新对话列表"
                         disabled={isRefreshing}
                       >
                         <BiRefresh
-                          className={`w-4 h-4 text-gray-500 transition-transform duration-500 ${isRefreshing ? "animate-spin" : ""}`}
+                          className={`w-5 h-5 text-gray-600 transition-transform duration-500 ${isRefreshing ? "animate-spin" : ""}`}
                         />
                       </button>
                     </div>
@@ -471,7 +471,6 @@ export default function InsightAILayout() {
                 <button
                   onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
                   className={`hover:bg-gray-200 rounded transition-all duration-300 flex items-center justify-center w-8 h-8 p-0 ${sidebarCollapsed ? '' : 'ml-2'}`}
-                  style={sidebarCollapsed ? {} : { marginTop: "0.25rem" }}
                   title={sidebarCollapsed ? "展开对话栏" : "收起对话栏"}
                 >
                   <div className="relative w-5 h-5">

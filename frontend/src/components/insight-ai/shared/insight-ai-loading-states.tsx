@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Play, RefreshCw, WifiOff } from "lucide-react";
+import { Play, RefreshCw } from "lucide-react";
+import { WebSocketConnectionError } from "./websocket-connection-error";
 
 export type ConversationLoadingState =
   | "idle" // 空闲状态
@@ -49,7 +50,7 @@ export function ConversationLoadingIndicator({
           title: "连接中",
           description: "正在连接到服务器...",
           showSpinner: true,
-          color: "text-blue-600",
+          color: "text-yellow-600",
         };
       case "connected":
         return {
@@ -70,7 +71,7 @@ export function ConversationLoadingIndicator({
           title: "处理数据",
           description: `正在处理 ${messageCount} 条消息...`,
           showSpinner: true,
-          color: "text-purple-600",
+          color: "text-blue-600",
         };
       case "ready":
         return {
@@ -83,7 +84,7 @@ export function ConversationLoadingIndicator({
         return {
           title: "WebSocket连接异常",
           description:
-            "与WebSocket服务器的连接异常断开，导致无法查看对话内容。",
+            "无法连接上WebSocket服务器，对话内容不可查看。",
           showSpinner: false,
           color: "text-red-600",
         };
@@ -248,34 +249,18 @@ export function ConversationLoadingIndicator({
 
         {/* WebSocket连接异常显示 */}
         {state === "error" && onReconnect && (
-          <div className="text-center">
-            <div className="w-16 h-16 mx-auto mb-4 bg-red-50 rounded-2xl flex items-center justify-center">
-              <WifiOff className="w-8 h-8 text-red-400" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              WebSocket连接异常
-            </h3>
-            <p className="text-gray-600 mb-4">
-              与WebSocket服务器的连接异常断开，导致无法查看对话内容。
-            </p>
-            <button
-              onClick={onReconnect}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <RefreshCw className="w-4 h-4" />
-              立即重连
-            </button>
-          </div>
+          <WebSocketConnectionError
+            onReconnect={onReconnect}
+            variant="full"
+          />
         )}
 
-        {/* 没有重连回调时的简单重连按钮 */}
+        {/* 没有重连回调时的fallback显示 */}
         {state === "error" && !onReconnect && (
-          <button
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            onClick={() => window.location.reload()}
-          >
-            刷新页面
-          </button>
+          <WebSocketConnectionError
+            variant="full"
+            reconnectText="刷新页面"
+          />
         )}
       </div>
     </div>

@@ -1,5 +1,5 @@
 import React from "react";
-import { BarChart3, WifiOff, RefreshCw, Wifi } from "lucide-react";
+import { BarChart3, WifiOff, Wifi } from "lucide-react";
 import { LuPanelLeft, LuPanelRight } from "react-icons/lu";
 import { useQueryClient } from "@tanstack/react-query";
 import { InsightAICollapsibleMessages } from "./insight-ai-collapsible-message";
@@ -7,7 +7,9 @@ import { InsightAIChatInput } from "./insight-ai-chat-input";
 import { createChatMessage } from "#/services/chat-service";
 import { useInsightAIMessages } from "#/hooks/insight-ai/use-insight-ai-messages";
 import { useConversationLoadingState } from "#/hooks/insight-ai/use-conversation-loading-state";
+import { useInsightAIAgentState } from "#/hooks/insight-ai/use-insight-ai-agent-state";
 import { ConversationLoadingIndicator } from "../shared/insight-ai-loading-states";
+import { WebSocketConnectionError } from "../shared/websocket-connection-error";
 import OpenHands from "#/api/open-hands";
 import { insightAIKeys } from "#/hooks/insight-ai/use-insight-ai-tasks";
 
@@ -26,20 +28,36 @@ const WebSocketStatusIcon = React.memo(({ status }: { status: string }) => {
         return {
           icon: Wifi,
           color: "text-green-500",
+          bgColor: "bg-green-50",
           title: "已连接",
         };
       case "CONNECTING":
         return {
           icon: Wifi,
           color: "text-yellow-500 animate-pulse",
+          bgColor: "bg-yellow-50",
           title: "连接中...",
         };
       case "DISCONNECTED":
-      default:
         return {
           icon: WifiOff,
           color: "text-red-500",
+          bgColor: "bg-red-50",
           title: "连接断开",
+        };
+      case "NOT_CONNECTED":
+        return {
+          icon: WifiOff,
+          color: "text-gray-400",
+          bgColor: "bg-gray-50",
+          title: "未连接",
+        };
+      default:
+        return {
+          icon: WifiOff,
+          color: "text-gray-400",
+          bgColor: "bg-gray-50",
+          title: "未连接",
         };
     }
   };
@@ -49,13 +67,14 @@ const WebSocketStatusIcon = React.memo(({ status }: { status: string }) => {
 
   return (
     <div
-      className={`flex items-center justify-center w-6 h-6 ${config.color}`}
+      className={`flex items-center justify-center w-6 h-6 rounded ${config.bgColor} ${config.color}`}
       title={config.title}
     >
       <IconComponent className="w-4 h-4" />
     </div>
   );
 });
+
 
 // 独立的头部组件，确保始终显示
 const ConversationHeader = React.memo(
@@ -68,7 +87,7 @@ const ConversationHeader = React.memo(
     conversationTitle: string;
     onTogglePanel?: () => void;
     isPanelExpanded?: boolean;
-    webSocketStatus?: string;
+    webSocketStatus?: "CONNECTING" | "CONNECTED" | "DISCONNECTED" | "NOT_CONNECTED";
   }) => (
     <div className="bg-white px-6 py-3" style={{ height: "64px" }}>
       <div className="flex items-center justify-between">
@@ -158,13 +177,44 @@ export function InsightAIConversation({
     conversationRuntimeStatus: Boolean(conversationData?.runtime_status),
   });
 
-  // 监听对话状态变化，同步更新左侧栏任务列表
+  // 使用智能体状态管理
+  const {
+    agentState,
+    isWaitingForUserInput,
+    isInputDisabled,
+    getAgentStateMessage,
+  } = useInsightAIAgentState(parsedEvents, {
+    webSocketStatus,
+    reconnect,
+  });
+
+
+  // 使用ref跟踪对话状态，只在真正的对话状态变化时无效化查询
+  const conversationStatusRef = React.useRef<string | undefined>(undefined);
+  
   React.useEffect(() => {
-    if (conversationData?.status) {
-      // 当对话状态发生变化时，刷新InsightAI任务列表以保持同步
-      queryClient.invalidateQueries({
-        queryKey: insightAIKeys.tasks(),
-      });
+    const currentStatus = conversationData?.status;
+    const previousStatus = conversationStatusRef.current;
+    
+    // 只在对话状态真正发生有意义的变化时才无效化查询
+    // 避免智能体内部状态变化导致的频繁查询刷新
+    if (currentStatus && currentStatus !== previousStatus) {
+      const isSignificantChange = 
+        // 初次加载时的状态设置
+        !previousStatus ||
+        // 对话从停止变为运行
+        (previousStatus === "STOPPED" && (currentStatus === "STARTING" || currentStatus === "RUNNING")) ||
+        // 对话从运行变为停止
+        ((previousStatus === "STARTING" || previousStatus === "RUNNING") && currentStatus === "STOPPED");
+        
+      if (isSignificantChange) {
+        console.log(`[InsightAI-Conversation] Significant conversation status change: ${previousStatus} -> ${currentStatus}, invalidating tasks`);
+        queryClient.invalidateQueries({
+          queryKey: insightAIKeys.tasks(),
+        });
+      }
+      
+      conversationStatusRef.current = currentStatus;
     }
   }, [conversationData?.status, queryClient]);
 
@@ -273,24 +323,10 @@ export function InsightAIConversation({
             webSocketStatus={webSocketStatus}
           />
           <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 bg-red-50 rounded-2xl flex items-center justify-center">
-                <WifiOff className="w-8 h-8 text-red-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                WebSocket连接异常
-              </h3>
-              <p className="text-gray-600 mb-4">
-                与WebSocket服务器的连接异常断开，导致无法查看对话内容。
-              </p>
-              <button
-                onClick={reconnect}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <RefreshCw className="w-4 h-4" />
-                立即重连
-              </button>
-            </div>
+            <WebSocketConnectionError
+              onReconnect={reconnect}
+              variant="full"
+            />
           </div>
         </div>
       </div>
@@ -314,10 +350,12 @@ export function InsightAIConversation({
             isLoading={isLoading}
           />
 
-          {/* Chat input - only show when connected */}
+          {/* Chat input - 根据智能体状态控制输入 */}
           <InsightAIChatInput
             onSendMessage={handleSendMessage}
-            disabled={!isConnected}
+            disabled={!isConnected || isInputDisabled || !isWaitingForUserInput}
+            agentStateMessage={getAgentStateMessage()}
+            agentState={agentState}
           />
         </div>
       </div>
