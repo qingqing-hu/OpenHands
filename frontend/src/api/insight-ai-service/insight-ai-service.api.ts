@@ -132,7 +132,7 @@ export class InsightAIService {
     const conversation = await OpenHands.createConversation(
       undefined, // selectedRepository
       undefined, // git_provider
-      `InsightAI: ${taskData.title}\n\n${taskData.description}`, // initialUserMsg
+      undefined, // initialUserMsg - 取消发送初始消息，让用户手动输入
       undefined, // suggested_task
       undefined, // selected_branch
       JSON.stringify({

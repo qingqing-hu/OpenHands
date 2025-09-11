@@ -1,0 +1,1 @@
+import{j as s}from"./chunk-PVWAREVJ-CBTMjtFb.js";function x(){return s.jsxs("div",{className:"flex flex-col gap-2.5",children:[s.jsx("div",{className:"w-[70px] h-[20px] skeleton"}),s.jsx("div",{className:"w-[680px] h-[40px] skeleton"})]})}export{x as I};

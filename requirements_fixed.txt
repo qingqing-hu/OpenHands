@@ -1,0 +1,104 @@
+# OpenHands 核心依赖 - 基于pyproject.toml生成 (合并同事代码后更新)
+# 包含合并代码后的新增依赖
+
+# 核心框架和工具
+aiohttp>=3.9.0,!=3.11.13
+fastapi
+uvicorn
+docker
+tornado
+python-dotenv
+python-multipart
+sse-starlette>=2.1.3
+psutil
+
+# AI/LLM相关
+litellm>=1.74.3,!=1.64.4
+openai==1.99.9
+anthropic
+google-generativeai
+google-api-python-client>=2.164.0
+google-auth-httplib2
+google-auth-oauthlib
+google-cloud-aiplatform
+boto3
+
+# 数据处理和分析
+numpy
+pandas
+joblib
+PyPDF2
+python-pptx
+pylatexenc
+python-docx
+
+# 文本处理
+jinja2>=3.1.3
+html2text
+json-repair
+python-frontmatter>=1.1.0
+whatthepatch>=1.0.6
+
+# 网络和通信
+httpx-aiohttp>=0.1.8
+python-socketio>=5.11.4
+websockets
+
+# 开发工具
+toml
+types-toml
+pyjwt>=2.9.0
+pathspec>=0.12.1
+zope-interface==7.2
+dirhash
+deprecated
+
+# 系统集成
+browsergym-core==0.13.3
+pexpect
+libtmux>=0.37,<0.40
+kubernetes>=33.1.0
+pyyaml>=6.0.2
+shellingham>=1.5.4
+
+# 监控和日志
+opentelemetry-api>=1.33.1
+opentelemetry-exporter-otlp-proto-grpc>=1.33.1
+python-json-logger>=3.2.1
+memory-profiler>=0.61.0
+
+# 第三方集成
+pygithub>=2.5.0
+redis>=5.2,<7.0
+
+# 工具库
+tenacity>=8.5,<10.0
+rapidfuzz>=3.9.0
+termcolor
+anyio==4.9.0
+protobuf>=5.0.0,<6.0.0
+bashlex>=0.18
+
+# OpenHands特定
+openhands-aci==0.3.2
+fastmcp>=2.5.2
+
+# Jupyter支持  
+ipywidgets>=8.1.5
+qtconsole>=5.6.1
+jupyter_kernel_gateway
+
+# Poetry (用于依赖管理)
+poetry>=2.1.2
+
+# 用户界面
+prompt-toolkit>=3.0.50
+
+# .NET互操作
+pythonnet
+
+# 第三方运行时 (可选，根据需要)
+# e2b>=1.0.5,<1.8.0
+# modal>=0.66.26,<1.2.0  
+# runloop-api-client==0.50.0
+# daytona==0.24.2

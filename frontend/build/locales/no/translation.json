@@ -1,4 +1,5 @@
 {
+  "MAINTENANCE$SCHEDULED_MESSAGE": "Planlagt vedlikehold starter {{time}}",
   "MICROAGENT$NO_REPOSITORY_FOUND": "Ingen repository funnet for å starte mikroagent",
   "MICROAGENT$ADD_TO_MICROAGENT": "Legg til i mikroagent",
   "MICROAGENT$WHAT_TO_ADD": "Hva vil du legge til i mikroagenten?",
@@ -727,5 +728,16 @@
   "COMMON$STARTING": "Starter",
   "MICROAGENT_MANAGEMENT$ERROR": "Systemet har oppdaget en feil. Prøv igjen senere.",
   "MICROAGENT_MANAGEMENT$CONVERSATION_STOPPED": "Samtalen har blitt stoppet.",
-  "MICROAGENT_MANAGEMENT$UPDATE_MICROAGENT_MODAL_DESCRIPTION": "OpenHands vil oppdatere mikroagenten basert på dine instruksjoner."
+  "MICROAGENT_MANAGEMENT$LEARN_THIS_REPO_MODAL_TITLE": "Vil du lære dette depotet?",
+  "MICROAGENT_MANAGEMENT$LEARN_THIS_REPO_MODAL_DESCRIPTION": "Vil du at OpenHands skal starte en ny samtale for å hjelpe deg med å forstå dette depotet?",
+  "MICROAGENT_MANAGEMENT$WHAT_YOU_WOULD_LIKE_TO_KNOW_ABOUT_THIS_REPO": "Hva vil du vite om dette depotet?",
+  "MICROAGENT_MANAGEMENT$DESCRIBE_WHAT_TO_KNOW_ABOUT_THIS_REPO": "Beskriv hva du vil vite om dette depotet.",
+  "MICROAGENT_MANAGEMENT$UPDATE_MICROAGENT_MODAL_DESCRIPTION": "OpenHands vil oppdatere mikroagenten basert på dine instruksjoner.",
+  "INSIGHT_AI$TAB_TERMINAL": "Terminal",
+  "INSIGHT_AI$TAB_FILES": "Filer",
+  "INSIGHT_AI$WORKSPACE_TITLE": "InsightAI Arbeidsområde",
+  "INSIGHT_AI$WORKSPACE_DESCRIPTION": "Sanntidsovervåking, terminaloperasjoner og filhåndtering",
+  "INSIGHT_AI$PROCESSING": "Behandler... ▋",
+  "INSIGHT_AI$PROJECT_FILES": "Prosjektfiler",
+  "INSIGHT_AI$SELECT_FILE_TO_VIEW": "Velg en fil for å se innholdet"
 }

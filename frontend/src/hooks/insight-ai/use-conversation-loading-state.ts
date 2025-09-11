@@ -183,7 +183,7 @@ export function useConversationLoadingState({
   }, [
     webSocketStatus,
     hasValidConversationId,
-    loadingState,
+    // 移除loadingState依赖，避免WebSocket状态监听的循环
     conversationStatus,
     conversationRuntimeStatus,
   ]);

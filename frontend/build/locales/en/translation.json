@@ -1,4 +1,5 @@
 {
+  "MAINTENANCE$SCHEDULED_MESSAGE": "Scheduled maintenance will begin at {{time}}",
   "MICROAGENT$NO_REPOSITORY_FOUND": "No repository found to launch microagent",
   "MICROAGENT$ADD_TO_MICROAGENT": "Add to Microagent",
   "MICROAGENT$WHAT_TO_ADD": "What would you like to add to the Microagent?",
@@ -727,5 +728,16 @@
   "COMMON$STARTING": "Starting",
   "MICROAGENT_MANAGEMENT$ERROR": "The system has encountered an error. Please try again later.",
   "MICROAGENT_MANAGEMENT$CONVERSATION_STOPPED": "The conversation has been stopped.",
-  "MICROAGENT_MANAGEMENT$UPDATE_MICROAGENT_MODAL_DESCRIPTION": "OpenHands will update the microagent based on your instructions."
+  "MICROAGENT_MANAGEMENT$LEARN_THIS_REPO_MODAL_TITLE": "Learn this repository?",
+  "MICROAGENT_MANAGEMENT$LEARN_THIS_REPO_MODAL_DESCRIPTION": "Do you want OpenHands to launch a new conversation to help you understand this repository?",
+  "MICROAGENT_MANAGEMENT$WHAT_YOU_WOULD_LIKE_TO_KNOW_ABOUT_THIS_REPO": "What would you like to know about this repository?",
+  "MICROAGENT_MANAGEMENT$DESCRIBE_WHAT_TO_KNOW_ABOUT_THIS_REPO": "Describe what you would like to know about this repository.",
+  "MICROAGENT_MANAGEMENT$UPDATE_MICROAGENT_MODAL_DESCRIPTION": "OpenHands will update the microagent based on your instructions.",
+  "INSIGHT_AI$TAB_TERMINAL": "Terminal",
+  "INSIGHT_AI$TAB_FILES": "Files",
+  "INSIGHT_AI$WORKSPACE_TITLE": "InsightAI Workspace",
+  "INSIGHT_AI$WORKSPACE_DESCRIPTION": "Real-time monitoring, terminal operations and file management",
+  "INSIGHT_AI$PROCESSING": "Processing... ▋",
+  "INSIGHT_AI$PROJECT_FILES": "Project Files",
+  "INSIGHT_AI$SELECT_FILE_TO_VIEW": "Select a file to view content"
 }

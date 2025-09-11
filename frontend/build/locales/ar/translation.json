@@ -1,4 +1,5 @@
 {
+  "MAINTENANCE$SCHEDULED_MESSAGE": "ستبدأ الصيانة المجدولة في {{time}}",
   "MICROAGENT$NO_REPOSITORY_FOUND": "لم يتم العثور على مستودع لإطلاق الوكيل المصغر",
   "MICROAGENT$ADD_TO_MICROAGENT": "إضافة إلى الوكيل المصغر",
   "MICROAGENT$WHAT_TO_ADD": "ماذا تريد أن تضيف إلى الوكيل المصغر؟",
@@ -727,5 +728,16 @@
   "COMMON$STARTING": "جارٍ البدء",
   "MICROAGENT_MANAGEMENT$ERROR": "واجه النظام خطأ. يرجى المحاولة مرة أخرى لاحقًا.",
   "MICROAGENT_MANAGEMENT$CONVERSATION_STOPPED": "تم إيقاف المحادثة.",
-  "MICROAGENT_MANAGEMENT$UPDATE_MICROAGENT_MODAL_DESCRIPTION": "سيقوم OpenHands بتحديث الوكيل الصغير بناءً على تعليماتك."
+  "MICROAGENT_MANAGEMENT$LEARN_THIS_REPO_MODAL_TITLE": "هل تريد تعلم هذا المستودع؟",
+  "MICROAGENT_MANAGEMENT$LEARN_THIS_REPO_MODAL_DESCRIPTION": "هل تريد أن يبدأ OpenHands محادثة جديدة لمساعدتك على فهم هذا المستودع؟",
+  "MICROAGENT_MANAGEMENT$WHAT_YOU_WOULD_LIKE_TO_KNOW_ABOUT_THIS_REPO": "ماذا تريد أن تعرف عن هذا المستودع؟",
+  "MICROAGENT_MANAGEMENT$DESCRIBE_WHAT_TO_KNOW_ABOUT_THIS_REPO": "صف ما ترغب في معرفته عن هذا المستودع.",
+  "MICROAGENT_MANAGEMENT$UPDATE_MICROAGENT_MODAL_DESCRIPTION": "سيقوم OpenHands بتحديث الوكيل الصغير بناءً على تعليماتك.",
+  "INSIGHT_AI$TAB_TERMINAL": "الطرفية",
+  "INSIGHT_AI$TAB_FILES": "الملفات",
+  "INSIGHT_AI$WORKSPACE_TITLE": "مساحة عمل InsightAI",
+  "INSIGHT_AI$WORKSPACE_DESCRIPTION": "المراقبة في الوقت الفعلي وعمليات الطرفية وإدارة الملفات",
+  "INSIGHT_AI$PROCESSING": "معالجة... ▋",
+  "INSIGHT_AI$PROJECT_FILES": "ملفات المشروع",
+  "INSIGHT_AI$SELECT_FILE_TO_VIEW": "اختر ملف لعرض المحتوى"
 }

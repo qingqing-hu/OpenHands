@@ -1,4 +1,5 @@
 {
+  "MAINTENANCE$SCHEDULED_MESSAGE": "예정된 유지보수가 {{time}}에 시작됩니다",
   "MICROAGENT$NO_REPOSITORY_FOUND": "마이크로에이전트를 시작할 저장소를 찾을 수 없습니다",
   "MICROAGENT$ADD_TO_MICROAGENT": "마이크로에이전트에 추가",
   "MICROAGENT$WHAT_TO_ADD": "마이크로에이전트에 무엇을 추가하시겠습니까?",
@@ -727,5 +728,16 @@
   "COMMON$STARTING": "시작 중",
   "MICROAGENT_MANAGEMENT$ERROR": "시스템에 오류가 발생했습니다. 나중에 다시 시도해 주세요.",
   "MICROAGENT_MANAGEMENT$CONVERSATION_STOPPED": "대화가 중단되었습니다.",
-  "MICROAGENT_MANAGEMENT$UPDATE_MICROAGENT_MODAL_DESCRIPTION": "OpenHands가 귀하의 지시에 따라 마이크로에이전트를 업데이트합니다."
+  "MICROAGENT_MANAGEMENT$LEARN_THIS_REPO_MODAL_TITLE": "이 저장소를 학습하시겠습니까?",
+  "MICROAGENT_MANAGEMENT$LEARN_THIS_REPO_MODAL_DESCRIPTION": "OpenHands가 이 저장소를 이해하는 데 도움이 되는 새 대화를 시작하도록 하시겠습니까?",
+  "MICROAGENT_MANAGEMENT$WHAT_YOU_WOULD_LIKE_TO_KNOW_ABOUT_THIS_REPO": "이 저장소에 대해 무엇을 알고 싶으신가요?",
+  "MICROAGENT_MANAGEMENT$DESCRIBE_WHAT_TO_KNOW_ABOUT_THIS_REPO": "이 저장소에 대해 알고 싶은 내용을 설명하세요.",
+  "MICROAGENT_MANAGEMENT$UPDATE_MICROAGENT_MODAL_DESCRIPTION": "OpenHands가 귀하의 지시에 따라 마이크로에이전트를 업데이트합니다.",
+  "INSIGHT_AI$TAB_TERMINAL": "터미널",
+  "INSIGHT_AI$TAB_FILES": "파일",
+  "INSIGHT_AI$WORKSPACE_TITLE": "InsightAI 워크스페이스",
+  "INSIGHT_AI$WORKSPACE_DESCRIPTION": "실시간 모니터링, 터미널 작업 및 파일 관리",
+  "INSIGHT_AI$PROCESSING": "처리 중... ▋",
+  "INSIGHT_AI$PROJECT_FILES": "프로젝트 파일",
+  "INSIGHT_AI$SELECT_FILE_TO_VIEW": "파일을 선택하여 내용 보기"
 }

@@ -1,4 +1,5 @@
 {
+  "MAINTENANCE$SCHEDULED_MESSAGE": "Planlı bakım {{time}} tarihinde başlayacak",
   "MICROAGENT$NO_REPOSITORY_FOUND": "Mikro ajanı başlatmak için depo bulunamadı",
   "MICROAGENT$ADD_TO_MICROAGENT": "Mikro ajana ekle",
   "MICROAGENT$WHAT_TO_ADD": "Mikro ajana ne eklemek istersiniz?",
@@ -727,5 +728,16 @@
   "COMMON$STARTING": "Başlatılıyor",
   "MICROAGENT_MANAGEMENT$ERROR": "Sistem bir hata ile karşılaştı. Lütfen daha sonra tekrar deneyin.",
   "MICROAGENT_MANAGEMENT$CONVERSATION_STOPPED": "Konuşma durduruldu.",
-  "MICROAGENT_MANAGEMENT$UPDATE_MICROAGENT_MODAL_DESCRIPTION": "OpenHands, talimatlarınıza göre mikro ajanı güncelleyecektir."
+  "MICROAGENT_MANAGEMENT$LEARN_THIS_REPO_MODAL_TITLE": "Bu depoyu öğrenmek ister misiniz?",
+  "MICROAGENT_MANAGEMENT$LEARN_THIS_REPO_MODAL_DESCRIPTION": "OpenHands'in bu depoyu anlamanıza yardımcı olacak yeni bir konuşma başlatmasını ister misiniz?",
+  "MICROAGENT_MANAGEMENT$WHAT_YOU_WOULD_LIKE_TO_KNOW_ABOUT_THIS_REPO": "Bu depo hakkında ne bilmek istersiniz?",
+  "MICROAGENT_MANAGEMENT$DESCRIBE_WHAT_TO_KNOW_ABOUT_THIS_REPO": "Bu depo hakkında ne bilmek istediğinizi açıklayın.",
+  "MICROAGENT_MANAGEMENT$UPDATE_MICROAGENT_MODAL_DESCRIPTION": "OpenHands, talimatlarınıza göre mikro ajanı güncelleyecektir.",
+  "INSIGHT_AI$TAB_TERMINAL": "Terminal",
+  "INSIGHT_AI$TAB_FILES": "Dosyalar",
+  "INSIGHT_AI$WORKSPACE_TITLE": "InsightAI Çalışma Alanı",
+  "INSIGHT_AI$WORKSPACE_DESCRIPTION": "Gerçek zamanlı izleme, terminal işlemleri ve dosya yönetimi",
+  "INSIGHT_AI$PROCESSING": "İşleniyor... ▋",
+  "INSIGHT_AI$PROJECT_FILES": "Proje Dosyaları",
+  "INSIGHT_AI$SELECT_FILE_TO_VIEW": "İçeriği görüntülemek için bir dosya seçin"
 }

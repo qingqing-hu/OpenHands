@@ -30,7 +30,7 @@ import { useOptimisticUserMessage } from "#/hooks/use-optimistic-user-message";
 import { useWSErrorMessage } from "#/hooks/use-ws-error-message";
 import { shouldRenderInsightAIEvent } from "#/components/insight-ai/chat/insight-ai-message-filter";
 
-export type WebSocketStatus = "CONNECTING" | "CONNECTED" | "DISCONNECTED";
+export type WebSocketStatus = "CONNECTING" | "CONNECTED" | "DISCONNECTED" | "NOT_CONNECTED";
 
 // InsightAI不使用右上角错误弹窗，注释掉相关类型检查函数
 // const hasValidMessageProperty = (obj: unknown): obj is { message: string } =>
@@ -108,7 +108,7 @@ export function useInsightAIWsClient(
   const queryClient = useQueryClient();
   const sioRef = React.useRef<Socket | null>(null);
   const [webSocketStatus, setWebSocketStatus] =
-    React.useState<WebSocketStatus>("DISCONNECTED");
+    React.useState<WebSocketStatus>("NOT_CONNECTED");
   const [events, setEvents] = React.useState<Record<string, unknown>[]>([]);
   const [parsedEvents, setParsedEvents] = React.useState<
     (OpenHandsAction | OpenHandsObservation)[]
@@ -123,6 +123,9 @@ export function useInsightAIWsClient(
 
   // WebSocket连接错误状态
   const [hasConnectionError, setHasConnectionError] = React.useState(false);
+  
+  // 重连计数器，用于手动触发重连
+  const [reconnectCounter, setReconnectCounter] = React.useState(0);
 
   const messageRateHandler = useRate({ threshold: 250 });
   const { data: conversation, refetch: refetchConversation } =
@@ -134,17 +137,13 @@ export function useInsightAIWsClient(
       return () => undefined;
     }
 
-    // 只有在对话可能处于未同步状态时才启动轮询
-    // 1. 对话状态未知（数据还在加载）
-    // 2. 对话状态为STOPPED但WebSocket已断开（可能从外部启动了）
-    // 3. WebSocket断开且对话状态不是RUNNING/STARTING（状态可能过期）
+    // 更严格的轮询条件，避免在WebSocket已连接时不必要的轮询
     const shouldPoll =
       !conversation ||
-      (conversation.status === "STOPPED" &&
-        webSocketStatus === "DISCONNECTED") ||
-      (webSocketStatus === "DISCONNECTED" &&
-        conversation.status !== "RUNNING" &&
-        conversation.status !== "STARTING");
+      // 只有在WebSocket断开且对话状态可能需要同步时才轮询
+      (webSocketStatus === "DISCONNECTED" && 
+       ((conversation.status === "STOPPED") ||
+        (conversation.status !== "RUNNING" && conversation.status !== "STARTING")));
 
     if (!shouldPoll) {
       return () => undefined;
@@ -155,11 +154,19 @@ export function useInsightAIWsClient(
     );
 
     const pollInterval = setInterval(() => {
+      // 在轮询前再次检查是否应该继续轮询，避免状态竞争
+      if (webSocketStatus === "CONNECTED" || webSocketStatus === "CONNECTING") {
+        console.log(
+          `[WS-Client] Stopping polling for ${conversationId} - WebSocket is ${webSocketStatus}`,
+        );
+        return;
+      }
+      
       console.log(
         `[WS-Client] Polling conversation status for ${conversationId}`,
       );
       refetchConversation();
-    }, 5000); // 每5秒检查一次状态，减少服务器压力
+    }, 8000); // 增加到8秒，减少轮询频率
 
     return () => {
       console.log(
@@ -184,19 +191,28 @@ export function useInsightAIWsClient(
   }
 
   // 手动重连函数
-  const reconnect = React.useCallback(() => {
+  const reconnect = React.useCallback(async () => {
+    console.log(`[InsightAI-WS] Manual reconnect requested for conversation ${conversationId}`);
     setHasConnectionError(false);
 
     // 强制重新连接
     const sio = sioRef.current;
     if (sio?.connected) {
+      console.log(`[InsightAI-WS] Disconnecting for manual reconnect`);
       sio.disconnect();
     }
 
-    // 重置连接状态，触发重新连接
+    // 重置连接状态
     isConnectingRef.current = false;
     currentConversationRef.current = "";
-  }, []);
+    setWebSocketStatus("NOT_CONNECTED");
+    
+    // 增加重连计数器，触发useEffect重新运行
+    setReconnectCounter(prev => prev + 1);
+    
+    // 等待一小段时间让用户看到重连效果
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }, [conversationId]);
 
   // 关闭错误提醒
   const dismissConnectionError = React.useCallback(() => {
@@ -214,6 +230,8 @@ export function useInsightAIWsClient(
 
     // 清除连接错误状态
     setHasConnectionError(false);
+    
+    console.log(`[InsightAI-WS] WebSocket connected to conversation ${conversationId}`);
   }
 
   function handleMessage(event: Record<string, unknown>) {
@@ -355,6 +373,8 @@ export function useInsightAIWsClient(
   }
 
   function handleDisconnect(data: unknown) {
+    console.log(`[InsightAI-WS] WebSocket disconnected from conversation ${conversationId}`, data);
+    
     isConnectingRef.current = false;
     if (connectionTimeoutRef.current) {
       clearTimeout(connectionTimeoutRef.current);
@@ -378,11 +398,17 @@ export function useInsightAIWsClient(
   }
 
   function handleError(data: unknown) {
+    console.log(`[InsightAI-WS] WebSocket error for conversation ${conversationId}`, data);
+    
     isConnectingRef.current = false;
     if (connectionTimeoutRef.current) {
       clearTimeout(connectionTimeoutRef.current);
       connectionTimeoutRef.current = null;
     }
+    
+    // 重置连接状态记录，避免卡住
+    currentConversationRef.current = "";
+    
     // set status
     setWebSocketStatus("DISCONNECTED");
 
@@ -408,8 +434,12 @@ export function useInsightAIWsClient(
     // reset events when conversationId changes
     setEvents([]);
     setParsedEvents([]);
-    setWebSocketStatus("CONNECTING");
+    // 初始状态设置为NOT_CONNECTED，等待后续根据对话状态调整
+    setWebSocketStatus("NOT_CONNECTED");
   }, [conversationId]);
+
+  // 使用稳定的ref来跟踪conversation状态，避免不必要的重连
+  // 移除conversationStatusRef，简化状态管理
 
   React.useEffect(() => {
     // 清除之前的连接超时
@@ -425,40 +455,27 @@ export function useInsightAIWsClient(
     ) {
       currentConversationRef.current = "";
       isConnectingRef.current = false;
-      setWebSocketStatus("DISCONNECTED");
+      setWebSocketStatus("NOT_CONNECTED");
       setEvents([]);
       setParsedEvents([]);
       return () => undefined;
     }
 
-    // 检查对话是否可以连接（只有RUNNING或STARTING状态才能连接）
-    // 如果明确知道对话状态，优先使用status判断
-    const canConnect =
-      conversation?.status === "RUNNING" || conversation?.status === "STARTING";
-
+    // 参考OpenHands原生实现：简化连接条件检查，允许STARTING和RUNNING状态连接
+    const canConnect = conversation?.status === "RUNNING" || conversation?.status === "STARTING" || conversation?.runtime_status;
     if (!canConnect) {
-      // 明确设置为DISCONNECTED状态，防止循环连接
-      setWebSocketStatus("DISCONNECTED");
-      isConnectingRef.current = false;
-      currentConversationRef.current = "";
-      return () => undefined; // conversation not ready for connection
-    }
-
-    // 防止重复连接相同的对话
-    if (
-      currentConversationRef.current === conversationId &&
-      isConnectingRef.current
-    ) {
+      console.log(`[InsightAI-WS] Cannot connect: conversation not ready (status: ${conversation?.status}, runtime_status: ${conversation?.runtime_status})`);
+      if (currentConversationRef.current === conversationId) {
+        // 如果对话状态是STOPPED，设置为NOT_CONNECTED；其他情况设置为DISCONNECTED
+        const wsStatus = conversation?.status === "STOPPED" ? "NOT_CONNECTED" : "DISCONNECTED";
+        setWebSocketStatus(wsStatus);
+        isConnectingRef.current = false;
+        currentConversationRef.current = "";
+      }
       return () => undefined;
     }
 
-    // 防止在已连接状态下重复连接
-    if (
-      webSocketStatus === "CONNECTED" &&
-      currentConversationRef.current === conversationId
-    ) {
-      return () => undefined;
-    }
+    console.log(`[InsightAI-WS] Starting connection to conversation ${conversationId} (status: ${conversation?.status})`);
 
     // 设置连接防护
     currentConversationRef.current = conversationId;
@@ -466,11 +483,14 @@ export function useInsightAIWsClient(
 
     let sio = sioRef.current;
 
+    // 如果已有连接且连接的是同一个对话，先断开
     if (sio?.connected) {
+      console.log(`[InsightAI-WS] Disconnecting existing connection to establish new one`);
       sio.disconnect();
     }
 
     // Set initial status...
+    console.log(`[InsightAI-WS] Starting connection to conversation ${conversationId}`);
     setWebSocketStatus("CONNECTING");
 
     const lastEvent = lastEventRef.current;
@@ -478,11 +498,11 @@ export function useInsightAIWsClient(
       latest_event_id: lastEvent?.id ?? -1,
       conversation_id: conversationId,
       providers_set: providers,
-      session_api_key: conversation.session_api_key, // Have to set here because socketio doesn't support custom headers. :(
+      session_api_key: conversation?.session_api_key, // Have to set here because socketio doesn't support custom headers. :(
     };
 
     let baseUrl = null;
-    if (conversation.url && !conversation.url.startsWith("/")) {
+    if (conversation?.url && !conversation.url.startsWith("/")) {
       baseUrl = new URL(conversation.url).host;
     } else {
       baseUrl = import.meta.env.VITE_BACKEND_BASE_URL || window?.location.host;
@@ -523,12 +543,13 @@ export function useInsightAIWsClient(
     };
   }, [
     conversationId,
-    // 依赖对话状态，当状态变化时重新评估连接
-    conversation?.status,
+    // 移除conversation?.status依赖，避免智能体状态变化触发重连
     conversation?.url,
     conversation?.session_api_key,
     // providers变化较少，保留
     providers,
+    // 手动重连计数器，用于触发重连
+    reconnectCounter,
   ]);
 
   React.useEffect(

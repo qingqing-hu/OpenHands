@@ -1,4 +1,5 @@
 {
+  "MAINTENANCE$SCHEDULED_MESSAGE": "Планове технічне обслуговування розпочнеться о {{time}}",
   "MICROAGENT$NO_REPOSITORY_FOUND": "Не знайдено репозиторій для запуску мікроагента",
   "MICROAGENT$ADD_TO_MICROAGENT": "Додати до мікроагента",
   "MICROAGENT$WHAT_TO_ADD": "Що ви хочете додати до мікроагента?",
@@ -727,5 +728,16 @@
   "COMMON$STARTING": "Запуск",
   "MICROAGENT_MANAGEMENT$ERROR": "Система зіткнулася з помилкою. Будь ласка, спробуйте пізніше.",
   "MICROAGENT_MANAGEMENT$CONVERSATION_STOPPED": "Розмову зупинено.",
-  "MICROAGENT_MANAGEMENT$UPDATE_MICROAGENT_MODAL_DESCRIPTION": "OpenHands оновить мікроагента відповідно до ваших інструкцій."
+  "MICROAGENT_MANAGEMENT$LEARN_THIS_REPO_MODAL_TITLE": "Вивчити цей репозиторій?",
+  "MICROAGENT_MANAGEMENT$LEARN_THIS_REPO_MODAL_DESCRIPTION": "Бажаєте, щоб OpenHands розпочав нову розмову, щоб допомогти вам зрозуміти цей репозиторій?",
+  "MICROAGENT_MANAGEMENT$WHAT_YOU_WOULD_LIKE_TO_KNOW_ABOUT_THIS_REPO": "Що ви хотіли б дізнатися про цей репозиторій?",
+  "MICROAGENT_MANAGEMENT$DESCRIBE_WHAT_TO_KNOW_ABOUT_THIS_REPO": "Опишіть, що ви хотіли б дізнатися про цей репозиторій.",
+  "MICROAGENT_MANAGEMENT$UPDATE_MICROAGENT_MODAL_DESCRIPTION": "OpenHands оновить мікроагента відповідно до ваших інструкцій.",
+  "INSIGHT_AI$TAB_TERMINAL": "Термінал",
+  "INSIGHT_AI$TAB_FILES": "Файли",
+  "INSIGHT_AI$WORKSPACE_TITLE": "Робоча область InsightAI",
+  "INSIGHT_AI$WORKSPACE_DESCRIPTION": "Моніторинг в реальному часі, операції терміналу та управління файлами",
+  "INSIGHT_AI$PROCESSING": "Обробка... ▋",
+  "INSIGHT_AI$PROJECT_FILES": "Файли проекту",
+  "INSIGHT_AI$SELECT_FILE_TO_VIEW": "Виберіть файл для перегляду вмісту"
 }

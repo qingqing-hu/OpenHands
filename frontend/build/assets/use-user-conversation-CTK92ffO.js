@@ -1,0 +1,1 @@
+import{u as s}from"./useQuery-BwZ0Ggwy.js";import{O as o}from"./open-hands-k81XQtBD.js";const r=1e3*60*5,t=1e3*60*15,c=(e,n)=>s({queryKey:["user","conversation",e],queryFn:async()=>await o.getConversation(e),enabled:!!e,retry:!1,refetchInterval:n,staleTime:r,gcTime:t});export{c as u};

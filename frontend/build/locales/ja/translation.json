@@ -1,4 +1,5 @@
 {
+  "MAINTENANCE$SCHEDULED_MESSAGE": "予定されたメンテナンスは{{time}}に開始されます",
   "MICROAGENT$NO_REPOSITORY_FOUND": "マイクロエージェントを起動するためのリポジトリが見つかりません",
   "MICROAGENT$ADD_TO_MICROAGENT": "マイクロエージェントに追加",
   "MICROAGENT$WHAT_TO_ADD": "マイクロエージェントに何を追加しますか？",
@@ -727,5 +728,16 @@
   "COMMON$STARTING": "開始中",
   "MICROAGENT_MANAGEMENT$ERROR": "システムでエラーが発生しました。後でもう一度お試しください。",
   "MICROAGENT_MANAGEMENT$CONVERSATION_STOPPED": "会話が停止されました。",
-  "MICROAGENT_MANAGEMENT$UPDATE_MICROAGENT_MODAL_DESCRIPTION": "OpenHandsはあなたの指示に基づいてマイクロエージェントを更新します。"
+  "MICROAGENT_MANAGEMENT$LEARN_THIS_REPO_MODAL_TITLE": "このリポジトリを学習しますか？",
+  "MICROAGENT_MANAGEMENT$LEARN_THIS_REPO_MODAL_DESCRIPTION": "OpenHandsがこのリポジトリを理解するための新しい会話を開始しますか？",
+  "MICROAGENT_MANAGEMENT$WHAT_YOU_WOULD_LIKE_TO_KNOW_ABOUT_THIS_REPO": "このリポジトリについて何を知りたいですか？",
+  "MICROAGENT_MANAGEMENT$DESCRIBE_WHAT_TO_KNOW_ABOUT_THIS_REPO": "このリポジトリについて知りたいことを説明してください。",
+  "MICROAGENT_MANAGEMENT$UPDATE_MICROAGENT_MODAL_DESCRIPTION": "OpenHandsはあなたの指示に基づいてマイクロエージェントを更新します。",
+  "INSIGHT_AI$TAB_TERMINAL": "ターミナル",
+  "INSIGHT_AI$TAB_FILES": "ファイル",
+  "INSIGHT_AI$WORKSPACE_TITLE": "InsightAI ワークスペース",
+  "INSIGHT_AI$WORKSPACE_DESCRIPTION": "リアルタイム監視、ターミナル操作、ファイル管理",
+  "INSIGHT_AI$PROCESSING": "処理中... ▋",
+  "INSIGHT_AI$PROJECT_FILES": "プロジェクトファイル",
+  "INSIGHT_AI$SELECT_FILE_TO_VIEW": "ファイルを選択してコンテンツを表示"
 }
