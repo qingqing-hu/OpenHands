@@ -28,8 +28,8 @@ class LatestCodeComparator:
             'venv', '.venv', 'env', '.env'
         }
         
-        # 设置截止时间为2025-09-10 00:00:00
-        self.cutoff_date = datetime(2025, 9, 10, 0, 0, 0)
+        # 设置截止时间为2025-09-11 00:00:00
+        self.cutoff_date = datetime(2025, 9, 11, 0, 0, 0)
         
         self.results = {
             'conflicts': [],      # 冲突文件（都有但内容不同）
@@ -276,13 +276,13 @@ class LatestCodeComparator:
 def main():
     # 配置路径
     current_project = Path.cwd()  # 当前项目路径
-    colleague_code = Path("/tmp/colleague-analysis-3/OpenHands")  # 同事最新代码路径
+    colleague_code = Path("/tmp/colleague-analysis-4/OpenHands")  # 同事最新代码路径
     output_dir = current_project / "tmp"  # 输出目录
     
     print(f"当前项目路径: {current_project}")
     print(f"同事最新代码路径: {colleague_code}")
     print(f"输出目录: {output_dir}")
-    print("截止时间: 2025-09-10 00:00:00")
+    print("截止时间: 2025-09-11 00:00:00")
     print("注意: 已忽略tmp目录的比较")
     
     # 检查路径是否存在
@@ -310,14 +310,14 @@ def main():
     summary = result_files['summary']
     print(f"\n📊 统计结果:")
     print(f"  - 总冲突文件: {summary['total_conflicts']} 个")
-    print(f"  - 🔥 最新冲突文件: {summary['recent_conflicts_count']} 个 (同事在2025-09-10后提交)")
+    print(f"  - 🔥 最新冲突文件: {summary['recent_conflicts_count']} 个 (同事在2025-09-11后提交)")
     print(f"  - 您的代码总文件数: {summary['total_your_files']}")
     print(f"  - 同事代码总文件数: {summary['total_colleague_files']}")
     
     if summary['recent_conflicts_count'] > 0:
         print(f"\n🚨 需要优先处理 {summary['recent_conflicts_count']} 个最新冲突文件！")
     else:
-        print(f"\n🎉 太好了！没有发现同事在2025-09-10之后提交的冲突文件。")
+        print(f"\n🎉 太好了！没有发现同事在2025-09-11之后提交的冲突文件。")
 
 if __name__ == "__main__":
     main()

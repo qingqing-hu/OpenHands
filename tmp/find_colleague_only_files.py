@@ -123,7 +123,7 @@ class ColleagueOnlyFilesFinder:
 def main():
     # 配置路径
     current_project = Path.cwd()  # 当前项目路径
-    colleague_code = Path("/tmp/colleague-analysis-3/OpenHands")  # 同事最新代码路径
+    colleague_code = Path("/tmp/colleague-analysis-4/OpenHands")  # 同事最新代码路径
     output_dir = current_project / "tmp"  # 输出目录
     
     print(f"当前项目路径: {current_project}")

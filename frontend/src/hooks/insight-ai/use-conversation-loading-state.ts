@@ -29,7 +29,11 @@ export function useConversationLoadingState({
         conversationStatus === "RUNNING" || conversationStatus === "STARTING"
       );
     }
-    // 只有在conversationStatus未知时才依赖runtime_status
+    // 如果对话状态是STOPPED，明确不连接，无论runtime_status如何
+    if (conversationStatus === "STOPPED") {
+      return false;
+    }
+    // 只有在conversationStatus完全未知时才依赖runtime_status
     return Boolean(conversationRuntimeStatus);
   };
 
@@ -73,20 +77,17 @@ export function useConversationLoadingState({
       return;
     }
 
-    // 如果对话ID发生变化，强制重置为连接状态
+    // 如果对话ID发生变化，智能设置初始状态
     if (isConversationChanged && conversationId) {
-      console.log(
-        `[LoadingState] Conversation changed to ${conversationId}, resetting state`,
-      );
-      setLoadingState("connecting");
+      // 根据可用信息智能设置初始状态，避免错误的"connecting"状态
+      const intelligentInitialState = getInitialState();
+      setLoadingState(intelligentInitialState);
       setError("");
     }
 
     // 如果对话状态还未加载，保持当前状态等待
-    if (!conversationStatus && conversationRuntimeStatus === undefined) {
-      console.log(
-        `[LoadingState] Conversation ${conversationId} - Waiting for status data`,
-      );
+    // 严格等待conversationStatus加载，避免基于不完整数据做判断
+    if (!conversationStatus) {
       return;
     }
 
@@ -95,9 +96,6 @@ export function useConversationLoadingState({
       // 只有当前状态不是unstarted时才设置，避免不必要的重新渲染
       if (loadingState !== "unstarted") {
         setLoadingState("unstarted");
-        console.log(
-          `[LoadingState] Conversation ${conversationId} - Not started (status: ${conversationStatus}, runtime_status: ${conversationRuntimeStatus})`,
-        );
       }
       setError("");
       return;
@@ -105,12 +103,12 @@ export function useConversationLoadingState({
 
     // 对话正在运行/启动，设置为连接状态
     if (isConversationActiveOrStarting()) {
-      // 对话切换时，即使当前是ready状态也要重新开始连接流程
-      if (loadingState !== "connecting" && loadingState !== "connected") {
+      // 只有在必要时才改变loading state，避免触发不必要的状态变化
+      // 如果WebSocket已经连接且状态是ready，不要改变状态
+      if (webSocketStatus === "CONNECTED" && loadingState === "ready") {
+        // WebSocket已连接且UI状态正确，不需要任何操作
+      } else if (loadingState !== "connecting" && loadingState !== "connected" && loadingState !== "ready") {
         setLoadingState("connecting");
-        console.log(
-          `[LoadingState] Conversation ${conversationId} - Starting connection (status: ${conversationStatus}, runtime_status: ${conversationRuntimeStatus})`,
-        );
       }
       setError("");
     }
@@ -119,24 +117,16 @@ export function useConversationLoadingState({
     hasValidConversationId,
     conversationStatus,
     conversationRuntimeStatus,
+    webSocketStatus,
+    loadingState,
   ]);
 
   // 监听WebSocket状态变化
   React.useEffect(() => {
     if (!hasValidConversationId) return;
 
-    console.log(
-      `[LoadingState] WebSocket status changed:`,
-      webSocketStatus,
-      "Current state:",
-      loadingState,
-    );
-
     // 如果当前是未启动状态，不应该被WebSocket状态改变覆盖
     if (loadingState === "unstarted") {
-      console.log(
-        `[LoadingState] Ignoring WebSocket status change while in unstarted state`,
-      );
       return;
     }
 
@@ -160,6 +150,15 @@ export function useConversationLoadingState({
           setLoadingState("connected");
         }
         setError("");
+        break;
+      case "NOT_CONNECTED":
+        // NOT_CONNECTED状态表示从未尝试连接，对于已停止的对话是正常状态
+        if (!isConversationActiveOrStarting()) {
+          // 对话未启动或已停止，设置为unstarted状态
+          if ((loadingState as ConversationLoadingState) !== "unstarted") {
+            setLoadingState("unstarted");
+          }
+        }
         break;
       case "DISCONNECTED":
         // 如果对话未启动，保持unstarted状态，否则显示错误
@@ -192,17 +191,9 @@ export function useConversationLoadingState({
   React.useEffect(() => {
     if (!hasValidConversationId || webSocketStatus !== "CONNECTED") return;
 
-    console.log(
-      `[LoadingState] Events count:`,
-      parsedEvents.length,
-      "Current state:",
-      loadingState,
-    );
-
     // 如果连接成功但还没有数据，显示加载历史状态
     if (parsedEvents.length === 0 && loadingState === "connected") {
       setLoadingState("loading_history");
-      console.log(`[LoadingState] Connected but no data yet, loading history`);
       return;
     }
 
@@ -210,16 +201,10 @@ export function useConversationLoadingState({
     if (parsedEvents.length > 0 && loadingState !== "ready") {
       if (loadingState !== "processing_messages") {
         setLoadingState("processing_messages");
-        console.log(
-          `[LoadingState] Processing ${parsedEvents.length} messages`,
-        );
 
         // 短暂延迟后设为准备就绪
         const timeoutId = setTimeout(() => {
           setLoadingState("ready");
-          console.log(
-            `[LoadingState] Ready - ${parsedEvents.length} messages processed`,
-          );
         }, 200);
 
         return () => clearTimeout(timeoutId);
@@ -233,9 +218,6 @@ export function useConversationLoadingState({
 
     if (loadingState === "loading_history" && parsedEvents.length === 0) {
       const timeoutId = setTimeout(() => {
-        console.log(
-          `[LoadingState] No historical data found after timeout, conversation is empty - ready for new messages`,
-        );
         setLoadingState("ready");
       }, 3000);
 

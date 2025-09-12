@@ -100,8 +100,8 @@ const ConversationHeader = React.memo(
           </h2>
           <div className="text-gray-200 flex-shrink-0">|</div>
           <div className="flex items-center gap-1 px-2 py-0.5 bg-blue-50/50 rounded flex-shrink-0">
-            <BarChart3 className="w-3 h-3 text-blue-500" />
-            <span className="text-xs font-normal text-blue-500">数据分析</span>
+            <BarChart3 className="w-3 h-3 text-blue-600" />
+            <span className="text-xs font-normal text-blue-600">数据分析</span>
           </div>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
@@ -177,7 +177,7 @@ export function InsightAIConversation({
     conversationRuntimeStatus: Boolean(conversationData?.runtime_status),
   });
 
-  // 使用智能体状态管理
+  // 使用智能体状态管理（移除reconnect参数，采用纯服务器驱动方式）
   const {
     agentState,
     isWaitingForUserInput,
@@ -185,7 +185,7 @@ export function InsightAIConversation({
     getAgentStateMessage,
   } = useInsightAIAgentState(parsedEvents, {
     webSocketStatus,
-    reconnect,
+    // reconnect - 不再传递，避免任何超时重连逻辑
   });
 
 
@@ -196,19 +196,19 @@ export function InsightAIConversation({
     const currentStatus = conversationData?.status;
     const previousStatus = conversationStatusRef.current;
     
+    
     // 只在对话状态真正发生有意义的变化时才无效化查询
     // 避免智能体内部状态变化导致的频繁查询刷新
     if (currentStatus && currentStatus !== previousStatus) {
       const isSignificantChange = 
         // 初次加载时的状态设置
         !previousStatus ||
-        // 对话从停止变为运行
-        (previousStatus === "STOPPED" && (currentStatus === "STARTING" || currentStatus === "RUNNING")) ||
+        // 对话从停止变为运行（只在RUNNING时刷新，避免STARTING时的中间状态刷新）
+        (previousStatus === "STOPPED" && currentStatus === "RUNNING") ||
         // 对话从运行变为停止
         ((previousStatus === "STARTING" || previousStatus === "RUNNING") && currentStatus === "STOPPED");
-        
+      
       if (isSignificantChange) {
-        console.log(`[InsightAI-Conversation] Significant conversation status change: ${previousStatus} -> ${currentStatus}, invalidating tasks`);
         queryClient.invalidateQueries({
           queryKey: insightAIKeys.tasks(),
         });
@@ -216,7 +216,7 @@ export function InsightAIConversation({
       
       conversationStatusRef.current = currentStatus;
     }
-  }, [conversationData?.status, queryClient]);
+  }, [conversationData?.status, conversationData?.runtime_status, webSocketStatus, queryClient]);
 
   // Handle starting conversation
   const handleStartConversation = async () => {

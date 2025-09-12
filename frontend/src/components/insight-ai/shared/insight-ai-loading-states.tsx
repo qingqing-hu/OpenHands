@@ -71,7 +71,7 @@ export function ConversationLoadingIndicator({
           title: "处理数据",
           description: `正在处理 ${messageCount} 条消息...`,
           showSpinner: true,
-          color: "text-blue-600",
+          color: "text-green-500",
         };
       case "ready":
         return {

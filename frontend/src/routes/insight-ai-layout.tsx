@@ -434,43 +434,39 @@ export default function InsightAILayout() {
           <div
             className={`bg-gray-50 flex flex-col transition-all duration-500 ease-in-out flex-shrink-0 overflow-hidden ${sidebarCollapsed ? "w-10" : "w-72"}`}
           >
-            <div className={`layout-header transition-all duration-500 ease-in-out ${sidebarCollapsed ? 'p-2' : 'p-4'}`}>
-              <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-between items-baseline'}`}>
+            <div className={`layout-header transition-all duration-500 ease-in-out ${sidebarCollapsed ? 'px-2 py-4' : 'px-4 pt-4 pb-10'}`}>
+              <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-between'}`}>
                 {!sidebarCollapsed && (
-                  <div className="layout-title flex items-center gap-2 overflow-hidden">
-                    <div 
-                      className="flex items-center gap-2 transition-all duration-500 ease-in-out transform opacity-100 translate-x-0 scale-100"
+                  <div className="flex items-center gap-2">
+                    <h2
+                      className="text-xl font-bold text-gray-900 whitespace-nowrap"
+                      style={{ lineHeight: "2rem" }}
                     >
-                      <h2
-                        className="text-xl font-bold text-gray-900 whitespace-nowrap"
-                        style={{ lineHeight: "2rem" }}
-                      >
-                        对话管理
-                      </h2>
-                      <button
-                        onClick={async () => {
-                          setIsRefreshing(true);
-                          try {
-                            await refetchTasks();
-                          } finally {
-                            // 延迟一点时间让用户看到动画效果
-                            setTimeout(() => setIsRefreshing(false), 500);
-                          }
-                        }}
-                        className="hover:bg-gray-200 rounded transition-all duration-300 flex items-center justify-center w-8 h-8 p-0"
-                        title="刷新对话列表"
-                        disabled={isRefreshing}
-                      >
-                        <BiRefresh
-                          className={`w-5 h-5 text-gray-600 transition-transform duration-500 ${isRefreshing ? "animate-spin" : ""}`}
-                        />
-                      </button>
-                    </div>
+                      对话管理
+                    </h2>
+                    <button
+                      onClick={async () => {
+                        setIsRefreshing(true);
+                        try {
+                          await refetchTasks();
+                        } finally {
+                          // 延迟一点时间让用户看到动画效果
+                          setTimeout(() => setIsRefreshing(false), 500);
+                        }
+                      }}
+                      className="hover:bg-gray-200 rounded transition-all duration-300 flex items-center justify-center w-8 h-8 p-0"
+                      title="刷新对话列表"
+                      disabled={isRefreshing}
+                    >
+                      <BiRefresh
+                        className={`w-5 h-5 text-gray-600 transition-transform duration-500 ${isRefreshing ? "animate-spin" : ""}`}
+                      />
+                    </button>
                   </div>
                 )}
                 <button
                   onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                  className={`hover:bg-gray-200 rounded transition-all duration-300 flex items-center justify-center w-8 h-8 p-0 ${sidebarCollapsed ? '' : 'ml-2'}`}
+                  className="hover:bg-gray-200 rounded transition-all duration-300 flex items-center justify-center w-8 h-8 p-0"
                   title={sidebarCollapsed ? "展开对话栏" : "收起对话栏"}
                 >
                   <div className="relative w-5 h-5">
@@ -496,12 +492,12 @@ export default function InsightAILayout() {
               className={`flex-1 overflow-y-auto transition-all duration-500 ease-in-out ${
                 sidebarCollapsed 
                   ? 'opacity-0 transform scale-95 pointer-events-none' 
-                  : 'opacity-100 transform scale-100 py-4 px-1.5'
+                  : 'opacity-100 transform scale-100 pt-2 pb-4 px-1.5'
               } insight-ai-scrollbar`}
             >
                 {/* 新增对话按钮 */}
                 <div
-                  className="layout-add-action flex bg-white rounded-xl border border-gray-200 items-center gap-1 p-4 cursor-pointer hover:border-blue-200 transition-all duration-200 mb-3"
+                  className="layout-add-action flex bg-white rounded-xl border border-gray-200 items-center gap-1 p-4 cursor-pointer hover:border-blue-200 transition-all duration-200 mb-3 mt-6"
                   onClick={handleShowCreateConfirm}
                 >
                   <BiMessageRoundedAdd size={16} className="text-gray-600" />
@@ -589,7 +585,7 @@ export default function InsightAILayout() {
                           选择一个对话
                         </h3>
                         <p className="text-gray-600">
-                          从左侧列表中选择一个对话来查看历史记录
+                          从左侧列表中选择一个对话来开始智能分析
                         </p>
                       </div>
                     </div>

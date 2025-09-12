@@ -13,8 +13,7 @@ interface UseInsightAIAgentState {
 interface UseInsightAIAgentStateOptions {
   /** WebSocket连接状态 */
   webSocketStatus?: "CONNECTING" | "CONNECTED" | "DISCONNECTED";
-  /** 重连函数，用于超时时触发重连 */
-  reconnect?: () => void;
+  // 移除reconnect选项，采用纯服务器驱动的状态管理
 }
 
 /**
@@ -26,7 +25,7 @@ export function useInsightAIAgentState(
   parsedEvents: (any)[],
   options: UseInsightAIAgentStateOptions = {}
 ): UseInsightAIAgentState {
-  const { webSocketStatus, reconnect } = options;
+  const { webSocketStatus } = options; // 移除reconnect，不再使用超时重连
   const [agentState, setAgentState] = React.useState<AgentState>(AgentState.INIT);
   const stateTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const lastStateChangeRef = React.useRef<number>(Date.now());
@@ -51,36 +50,11 @@ export function useInsightAIAgentState(
     }
   }, []);
 
-  // 设置状态超时检查
-  const setStateTimeout = React.useCallback((state: AgentState, timeoutMs: number) => {
-    clearStateTimeout();
-    stateTimeoutRef.current = setTimeout(() => {
-      console.warn(`[InsightAI-AgentState] State "${state}" timeout after ${timeoutMs}ms`);
-      
-      if (state === AgentState.LOADING) {
-        console.log(`[InsightAI-AgentState] LOADING timeout detected`);
-        
-        // 检查WebSocket是否仍然连接
-        if (webSocketStatus === "CONNECTED") {
-          console.log(`[InsightAI-AgentState] WebSocket still connected during timeout, extending timeout period`);
-          // 如果WebSocket仍然连接，说明对话可能仍在进行
-          // 延长超时时间而不是强制重置，避免中断正在运行的任务
-          setStateTimeout(state, timeoutMs); // 再给一个周期的时间
-          return;
-        }
-        
-        // 只有在WebSocket断开时才尝试恢复
-        if (webSocketStatus === "DISCONNECTED" && reconnect) {
-          console.log(`[InsightAI-AgentState] WebSocket disconnected, triggering reconnect`);
-          reconnect();
-        } else {
-          // 如果WebSocket状态未知或无重连函数，保持当前状态不变
-          // 不要强制重置为INIT，避免干扰正在运行的对话
-          console.log(`[InsightAI-AgentState] Timeout but cannot determine safe recovery action, maintaining current state`);
-        }
-      }
-    }, timeoutMs);
-  }, [webSocketStatus, reconnect, clearStateTimeout]);
+  // 完全移除超时机制，与OpenHands原生前端保持一致
+  // OpenHands原生前端不使用任何智能体状态超时逻辑，完全依赖服务器驱动
+  const setStateTimeout = React.useCallback(() => {
+    // 空函数，保持接口兼容性但不执行任何超时逻辑
+  }, []);
 
   // 仅在智能体状态事件真正改变时更新状态
   React.useEffect(() => {
@@ -91,17 +65,10 @@ export function useInsightAIAgentState(
     const newState = latestAgentStateEvent.extras.agent_state as AgentState;
     setAgentState(prevState => {
       if (newState !== prevState) {
-        console.log(`[InsightAI-AgentState] State changed: ${prevState} -> ${newState}`);
         lastStateChangeRef.current = Date.now();
         
-        // 清理之前的超时定时器
+        // 清理之前的超时定时器（如果有）
         clearStateTimeout();
-        
-        // 为LOADING状态设置超时检查
-        if (newState === AgentState.LOADING) {
-          console.log(`[InsightAI-AgentState] Setting timeout for LOADING state`);
-          setStateTimeout(newState, 30000); // 30秒超时
-        }
         
         return newState;
       }
@@ -111,25 +78,11 @@ export function useInsightAIAgentState(
 
   // WebSocket连接状态变化时的处理
   React.useEffect(() => {
-    if (webSocketStatus === "CONNECTED") {
-      console.log(`[InsightAI-AgentState] WebSocket connected, current state: ${agentState}`);
-      
-      // 只有在LOADING状态且没有超时定时器时才设置超时
-      if (agentState === AgentState.LOADING && !stateTimeoutRef.current) {
-        console.log(`[InsightAI-AgentState] Setting timeout for LOADING state after WebSocket connection`);
-        setStateTimeout(AgentState.LOADING, 60000); // 增加到60秒，给更多时间
-      }
-      
-      // 对于INIT状态，不需要任何特殊处理，等待自然状态变化
-      if (agentState === AgentState.INIT) {
-        console.log(`[InsightAI-AgentState] Connected in INIT state, waiting for natural state progression`);
-      }
-    } else if (webSocketStatus === "DISCONNECTED") {
-      console.log(`[InsightAI-AgentState] WebSocket disconnected, clearing timeouts`);
+    if (webSocketStatus === "DISCONNECTED") {
       // 连接断开时清理超时定时器
       clearStateTimeout();
     }
-  }, [webSocketStatus, agentState, setStateTimeout, clearStateTimeout]);
+  }, [webSocketStatus, clearStateTimeout]);
 
   // 组件卸载时清理定时器
   React.useEffect(() => {
