@@ -11,6 +11,7 @@ import { OpenHandsObservation } from "#/types/core/observations";
 import { InsightAIStatusType } from "../shared/insight-ai-status-indicator";
 import { getActionContent } from "../../features/chat/event-content-helpers/get-action-content";
 import { getObservationContent } from "../../features/chat/event-content-helpers/get-observation-content";
+import { getObservationResult } from "../../features/chat/event-content-helpers/get-observation-result";
 import i18n from "#/i18n";
 
 /**
@@ -453,48 +454,10 @@ const getMessageStatus = (
     return event.isError ? "error" : "success";
   }
 
-  // Special handling for MCP observations - parse nested content for success indicators
+  // Use OpenHands native logic for MCP observations
   if (isOpenHandsObservation(event) && event.observation === "mcp") {
-    const content = event.content || "";
-
-    try {
-      // Try to parse the outer JSON structure
-      const parsedContent = JSON.parse(content);
-      if (parsedContent?.content && Array.isArray(parsedContent.content)) {
-        // Look for success field in the nested text content
-        for (const item of parsedContent.content) {
-          if (item?.text && typeof item.text === "string") {
-            const textContent = item.text;
-            if (
-              textContent.includes('"success": true') ||
-              textContent.includes('"success":true')
-            ) {
-              return "success";
-            }
-            if (
-              textContent.includes('"success": false') ||
-              textContent.includes('"success":false')
-            ) {
-              return "error";
-            }
-          }
-        }
-      }
-    } catch (e) {
-      // If JSON parsing fails, fall back to simple string search
-      if (
-        content.includes('"success": true') ||
-        content.includes('"success":true')
-      ) {
-        return "success";
-      }
-      if (
-        content.includes('"success": false') ||
-        content.includes('"success":false')
-      ) {
-        return "error";
-      }
-    }
+    const nativeResult = getObservationResult(event);
+    return nativeResult as InsightAIStatusType;
   }
 
   if (isOpenHandsObservation(event)) {
