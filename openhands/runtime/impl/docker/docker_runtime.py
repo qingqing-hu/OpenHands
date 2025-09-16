@@ -461,6 +461,9 @@ class DockerRuntime(ActionExecutionClient):
                 environment=environment,
                 volumes=volumes,  # type: ignore
                 device_requests=device_requests,
+                # Enable init process to handle signals and prevent zombie processes
+                # This is especially important on CentOS 7 and other Linux distributions
+                init=True,
                 **(self.config.sandbox.docker_runtime_kwargs or {}),
             )
             self.log('debug', f'Container started. Server url: {self.api_url}')

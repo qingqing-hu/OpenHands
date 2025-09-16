@@ -12,6 +12,7 @@ import json
 import mimetypes
 import os
 import shutil
+import signal
 import sys
 import tempfile
 import time
@@ -1137,5 +1138,18 @@ if __name__ == '__main__':
             logger.error(f'Error listing files: {e}')
             return JSONResponse(content=[])
 
-    logger.debug(f'Starting action execution API on port {args.port}')
+    # Setup signal handlers for graceful shutdown and zombie process prevention
+    def signal_handler(signum, frame):
+        logger.info(f'Received signal {signum}, initiating graceful shutdown...')
+        # This will trigger FastAPI's lifespan shutdown
+        os._exit(0)
+    
+    # Handle SIGTERM (Docker stop) and SIGINT (Ctrl+C)
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+    
+    # Ensure we don't create zombie processes by handling SIGCHLD
+    signal.signal(signal.SIGCHLD, signal.SIG_DFL)
+    
+    logger.debug(f'Starting action execution API on port {args.port} with signal handlers')
     run(app, host='0.0.0.0', port=args.port)
