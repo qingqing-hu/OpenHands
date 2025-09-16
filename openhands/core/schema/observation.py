@@ -14,6 +14,10 @@ class ObservationType(str, Enum):
     """The HTML content of a URL
     """
 
+    REAL_BROWSE = 'real_browse'
+    """Real browser tab navigation
+    """
+
 
     RUN = 'run'
     """The output of a command

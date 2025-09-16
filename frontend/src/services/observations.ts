@@ -69,30 +69,5 @@ export function handleObservationMessage(message: ObservationMessage) {
     default:
       break;
   }
-  if (!message.extras?.hidden) {
-    // Convert the message to the appropriate observation type
-    const { observation } = message;
-
-    switch (observation) {
-      case "browse":
-        if (message.extras?.screenshot) {
-          store.dispatch(setScreenshotSrc(message.extras.screenshot));
-        }
-        if (message.extras?.url) {
-          store.dispatch(setUrl(message.extras.url));
-        }
-        break;
-      case "browse_interactive":
-        if (message.extras?.screenshot) {
-          store.dispatch(setScreenshotSrc(message.extras.screenshot));
-        }
-        if (message.extras?.url) {
-          store.dispatch(setUrl(message.extras.url));
-        }
-        break;
-      default:
-        // For any unhandled observation types, just ignore them
-        break;
-    }
-  }
+  // Note: Legacy screenshot handling has been removed as it's no longer used
 }

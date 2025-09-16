@@ -56,3 +56,29 @@ class BrowserOutputObservation(Observation):
         return ret
 
 
+@dataclass
+class RealBrowseObservation(Observation):
+    """This data class represents a real browser navigation observation."""
+
+    url: str
+    trigger_by_action: str
+    auto_switch_triggered: bool = False
+    error: bool = False
+    observation: str = ObservationType.REAL_BROWSE
+    
+    @property
+    def message(self) -> str:
+        return 'Navigated to ' + self.url
+
+    def __str__(self) -> str:
+        ret = (
+            '**RealBrowseObservation**\n'
+            f'URL: {self.url}\n'
+            f'Error: {self.error}\n'
+            f'Auto switch triggered: {self.auto_switch_triggered}\n'
+        )
+        ret += '--- Agent Observation ---\n'
+        ret += self.content
+        return ret
+
+

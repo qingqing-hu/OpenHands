@@ -58,6 +58,7 @@ from openhands.events.observation import (
     FileWriteObservation,
     IPythonRunCellObservation,
     Observation,
+    RealBrowseObservation,
 )
 from openhands.events.serialization import event_from_dict, event_to_dict
 from openhands.runtime.browser import browse
@@ -178,6 +179,7 @@ class ActionExecutor:
         user_id: int,
         enable_browser: bool,
         browsergym_eval_env: str | None,
+        file_viewer_port: int | None = None,
     ) -> None:
         self.plugins_to_load = plugins_to_load
         self._initial_cwd = work_dir
@@ -195,6 +197,7 @@ class ActionExecutor:
         self.file_editor = OHEditor(workspace_root=self._initial_cwd)
         self.enable_browser = enable_browser
         self.browser: BrowserEnv | None = None
+        self.file_viewer_port = file_viewer_port
         self.browser_init_task: asyncio.Task | None = None
         self.browsergym_eval_env = browsergym_eval_env
 
@@ -598,6 +601,24 @@ class ActionExecutor:
             return ErrorObservation(
                 f'File {filepath} written, but failed to change ownership and permissions: {e}'
             )
+        
+        # Check if this is an HTML file and if so, trigger browser auto-switch
+        if filepath.lower().endswith(('.html', '.htm')):
+            # Create a localhost URL using the file viewer service
+            if self.file_viewer_port:
+                file_url = f"http://localhost:{self.file_viewer_port}/view?path={filepath}"
+                logger.info(f"HTML file created, triggering auto-switch to: {file_url}")
+                return RealBrowseObservation(
+                    content=f'HTML file created and ready for viewing: {action.path}',
+                    url=file_url,
+                    trigger_by_action=f"file_write:{action.path}",
+                    auto_switch_triggered=True,
+                    error=False
+                )
+            else:
+                logger.warning("File viewer port not set, cannot create URL for HTML file")
+                return FileWriteObservation(content='', path=filepath)
+        
         return FileWriteObservation(content='', path=filepath)
 
     async def edit(self, action: FileEditAction) -> Observation:
@@ -750,6 +771,7 @@ if __name__ == '__main__':
             user_id=args.user_id,
             enable_browser=args.enable_browser,
             browsergym_eval_env=args.browsergym_eval_env,
+            file_viewer_port=_file_viewer_port,
         )
         
         logger.info('[DEBUG] ActionExecutor: 开始异步初始化 (ainit)...')
