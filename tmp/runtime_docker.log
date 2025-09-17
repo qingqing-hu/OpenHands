@@ -1,48 +1,71 @@
-Web UI available at http://localhost:44883?tkn=a4fa79f7-8903-43bf-9a65-8fb13b42dc3e
-
-07:16:22 - openhands:INFO: action_execution_server.py:361 - Initializing by running 1 bash commands...
-07:16:22 - openhands:INFO: action_execution_server.py:705 - ActionExecutor initialized.
-07:16:22 - openhands:INFO: action_execution_server.py:715 - Initializing MCP Proxy Manager...
-07:16:22 - openhands.runtime.mcp.proxy.manager:INFO: manager.py:57 - No MCP servers configured for FastMCP Proxy, skipping initialization.
-07:16:22 - openhands.runtime.mcp.proxy.manager:INFO: manager.py:81 - No MCP servers configured for FastMCP Proxy, skipping mount.
+09:03:52 - openhands:WARNING: action_execution_server.py:649 - Starting Action Execution Server
+09:03:52 - openhands:INFO: action_execution_server.py:675 - Starting file viewer server
+09:03:52 - openhands:INFO: file_viewer_server.py:92 - File viewer server URL saved to /tmp/oh-server-url: http://localhost:37135
+09:03:52 - openhands:INFO: file_viewer_server.py:93 - Starting file viewer server on port 37135
+09:03:52 - openhands:INFO: action_execution_server.py:680 - File viewer server started at http://localhost:37135
+INFO:     Started server process [10]
+INFO:     Waiting for application startup.
+09:03:52 - openhands:INFO: action_execution_server.py:695 - Initializing ActionExecutor...
+INFO:     Started server process [10]
+INFO:     Waiting for application startup.
 INFO:     Application startup complete.
-INFO:     Uvicorn running on http://0.0.0.0:35598 (Press CTRL+C to quit)
-INFO:     172.17.0.1:52674 - "GET /alive HTTP/1.1" 200 OK
-INFO:     172.17.0.1:52674 - "POST /execute_action HTTP/1.1" 200 OK
-INFO:     172.17.0.1:52674 - "POST /execute_action HTTP/1.1" 200 OK
-INFO:     172.17.0.1:52674 - "POST /execute_action HTTP/1.1" 200 OK
-INFO:     172.17.0.1:52674 - "POST /execute_action HTTP/1.1" 200 OK
+INFO:     Uvicorn running on http://127.0.0.1:37135 (Press CTRL+C to quit)
+09:03:52 - openhands:INFO: action_execution_server.py:217 - No max memory limit set, using all available system memory
+09:04:20 - openhands:INFO: browser_env.py:103 - Successfully called env.reset
+09:04:20 - openhands:INFO: browser_env.py:121 - Browser env started.
+Server bound to 0.0.0.0:48039 (IPv4)
+
+Extension host agent listening on 48039
+
+
+
+[09:04:20]
+
+
+
+
+
+
+
+
+
+Web UI available at http://localhost:48039?tkn=f2b52da7-952c-48ff-88c9-ae0b0640a9ab
+
+09:04:52 - openhands:INFO: action_execution_server.py:361 - Initializing by running 1 bash commands...
+09:04:52 - openhands:INFO: action_execution_server.py:705 - ActionExecutor initialized.
+09:04:52 - openhands:INFO: action_execution_server.py:715 - Initializing MCP Proxy Manager...
+09:04:52 - openhands.runtime.mcp.proxy.manager:INFO: manager.py:57 - No MCP servers configured for FastMCP Proxy, skipping initialization.
+09:04:52 - openhands.runtime.mcp.proxy.manager:INFO: manager.py:81 - No MCP servers configured for FastMCP Proxy, skipping mount.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:36588 (Press CTRL+C to quit)
+INFO:     172.17.0.1:33284 - "GET /alive HTTP/1.1" 200 OK
+INFO:     172.17.0.1:33284 - "POST /execute_action HTTP/1.1" 200 OK
+INFO:     172.17.0.1:33284 - "POST /execute_action HTTP/1.1" 200 OK
+INFO:     172.17.0.1:33284 - "POST /execute_action HTTP/1.1" 200 OK
+INFO:     172.17.0.1:33284 - "POST /execute_action HTTP/1.1" 200 OK
 [Errno 2] No such file or directory: '.openhands/setup.sh'
-INFO:     172.17.0.1:52674 - "POST /execute_action HTTP/1.1" 200 OK
+INFO:     172.17.0.1:33284 - "POST /execute_action HTTP/1.1" 200 OK
 [Errno 2] No such file or directory: '.openhands/pre-commit.sh'
-INFO:     172.17.0.1:52674 - "POST /execute_action HTTP/1.1" 200 OK
+INFO:     172.17.0.1:33284 - "POST /execute_action HTTP/1.1" 200 OK
 [Errno 2] No such file or directory: '/workspace/.openhands_instructions'
-INFO:     172.17.0.1:52674 - "POST /execute_action HTTP/1.1" 200 OK
-INFO:     172.17.0.1:52674 - "POST /list_files HTTP/1.1" 200 OK
-07:16:26 - openhands:INFO: action_execution_server.py:861 - Updating MCP server with tools: [
+INFO:     172.17.0.1:33284 - "POST /execute_action HTTP/1.1" 200 OK
+INFO:     172.17.0.1:33284 - "POST /list_files HTTP/1.1" 200 OK
+09:05:01 - openhands:INFO: action_execution_server.py:861 - Updating MCP server with tools: [
   {
     "name": "fetch",
     "command": "uvx",
     "args": [
       "mcp-server-fetch"
     ],
-    "env": {}
+    "env": {
+      "UV_INDEX_URL": "http://mirrors.myhexin.com/repository/pypi-public/simple/",
+      "UV_TRUSTED_HOST": "mirrors.myhexin.com",
+      "UV_INSECURE_HOST": "mirrors.myhexin.com"
+    }
   }
 ]
-07:16:26 - openhands.runtime.mcp.proxy.manager:INFO: manager.py:69 - FastMCP Proxy initialized successfully
-07:16:26 - openhands.runtime.mcp.proxy.manager:INFO: manager.py:117 - Mounted FastMCP Proxy app at /mcp
-07:16:26 - openhands:INFO: action_execution_server.py:867 - MCP Proxy Manager updated and remounted successfully
-INFO:     172.17.0.1:52674 - "POST /update_mcp_server HTTP/1.1" 200 OK
-INFO:     172.17.0.1:52692 - "GET /mcp/sse HTTP/1.1" 200 OK
-INFO:     172.17.0.1:52696 - "POST /mcp/messages/?session_id=2e969929fee9460c9f23f235e5bd67dd HTTP/1.1" 202 Accepted
-INFO:     172.17.0.1:52696 - "POST /mcp/messages/?session_id=2e969929fee9460c9f23f235e5bd67dd HTTP/1.1" 202 Accepted
-INFO:     172.17.0.1:52696 - "POST /mcp/messages/?session_id=2e969929fee9460c9f23f235e5bd67dd HTTP/1.1" 202 Accepted
-INFO:     172.17.0.1:57752 - "GET /mcp/sse HTTP/1.1" 200 OK
-INFO:     172.17.0.1:57782 - "GET /mcp/sse HTTP/1.1" 200 OK
-INFO:     172.17.0.1:57842 - "GET /openhands/mcp/sse HTTP/1.1" 404 Not Found
-INFO:     172.17.0.1:57846 - "GET /mcp/sse HTTP/1.1" 200 OK
-error: Failed to fetch: `https://pypi.org/simple/mcp-server-fetch/`
-  Caused by: Request failed after 3 retries
-  Caused by: error sending request for url (https://pypi.org/simple/mcp-server-fetch/)
-  Caused by: operation timed out
-INFO:     172.17.0.1:52876 - "GET /vscode/connection_token HTTP/1.1" 200 OK
+09:05:01 - openhands.runtime.mcp.proxy.manager:INFO: manager.py:69 - FastMCP Proxy initialized successfully
+09:05:01 - openhands.runtime.mcp.proxy.manager:INFO: manager.py:117 - Mounted FastMCP Proxy app at /mcp
+09:05:01 - openhands:INFO: action_execution_server.py:867 - MCP Proxy Manager updated and remounted successfully
+INFO:     172.17.0.1:33284 - "POST /update_mcp_server HTTP/1.1" 200 OK
+INFO:     172.17.0.1:33302 - "GET /mcp/sse HTTP/1.1" 200 OK

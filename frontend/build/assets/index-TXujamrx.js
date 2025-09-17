@@ -1,0 +1,81 @@
+import{A as R}from"./use-ws-error-message-zI2STNuz.js";import{j as s,R as g}from"./chunk-PVWAREVJ-CBTMjtFb.js";import{c as m}from"./utils-KsbccAr1.js";import{F as S}from"./index-BIK6u6tQ.js";import{S as M}from"./prism-Bn3SPeE8.js";import{A as h}from"./store-BNTGNbOk.js";import"./index-B7ioC3DE.js";import{i}from"./i18next-Lgj2Bm8L.js";import{G as d}from"./iconBase-RaU8dPIN.js";function it(t,e,r,n){return{action:R.MESSAGE,args:{content:t,image_urls:e,file_urls:r,timestamp:n}}}function j({width:t=20,height:e=20,active:r}){return s.jsx("svg",{width:t,height:e,viewBox:`0 0 ${t} ${e}`,fill:"none",xmlns:"http://www.w3.org/2000/svg",children:s.jsx("path",{fillRule:"evenodd",clipRule:"evenodd",d:"M11.204 15.0037L6.65511 9.99993L11.204 4.99617L12.1289 5.83701L8.34444 9.99993L12.1289 14.1628L11.204 15.0037Z",fill:r?"#D4D4D4":"#525252"})})}function I({width:t=20,height:e=20,active:r}){return s.jsx("svg",{width:t,height:e,viewBox:`0 0 ${t} ${e}`,fill:"none",xmlns:"http://www.w3.org/2000/svg",children:s.jsx("path",{fillRule:"evenodd",clipRule:"evenodd",d:"M8.79602 4.99634L13.3449 10.0001L8.79602 15.0038L7.87109 14.163L11.6556 10.0001L7.87109 5.83718L8.79602 4.99634Z",fill:r?"#D4D4D4":"#525252"})})}function p({onClick:t,className:e}){return s.jsx("button",{type:"button",onClick:t,className:m("bg-neutral-400 rounded-full w-5 h-5 flex items-center justify-center",e),children:s.jsx(M,{width:18,height:18})})}function b({src:t,size:e="small"}){return s.jsx("img",{role:"img",alt:"",src:t,className:m("rounded-sm object-cover",e==="small"&&"w-[62px] h-[62px]",e==="large"&&"w-[100px] h-[100px]")})}function A({src:t,onRemove:e,size:r="small"}){return s.jsxs("div",{"data-testid":"image-preview",className:"relative w-fit shrink-0",children:[s.jsx(b,{src:t,size:r}),e&&s.jsx(p,{onClick:e,className:"absolute right-[3px] top-[3px]"})]})}function at({size:t="small",images:e,onRemove:r}){const n=g.useRef(null),[l,c]=g.useState(!1),[f,_]=g.useState(!0),[w,$]=g.useState(!1);g.useEffect(()=>{const a=n.current;if(a){const o=a.scrollWidth>a.clientWidth;c(o)}},[e]);const L=a=>{const o=a.currentTarget;_(o.scrollLeft===0),$(o.scrollLeft+o.clientWidth===o.scrollWidth)};return s.jsxs("div",{"data-testid":"image-carousel",className:"relative",children:[l&&s.jsx("div",{className:"absolute right-full transform top-1/2 -translate-y-1/2",children:s.jsx(j,{active:!f})}),s.jsx("div",{ref:n,onScroll:L,className:m("flex overflow-x-auto",t==="small"&&"gap-2",t==="large"&&"gap-4"),children:e.map((a,o)=>s.jsx(A,{size:t,src:a,onRemove:r?()=>r?.(o):void 0},o))}),l&&s.jsx("div",{className:"absolute left-full transform top-1/2 -translate-y-1/2",children:s.jsx(I,{active:!w})})]})}function N({filename:t,onRemove:e}){return s.jsxs("div",{"data-testid":"file-item",className:"flex flex-row gap-x-1 items-center justify-start",children:[s.jsx(S,{className:"h-4 w-4"}),s.jsx("code",{className:"text-sm flex-1 text-white truncate",children:t}),e&&s.jsx(p,{onClick:e})]})}function lt({files:t,onRemove:e}){return s.jsx("div",{"data-testid":"file-list",className:m("flex flex-col gap-y-1.5 justify-start"),children:t.map((r,n)=>s.jsx(N,{filename:r,onRemove:e?()=>e?.(n):void 0},n))})}const ct=t=>t.type.startsWith("image/"),O=3*1024*1024,T=3*1024*1024;function y(t){const e=t.filter(r=>r.size>O);if(e.length>0){const r=e.map(n=>n.name);return{isValid:!1,errorMessage:`Files exceeding 3MB are not allowed: ${r.join(", ")}`,oversizedFiles:r}}return{isValid:!0}}function E(t,e=[]){const r=e.reduce((c,f)=>c+f.size,0),n=t.reduce((c,f)=>c+f.size,0),l=r+n;return l>T?{isValid:!1,errorMessage:`Total file size would be ${(l/1048576).toFixed(1)}MB, exceeding the 3MB limit. Please select fewer or smaller files.`}:{isValid:!0}}function ut(t,e=[]){const r=y(t);return r.isValid?E(t,e):r}const V=t=>{const e=t.content.length>0,r=t.content.toLowerCase().includes("error:");switch(t.observation){case"run":{const n=t.extras.metadata.exit_code;return n===-1?"timeout":n===0?"success":"error"}case"run_ipython":case"read":case"edit":case"mcp":return!e||r?"error":"success";default:return"success"}},u=1e3,C=t=>`\`\`\`json
+${JSON.stringify(t,null,2)}
+\`\`\``,x=t=>{switch(t){case h.LOW:return i.t("SECURITY$LOW_RISK");case h.MEDIUM:return i.t("SECURITY$MEDIUM_RISK");case h.HIGH:return i.t("SECURITY$HIGH_RISK");case h.UNKNOWN:default:return i.t("SECURITY$UNKNOWN_RISK")}},v=t=>{let{content:e}=t.args;return e.length>u&&(e=`${t.args.content.slice(0,u)}...`),`${t.args.path}
+${e}`},k=t=>{let e=`Command:
+\`${t.args.command}\``;return t.args.confirmation_state==="awaiting_confirmation"&&(e+=`
+
+${x(t.args.security_risk)}`),e},F=t=>{let e=`\`\`\`
+${t.args.code}
+\`\`\``;return t.args.confirmation_state==="awaiting_confirmation"&&(e+=`
+
+${x(t.args.security_risk)}`),e},B=t=>`Browsing ${t.args.url}`,z=t=>`**Action:**
+
+\`\`\`python
+${t.args.browser_actions}
+\`\`\``,D=t=>{const e=t.args.name||"",r=t.args.arguments||{};let n=`**MCP Tool Call:** ${e}
+
+`;return t.args.thought&&(n+=`
+
+**Thought:**
+${t.args.thought}`),n+=`
+
+**Arguments:**
+\`\`\`json
+${JSON.stringify(r,null,2)}
+\`\`\``,n},H=t=>t.args.thought,U=t=>{let e=t.args.final_thought;switch(t.args.task_completed){case"success":e+=`
+
+
+${i.t("FINISH$TASK_COMPLETED_SUCCESSFULLY")}`;break;case"failure":e+=`
+
+
+${i.t("FINISH$TASK_NOT_COMPLETED")}`;break;case"partial":default:e+=`
+
+
+${i.t("FINISH$TASK_COMPLETED_PARTIALLY")}`;break}return e.trim()},Z=()=>"",K=t=>`\`\`\`json
+${JSON.stringify(t,null,2)}
+\`\`\``,dt=t=>{switch(t.action){case"read":case"edit":case"message":return Z();case"write":return v(t);case"run":return k(t);case"run_ipython":return F(t);case"browse":return B(t);case"browse_interactive":return z(t);case"call_tool_mcp":return D(t);case"think":return H(t);case"finish":return U(t);default:return t.action==="condensation"?K(t):C(t)}},W=t=>`\`\`\`
+${t.content}
+\`\`\``,P=t=>{let{content:e}=t;return e.length>u&&(e=`${e.slice(0,u)}...`),`Output:
+\`\`\`sh
+${e.trim()||i.t("OBSERVATION$COMMAND_NO_OUTPUT")}
+\`\`\``},G=(t,e)=>e?`\`\`\`diff
+${t.extras.diff||t.content}
+\`\`\``:t.content,Y=t=>{let e=`**URL:** ${t.extras.url}
+`;return t.extras.error&&(e+=`
+
+**Error:**
+${t.extras.error}
+`),e+=`
+
+**Output:**
+${t.content}`,e.length>u&&(e=`${e.slice(0,u)}...(truncated)`),e},J=t=>{let e="";if(t.extras.recall_type==="workspace_context"){if(t.extras.repo_name&&(e+=`
+
+**Repository:** ${t.extras.repo_name}`),t.extras.repo_directory&&(e+=`
+
+**Directory:** ${t.extras.repo_directory}`),t.extras.date&&(e+=`
+
+**Date:** ${t.extras.date}`),t.extras.runtime_hosts&&Object.keys(t.extras.runtime_hosts).length>0){e+=`
+
+**Available Hosts**`;for(const[r,n]of Object.entries(t.extras.runtime_hosts))e+=`
+
+- ${r} (port ${n})`}t.extras.repo_instructions&&(e+=`
+
+**Repository Instructions:**
+
+${t.extras.repo_instructions}`),t.extras.additional_agent_instructions&&(e+=`
+
+**Additional Instructions:**
+
+${t.extras.additional_agent_instructions}`)}if(t.extras.microagent_knowledge&&t.extras.microagent_knowledge.length>0){e+=`
+
+**Triggered Microagent Knowledge:**`;for(const r of t.extras.microagent_knowledge)e+=`
+
+- **${r.name}** (triggered by keyword: ${r.trigger})
+
+\`\`\`
+${r.content}
+\`\`\``}if(t.extras.custom_secrets_descriptions&&Object.keys(t.extras.custom_secrets_descriptions).length>0){e+=`
+
+**Custom Secrets**`;for(const[r,n]of Object.entries(t.extras.custom_secrets_descriptions))e+=`
+
+- $${r}: ${n}`}return e},ft=t=>{switch(t.observation){case"read":return W(t);case"edit":return G(t,V(t)==="success");case"run_ipython":case"run":return P(t);case"browse":return Y(t);case"recall":return J(t);case"mcp":return C(t);default:return C(t)}};function gt(t){return d({attr:{viewBox:"0 0 16 16",fill:"currentColor"},child:[{tag:"path",attr:{fillRule:"evenodd",clipRule:"evenodd",d:"M7.976 10.072l4.357-4.357.62.618L8.284 11h-.618L3 6.333l.619-.618 4.357 4.357z"},child:[]}]})(t)}function ht(t){return d({attr:{viewBox:"0 0 16 16",fill:"currentColor"},child:[{tag:"path",attr:{fillRule:"evenodd",clipRule:"evenodd",d:"M5.928 7.976l4.357 4.357-.618.62L5 8.284v-.618L9.667 3l.618.619-4.357 4.357z"},child:[]}]})(t)}function mt(t){return d({attr:{viewBox:"0 0 16 16",fill:"currentColor"},child:[{tag:"path",attr:{fillRule:"evenodd",clipRule:"evenodd",d:"M10.072 8.024L5.715 3.667l.618-.62L11 7.716v.618L6.333 13l-.618-.619 4.357-4.357z"},child:[]}]})(t)}function Ct(t){return d({attr:{viewBox:"0 0 16 16",fill:"currentColor"},child:[{tag:"path",attr:{fillRule:"evenodd",clipRule:"evenodd",d:"M8.024 5.928l-4.357 4.357-.62-.618L7.716 5h.618L13 9.667l-.619.618-4.357-4.357z"},child:[]}]})(t)}function pt(t){return d({attr:{viewBox:"0 0 16 16",fill:"currentColor"},child:[{tag:"path",attr:{d:"M4.708 5.578L2.061 8.224l2.647 2.646-.708.708-3-3V7.87l3-3 .708.708zm7-.708L11 5.578l2.647 2.646L11 10.87l.708.708 3-3V7.87l-3-3zM4.908 13l.894.448 5-10L9.908 3l-5 10z"},child:[]}]})(t)}function xt(t){return d({attr:{viewBox:"0 0 16 16",fill:"currentColor"},child:[{tag:"path",attr:{fillRule:"evenodd",clipRule:"evenodd",d:"M8 8C8 9.10457 7.10457 10 6 10C4.89543 10 4 9.10457 4 8C4 6.89543 4.89543 6 6 6C7.10457 6 8 6.89543 8 8ZM5 8C5 8.55228 5.44772 9 6 9C6.55228 9 7 8.55228 7 8C7 7.44772 6.55228 7 6 7C5.44772 7 5 7.44772 5 8Z"},child:[]},{tag:"path",attr:{fillRule:"evenodd",clipRule:"evenodd",d:"M8 8C8 9.10457 8.89543 10 10 10C11.1046 10 12 9.10457 12 8C12 6.89543 11.1046 6 10 6C8.89543 6 8 6.89543 8 8ZM11 8C11 8.55228 10.5523 9 10 9C9.44772 9 9 8.55228 9 8C9 7.44772 9.44772 7 10 7C10.5523 7 11 7.44772 11 8Z"},child:[]},{tag:"path",attr:{fillRule:"evenodd",clipRule:"evenodd",d:"M8.51001 11.251C9.02924 11.1436 9.50557 10.8864 9.88001 10.511L10.58 11.221C9.89283 11.901 8.96678 12.2851 8.00001 12.291C7.51235 12.2873 7.03006 12.1888 6.58001 12.001C6.13507 11.8188 5.73061 11.5503 5.39001 11.211L6.09001 10.501C6.40274 10.8119 6.78661 11.0418 7.20833 11.1708C7.63005 11.2998 8.07687 11.3238 8.51001 11.241V11.251Z"},child:[]},{tag:"path",attr:{fillRule:"evenodd",clipRule:"evenodd",d:"M9.5 1.5C9.5 2.15311 9.0826 2.70873 8.5 2.91465V3H11C12.6569 3 14 4.34315 14 6V7L15 8V10L14 11V12C14 13.6569 12.6569 15 11 15H5C3.34315 15 2 13.6569 2 12V11L1 10V8L2 7V6C2 4.34315 3.34315 3 5 3H7.5V2.91465C6.9174 2.70873 6.5 2.15311 6.5 1.5C6.5 0.671573 7.17157 0 8 0C8.82843 0 9.5 0.671573 9.5 1.5ZM5 4C3.89543 4 3 4.89543 3 6V12C3 13.1046 3.89543 14 5 14H11C12.1046 14 13 13.1046 13 12V6C13 4.89543 12.1046 4 11 4H5Z"},child:[]}]})(t)}export{j as C,lt as F,at as I,xt as V,dt as a,ft as b,it as c,ht as d,Ct as e,mt as f,V as g,gt as h,ct as i,I as j,pt as k,ut as v};
