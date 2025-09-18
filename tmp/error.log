@@ -1,0 +1,133 @@
+05:48:30 - openhands:INFO: base.py:818 - [runtime c5abb206b6a549d1962b926b54dcc883] Selected repo: None, loading microagents from /workspace/.openhands/microagents (inside runtime)
+05:48:30 - openhands:ERROR: agent_session.py:215 - Agent session start failed in 11.699674129486084s
+05:48:30 - openhands:ERROR: session.py:247 - Error creating agent_session: [Errno 111] Connection refused
+Traceback (most recent call last):
+  File "/app/.venv/lib/python3.12/site-packages/httpx/_transports/default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "/app/.venv/lib/python3.12/site-packages/httpx/_transports/default.py", line 250, in handle_request
+    resp = self._pool.handle_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/httpcore/_sync/connection_pool.py", line 256, in handle_request
+    raise exc from None
+  File "/app/.venv/lib/python3.12/site-packages/httpcore/_sync/connection_pool.py", line 236, in handle_request
+    response = connection.handle_request(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/httpcore/_sync/connection.py", line 101, in handle_request
+    raise exc
+  File "/app/.venv/lib/python3.12/site-packages/httpcore/_sync/connection.py", line 78, in handle_request
+    stream = self._connect(request)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/httpcore/_sync/connection.py", line 124, in _connect
+    stream = self._network_backend.connect_tcp(**kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/httpcore/_backends/sync.py", line 207, in connect_tcp
+    with map_exceptions(exc_map):
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "/app/.venv/lib/python3.12/site-packages/httpcore/_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.ConnectError: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/app/openhands/server/session/session.py", line 212, in initialize_agent
+    await self.agent_session.start(
+  File "/app/openhands/server/session/agent_session.py", line 152, in start
+    self.memory = await self._create_memory(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/openhands/server/session/agent_session.py", line 489, in _create_memory
+    microagents: list[BaseMicroagent] = await call_sync_from_async(
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/openhands/utils/async_utils.py", line 18, in call_sync_from_async
+    result = await coro
+             ^^^^^^^^^^
+  File "/usr/local/lib/python3.12/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/openhands/utils/async_utils.py", line 17, in <lambda>
+    coro = loop.run_in_executor(None, lambda: fn(*args, **kwargs))
+                                              ^^^^^^^^^^^^^^^^^^^
+  File "/app/openhands/runtime/base.py", line 825, in get_microagents_from_selected_repo
+    obs = self.read(
+          ^^^^^^^^^^
+  File "/app/openhands/runtime/impl/action_execution/action_execution_client.py", line 343, in read
+    return self.send_action_for_execution(action)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/openhands/runtime/impl/action_execution/action_execution_client.py", line 317, in send_action_for_execution
+    response = self._send_action_server_request(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/tenacity/__init__.py", line 338, in wrapped_f
+    return copy(f, *args, **kw)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/tenacity/__init__.py", line 477, in __call__
+    do = self.iter(retry_state=retry_state)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/tenacity/__init__.py", line 378, in iter
+    result = action(retry_state)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/tenacity/__init__.py", line 400, in <lambda>
+    self._add_action_func(lambda rs: rs.outcome.result())
+                                     ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/app/.venv/lib/python3.12/site-packages/tenacity/__init__.py", line 480, in __call__
+    result = fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/app/openhands/runtime/impl/action_execution/action_execution_client.py", line 126, in _send_action_server_request
+    return send_request(self.session, method, url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/tenacity/__init__.py", line 338, in wrapped_f
+    return copy(f, *args, **kw)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/tenacity/__init__.py", line 477, in __call__
+    do = self.iter(retry_state=retry_state)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/tenacity/__init__.py", line 378, in iter
+    result = action(retry_state)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/tenacity/__init__.py", line 400, in <lambda>
+    self._add_action_func(lambda rs: rs.outcome.result())
+                                     ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/app/.venv/lib/python3.12/site-packages/tenacity/__init__.py", line 480, in __call__
+    result = fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/app/openhands/runtime/utils/request.py", line 44, in send_request
+    response = session.request(method, url, timeout=timeout, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/openhands/utils/http_session.py", line 31, in request
+    return CLIENT.request(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/httpx/_client.py", line 825, in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/httpx/_client.py", line 914, in send
+    response = self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/httpx/_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/httpx/_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/httpx/_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/.venv/lib/python3.12/site-packages/httpx/_transports/default.py", line 249, in handle_request
+    with map_httpcore_exceptions():
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "/app/.venv/lib/python3.12/site-packages/httpx/_transports/default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ConnectError: [Errno 111] Connection refused
+[DEBUG] Incoming request path: /openhands/api/conversations/c5abb206b6a549d1962b926b54dcc883

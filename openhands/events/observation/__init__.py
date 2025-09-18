@@ -5,7 +5,7 @@ from openhands.events.observation.agent import (
     AgentThinkObservation,
     RecallObservation,
 )
-from openhands.events.observation.browse import BrowserOutputObservation
+from openhands.events.observation.browse import BrowserOutputObservation, RealBrowseObservation
 from openhands.events.observation.commands import (
     CmdOutputMetadata,
     CmdOutputObservation,
@@ -35,6 +35,7 @@ __all__ = [
     'CmdOutputMetadata',
     'IPythonRunCellObservation',
     'BrowserOutputObservation',
+    'RealBrowseObservation',
     'FileReadObservation',
     'FileWriteObservation',
     'FileEditObservation',

@@ -9,7 +9,7 @@ from openhands.events.observation.agent import (
     MicroagentKnowledge,
     RecallObservation,
 )
-from openhands.events.observation.browse import BrowserOutputObservation
+from openhands.events.observation.browse import BrowserOutputObservation, RealBrowseObservation
 from openhands.events.observation.commands import (
     CmdOutputMetadata,
     CmdOutputObservation,
@@ -36,6 +36,7 @@ observations = (
     CmdOutputObservation,
     IPythonRunCellObservation,
     BrowserOutputObservation,
+    RealBrowseObservation,
     FileReadObservation,
     FileWriteObservation,
     FileEditObservation,

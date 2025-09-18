@@ -1,0 +1,36 @@
+openhands-app-  | 06:30:21 - openhands:INFO: listen_socket.py:138 - Successfully joined conversation b9d9dc00a420470e96798b77b6539b3d with connection_id xZ-UidLiOggWSpPOAAAV
+openhands-app-  | 06:32:24 - openhands:ERROR: client.py:103 - McpError connecting to http://172.17.0.1:38511/mcp/sse: Connection closed
+openhands-app-  | 06:32:24 - openhands:ERROR: utils.py:119 - Failed to connect to url='http://172.17.0.1:38511/mcp/sse' api_key='******': Connection closed
+openhands-app-  | Traceback (most recent call last):
+openhands-app-  |   File "/app/openhands/mcp/utils.py", line 112, in create_mcp_clients
+openhands-app-  |     await client.connect_http(server, conversation_id=conversation_id)
+openhands-app-  |   File "/app/openhands/mcp/client.py", line 100, in connect_http
+openhands-app-  |     await self._initialize_and_list_tools()
+openhands-app-  |   File "/app/openhands/mcp/client.py", line 41, in _initialize_and_list_tools
+openhands-app-  |     tools = await self.client.list_tools()
+openhands-app-  |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+openhands-app-  |   File "/usr/local/lib/python3.12/site-packages/fastmcp/client/client.py", line 564, in list_tools
+openhands-app-  |     result = await self.list_tools_mcp()
+openhands-app-  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+openhands-app-  |   File "/usr/local/lib/python3.12/site-packages/fastmcp/client/client.py", line 552, in list_tools_mcp
+openhands-app-  |     result = await self.session.list_tools()
+openhands-app-  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+openhands-app-  |   File "/usr/local/lib/python3.12/site-packages/mcp/client/session.py", line 386, in list_tools
+openhands-app-  |     result = await self.send_request(
+openhands-app-  |              ^^^^^^^^^^^^^^^^^^^^^^^^
+openhands-app-  |   File "/usr/local/lib/python3.12/site-packages/mcp/shared/session.py", line 286, in send_request
+openhands-app-  |     raise McpError(response_or_error.error)
+openhands-app-  | mcp.shared.exceptions.McpError: Connection closed
+openhands-app-  | 06:32:24 - openhands:INFO: utils.py:106 - Initializing MCP agent for url='http://localhost:5000/mcp/mcp' api_key='******' with SHTTP connection...
+openhands-app-  | [DEBUG] Incoming request path: /mcp/mcp
+openhands-app-  | INFO:     127.0.0.1:37884 - "POST /mcp/mcp HTTP/1.1" 307 Temporary Redirect
+openhands-app-  | [DEBUG] Incoming request path: /mcp/mcp/
+openhands-app-  | INFO:     127.0.0.1:37884 - "POST /mcp/mcp/ HTTP/1.1" 200 OK
+openhands-app-  | [DEBUG] Incoming request path: /mcp/mcp
+openhands-app-  | INFO:     127.0.0.1:37886 - "POST /mcp/mcp HTTP/1.1" 307 Temporary Redirect
+openhands-app-  | [DEBUG] Incoming request path: /mcp/mcp/
+openhands-app-  | INFO:     127.0.0.1:37886 - "POST /mcp/mcp/ HTTP/1.1" 202 Accepted
+openhands-app-  | [DEBUG] Incoming request path: /mcp/mcp
+openhands-app-  | INFO:     127.0.0.1:37888 - "POST /mcp/mcp HTTP/1.1" 307 Temporary Redirect
+openhands-app-  | [DEBUG] Incoming request path: /mcp/mcp/
+openhands-app-  | INFO:     127.0.0.1:37888 - "POST /mcp/mcp/ HTTP/1.1" 200 OK
