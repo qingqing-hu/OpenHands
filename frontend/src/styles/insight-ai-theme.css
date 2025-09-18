@@ -1,5 +1,8 @@
 /* InsightAI Theme - Modern AI Interface */
 
+/* InsightAI Browser Styles */
+@import './insight-ai-browser.css';
+
 :root {
   /* InsightAI Light Theme Color Palette */
   --insight-primary: #0072f5;
@@ -372,6 +375,16 @@ body:has(.insight-ai-layout) {
   background-clip: padding-box;
 }
 
+/* 水平滚动条始终可见 */
+.insight-ai-scrollbar::-webkit-scrollbar:horizontal {
+  height: 6px;
+}
+
+.insight-ai-scrollbar::-webkit-scrollbar-thumb:horizontal {
+  opacity: 1;
+  background: #d1d5db;
+}
+
 .insight-ai-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
   cursor: grab;
@@ -389,6 +402,17 @@ body:has(.insight-ai-layout) {
 
 /* Firefox 滚动条样式 */
 .insight-ai-scrollbar:hover {
+  scrollbar-color: #d1d5db transparent;
+}
+
+/* Firefox 水平滚动条始终可见 */
+.insight-ai-scrollbar {
+  scrollbar-width: thin;
+}
+
+/* 对于有水平滚动的容器，显示水平滚动条 */
+.insight-ai-scrollbar[style*="overflow-x: scroll"],
+.insight-ai-scrollbar[style*="overflowX: scroll"] {
   scrollbar-color: #d1d5db transparent;
 }
 
@@ -481,14 +505,56 @@ body:has(.insight-ai-layout) {
   font-size: 13px !important;
 }
 
+/* 所有扩展内容中的JSON查看器统一使用13px字体 */
+.insight-ai-scrollbar .react-json-view {
+  font-size: 13px !important;
+  display: block !important; /* 强制block布局，让白底容器宽度不受限制 */
+}
+
+.insight-ai-scrollbar .react-json-view * {
+  font-size: 13px !important;
+}
+
 /* Reset ReactJsonView margins in expanded content */
 .insight-ai-scrollbar .react-json-view {
   margin-bottom: 0 !important;
   padding-bottom: 0 !important;
+  /* 防止JSON内容自动换行，与markdown保持一致 */
+  white-space: nowrap !important;
+  /* 不设置overflow-x，让父容器控制滚动 */
 }
 
 .insight-ai-scrollbar .react-json-view:last-child {
   margin-bottom: 0 !important;
+}
+
+/* 防止ReactJsonView内部元素换行 */
+.insight-ai-scrollbar .react-json-view .pretty-json-container,
+.insight-ai-scrollbar .react-json-view .object-key-val,
+.insight-ai-scrollbar .react-json-view .object-meta-data,
+.insight-ai-scrollbar .react-json-view .array-key-val,
+.insight-ai-scrollbar .react-json-view .variable-row,
+.insight-ai-scrollbar .react-json-view span {
+  white-space: nowrap !important;
+}
+
+/* 确保JSON容器不会因内容过宽而自动换行 */
+.insight-ai-scrollbar .react-json-view .object-content,
+.insight-ai-scrollbar .react-json-view .array-content {
+  display: inline-block !important;
+  white-space: nowrap !important;
+}
+
+/* 确保ReactJsonView根容器支持水平滚动 */
+.insight-ai-scrollbar .react-json-view .pretty-json-container {
+  min-width: max-content !important;
+  display: inline-block !important;
+}
+
+/* 防止ReactJsonView内部的div阻止水平滚动 */
+.insight-ai-scrollbar .react-json-view > div {
+  min-width: max-content !important;
+  display: inline-block !important;
 }
 
 /* InsightAI Chat Input - ChatGPT Style */

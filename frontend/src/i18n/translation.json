@@ -7745,7 +7745,7 @@
     },
     "OBSERVATION_MESSAGE$BROWSE": {
         "en": "Browsing completed",
-        "zh-CN": "浏览",
+        "zh-CN": "网页浏览",
         "zh-TW": "瀏覽",
         "ko-KR": "탐색",
         "ja": "閲覧",

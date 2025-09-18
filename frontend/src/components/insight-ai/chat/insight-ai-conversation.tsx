@@ -2,12 +2,15 @@ import React from "react";
 import { BarChart3, WifiOff, Wifi } from "lucide-react";
 import { LuPanelLeft, LuPanelRight } from "react-icons/lu";
 import { useQueryClient } from "@tanstack/react-query";
-import { InsightAICollapsibleMessages } from "./insight-ai-collapsible-message";
+import { InsightAICollapsibleMessages, ScrollState } from "./insight-ai-collapsible-message";
 import { InsightAIChatInput } from "./insight-ai-chat-input";
 import { createChatMessage } from "#/services/chat-service";
 import { useInsightAIMessages } from "#/hooks/insight-ai/use-insight-ai-messages";
 import { useConversationLoadingState } from "#/hooks/insight-ai/use-conversation-loading-state";
 import { useInsightAIAgentState } from "#/hooks/insight-ai/use-insight-ai-agent-state";
+import { AgentState } from "#/types/agent-state";
+import { useSelector } from "react-redux";
+import { RootState } from "#/store";
 import { ConversationLoadingIndicator } from "../shared/insight-ai-loading-states";
 import { WebSocketConnectionError } from "../shared/websocket-connection-error";
 import OpenHands from "#/api/open-hands";
@@ -48,14 +51,14 @@ const WebSocketStatusIcon = React.memo(({ status }: { status: string }) => {
       case "NOT_CONNECTED":
         return {
           icon: WifiOff,
-          color: "text-gray-400",
+          color: "text-gray-500",
           bgColor: "bg-gray-50",
           title: "未连接",
         };
       default:
         return {
           icon: WifiOff,
-          color: "text-gray-400",
+          color: "text-gray-500",
           bgColor: "bg-gray-50",
           title: "未连接",
         };
@@ -141,6 +144,12 @@ export function InsightAIConversation({
   // 启动对话的加载状态
   const [isStarting, setIsStarting] = React.useState(false);
 
+  // 滚动状态管理
+  const [scrollState, setScrollState] = React.useState<ScrollState>({
+    showScrollToBottom: false,
+    scrollToBottom: () => {},
+  });
+
   // ===== 所有的 React Hooks 必须在组件顶层无条件调用 =====
 
   // 使用简化的InsightAI消息处理hook
@@ -177,9 +186,11 @@ export function InsightAIConversation({
     conversationRuntimeStatus: Boolean(conversationData?.runtime_status),
   });
 
-  // 使用智能体状态管理（移除reconnect参数，采用纯服务器驱动方式）
+  // 使用Redux store的智能体状态（与OpenHands原生保持一致）
+  const { curAgentState } = useSelector((state: RootState) => state.agent);
+
+  // 使用自定义Hook获取其他状态信息
   const {
-    agentState,
     isWaitingForUserInput,
     isInputDisabled,
     getAgentStateMessage,
@@ -188,14 +199,19 @@ export function InsightAIConversation({
     // reconnect - 不再传递，避免任何超时重连逻辑
   });
 
+  // 使用Redux store的智能体状态作为主要状态
+  const agentState = curAgentState;
+
 
   // 使用ref跟踪对话状态，只在真正的对话状态变化时无效化查询
   const conversationStatusRef = React.useRef<string | undefined>(undefined);
+  const runtimeStatusRef = React.useRef<boolean | undefined>(undefined);
   
   React.useEffect(() => {
     const currentStatus = conversationData?.status;
+    const currentRuntimeStatus = Boolean(conversationData?.runtime_status);
     const previousStatus = conversationStatusRef.current;
-    
+    const previousRuntimeStatus = runtimeStatusRef.current;
     
     // 只在对话状态真正发生有意义的变化时才无效化查询
     // 避免智能体内部状态变化导致的频繁查询刷新
@@ -216,7 +232,12 @@ export function InsightAIConversation({
       
       conversationStatusRef.current = currentStatus;
     }
-  }, [conversationData?.status, conversationData?.runtime_status, webSocketStatus, queryClient]);
+    
+    // 单独跟踪runtime status变化，避免重复刷新
+    if (currentRuntimeStatus !== previousRuntimeStatus) {
+      runtimeStatusRef.current = currentRuntimeStatus;
+    }
+  }, [conversationData?.status, queryClient]); // 移除了webSocketStatus和runtime_status依赖
 
   // Handle starting conversation
   const handleStartConversation = async () => {
@@ -348,6 +369,9 @@ export function InsightAIConversation({
           <InsightAICollapsibleMessages
             messages={messages}
             isLoading={isLoading}
+            isAwaitingUserConfirmation={agentState === AgentState.AWAITING_USER_CONFIRMATION}
+            onSend={send}
+            onScrollStateChange={setScrollState}
           />
 
           {/* Chat input - 根据智能体状态控制输入 */}
@@ -356,6 +380,8 @@ export function InsightAIConversation({
             disabled={!isConnected || isInputDisabled || !isWaitingForUserInput}
             agentStateMessage={getAgentStateMessage()}
             agentState={agentState}
+            onScrollToBottom={scrollState.scrollToBottom}
+            showScrollToBottom={scrollState.showScrollToBottom}
           />
         </div>
       </div>

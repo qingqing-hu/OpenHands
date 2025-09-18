@@ -32,5 +32,5 @@ export default {
   appDirectory: "src",
   buildEnd: unpackClientDirectory,
   ssr: false,
-  basename: process.env.VITE_BASE_PATH || "/openhands",
+  basename: process.env.VITE_BASE_PATH || "/openhands/",
 } satisfies Config;

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FileText, Copy, Download, RefreshCw, X } from "lucide-react";
+import { FileText, Copy, Download, RefreshCw, X, Globe } from "lucide-react";
 import { IoMdClose } from "react-icons/io";
 import {
   useInsightAITaskLogs,
@@ -7,6 +7,7 @@ import {
   useInsightAIFileOperations,
 } from "#/hooks/insight-ai/use-insight-ai-tasks";
 import { InsightAITerminal } from "./insight-ai-terminal";
+import { InsightAIBrowserPanel } from "../browser";
 
 interface FileItem {
   name: string;
@@ -26,7 +27,7 @@ interface InsightAICodePanelProps {
   onClosePanel?: () => void;
 }
 
-type ViewMode = "terminal" | "files";
+type ViewMode = "terminal" | "files" | "browser";
 
 export function InsightAICodePanel({
   taskId,
@@ -111,6 +112,10 @@ export function InsightAICodePanel({
       value: "files",
       label: "文件",
     },
+    {
+      value: "browser",
+      label: "浏览器",
+    },
   ];
 
   const renderTerminalContentInline = () => (
@@ -123,6 +128,24 @@ export function InsightAICodePanel({
       className="ant-tabs-tabpane ant-tabs-tabpane-active h-full px-4 pt-1 pb-4"
     >
       <InsightAITerminal taskId={taskId || ""} />
+    </div>
+  );
+
+  const renderBrowserContentInline = () => (
+    <div
+      id="rc-tabs-browser-panel"
+      role="tabpanel"
+      tabIndex={0}
+      aria-labelledby="rc-tabs-browser-tab"
+      aria-hidden={false}
+      className="ant-tabs-tabpane ant-tabs-tabpane-active h-full px-4 pt-1 pb-4"
+    >
+      <InsightAIBrowserPanel
+        conversationId={taskId || ""}
+        className="h-full"
+        autoSwitchEnabled={true}
+        useContainerLayout={true}
+      />
     </div>
   );
 
@@ -288,7 +311,7 @@ export function InsightAICodePanel({
                                 className="ant-flex css-131v83g ant-flex-align-center flex items-center"
                                 style={{ gap: "4px", flexDirection: "row" }}
                               >
-                                <span className="anticon" role="img">
+                                {option.value === "terminal" ? (
                                   <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     width="16"
@@ -299,31 +322,41 @@ export function InsightAICodePanel({
                                     strokeWidth="2"
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
-                                    className={`lucide ${option.value === "terminal" ? "lucide-square-terminal" : "lucide-folder-code"}`}
+                                    className="lucide lucide-square-terminal"
                                     aria-hidden="true"
                                   >
-                                    {option.value === "terminal" ? (
-                                      <>
-                                        <path d="m7 11 2-2-2-2" />
-                                        <path d="M11 13h4" />
-                                        <rect
-                                          width="18"
-                                          height="18"
-                                          x="3"
-                                          y="3"
-                                          rx="2"
-                                          ry="2"
-                                        />
-                                      </>
-                                    ) : (
-                                      <>
-                                        <path d="M10 10.5 8 13l2 2.5" />
-                                        <path d="m14 10.5 2 2.5-2 2.5" />
-                                        <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z" />
-                                      </>
-                                    )}
+                                    <path d="m7 11 2-2-2-2" />
+                                    <path d="M11 13h4" />
+                                    <rect
+                                      width="18"
+                                      height="18"
+                                      x="3"
+                                      y="3"
+                                      rx="2"
+                                      ry="2"
+                                    />
                                   </svg>
-                                </span>
+                                ) : option.value === "files" ? (
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="transparent"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="lucide lucide-folder-code"
+                                    aria-hidden="true"
+                                  >
+                                    <path d="M10 10.5 8 13l2 2.5" />
+                                    <path d="m14 10.5 2 2.5-2 2.5" />
+                                    <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z" />
+                                  </svg>
+                                ) : (
+                                  <Globe size={16} />
+                                )}
                                 <div>{option.label}</div>
                               </div>
                             </div>
@@ -357,6 +390,7 @@ export function InsightAICodePanel({
           <div className="flex-1 overflow-hidden">
             {viewMode === "terminal" && renderTerminalContentInline()}
             {viewMode === "files" && renderWorkspaceContentInline()}
+            {viewMode === "browser" && renderBrowserContentInline()}
           </div>
         </div>
       </div>

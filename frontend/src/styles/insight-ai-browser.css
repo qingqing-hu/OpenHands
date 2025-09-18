@@ -1,0 +1,440 @@
+/**
+ * InsightAI Browser 样式文件
+ * 确保浏览器功能与 InsightAI 主题完全一致
+ */
+
+/* ========== 浏览器面板基础样式 ========== */
+.insight-ai-browser {
+  /* 使用 InsightAI 的主色调 */
+  --browser-primary: #2563eb;
+  --browser-primary-hover: #1d4ed8;
+  --browser-bg-primary: #ffffff;
+  --browser-bg-secondary: #f8fafc;
+  --browser-bg-tertiary: #f1f5f9;
+  --browser-border-color: #e2e8f0;
+  --browser-border-hover: #cbd5e1;
+  --browser-text-primary: #1e293b;
+  --browser-text-secondary: #64748b;
+  --browser-text-muted: #94a3b8;
+  --browser-error: #dc2626;
+  --browser-error-bg: #fef2f2;
+  --browser-success: #16a34a;
+  --browser-success-bg: #f0fdf4;
+  --browser-warning: #d97706;
+  --browser-warning-bg: #fffbeb;
+  
+  /* 圆角和阴影 */
+  --browser-radius-sm: 0.5rem;
+  --browser-radius-md: 0.75rem;
+  --browser-radius-lg: 1rem;
+  --browser-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --browser-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  
+  /* 动画时长 */
+  --browser-transition-fast: 150ms;
+  --browser-transition-normal: 200ms;
+  --browser-transition-slow: 300ms;
+}
+
+/* ========== 地址栏样式 ========== */
+.insight-ai-browser .browser-address-bar {
+  background: var(--browser-bg-primary);
+  border-bottom: 1px solid var(--browser-border-color);
+  padding: 0.75rem 1rem;
+}
+
+.insight-ai-browser .browser-address-input {
+  background: var(--browser-bg-secondary);
+  border: 1px solid var(--browser-border-color);
+  border-radius: var(--browser-radius-md);
+  color: var(--browser-text-primary);
+  font-size: 0.875rem;
+  transition: all var(--browser-transition-normal) ease;
+}
+
+.insight-ai-browser .browser-address-input:focus {
+  outline: none;
+  border-color: var(--browser-primary);
+  background: var(--browser-bg-primary);
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+}
+
+.insight-ai-browser .browser-address-input::placeholder {
+  color: var(--browser-text-muted);
+}
+
+/* 地址栏验证状态 */
+.insight-ai-browser .browser-address-input.valid {
+  border-color: var(--browser-success);
+  color: var(--browser-success);
+}
+
+.insight-ai-browser .browser-address-input.invalid {
+  border-color: var(--browser-error);
+  color: var(--browser-error);
+}
+
+/* ========== 导航按钮样式 ========== */
+.insight-ai-browser .browser-nav-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--browser-radius-md);
+  border: none;
+  background: transparent;
+  color: var(--browser-text-secondary);
+  cursor: pointer;
+  transition: all var(--browser-transition-fast) ease;
+}
+
+.insight-ai-browser .browser-nav-button:hover:not(:disabled) {
+  background: var(--browser-bg-tertiary);
+  color: var(--browser-text-primary);
+}
+
+.insight-ai-browser .browser-nav-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.insight-ai-browser .browser-nav-button.primary {
+  background: var(--browser-primary);
+  color: white;
+}
+
+.insight-ai-browser .browser-nav-button.primary:hover:not(:disabled) {
+  background: var(--browser-primary-hover);
+}
+
+/* ========== 加载状态样式 ========== */
+.insight-ai-browser .browser-loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--browser-bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.insight-ai-browser .browser-loading-spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid var(--browser-border-color);
+  border-top-color: var(--browser-primary);
+  border-radius: 50%;
+  animation: browser-spin 1s linear infinite;
+}
+
+@keyframes browser-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 加载进度条 */
+.insight-ai-browser .browser-progress-bar {
+  height: 2px;
+  background: var(--browser-bg-tertiary);
+  overflow: hidden;
+}
+
+.insight-ai-browser .browser-progress-bar::after {
+  content: '';
+  display: block;
+  height: 100%;
+  background: var(--browser-primary);
+  animation: browser-progress 1.5s ease-in-out infinite;
+}
+
+@keyframes browser-progress {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ========== 错误显示样式 ========== */
+.insight-ai-browser .browser-error-container {
+  padding: 1.5rem;
+  background: var(--browser-bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+}
+
+.insight-ai-browser .browser-error-card {
+  max-width: 28rem;
+  padding: 1.5rem;
+  background: var(--browser-bg-primary);
+  border: 1px solid var(--browser-border-color);
+  border-radius: var(--browser-radius-lg);
+  box-shadow: var(--browser-shadow-md);
+  text-align: center;
+}
+
+.insight-ai-browser .browser-error-icon {
+  width: 3rem;
+  height: 3rem;
+  margin: 0 auto 0.75rem;
+  padding: 0.75rem;
+  border-radius: 50%;
+  background: var(--browser-error-bg);
+  color: var(--browser-error);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.insight-ai-browser .browser-error-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--browser-text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.insight-ai-browser .browser-error-description {
+  color: var(--browser-text-secondary);
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.insight-ai-browser .browser-error-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--browser-primary);
+  color: white;
+  border: none;
+  border-radius: var(--browser-radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--browser-transition-normal) ease;
+}
+
+.insight-ai-browser .browser-error-button:hover {
+  background: var(--browser-primary-hover);
+}
+
+.insight-ai-browser .browser-error-button.secondary {
+  background: var(--browser-bg-tertiary);
+  color: var(--browser-text-primary);
+}
+
+.insight-ai-browser .browser-error-button.secondary:hover {
+  background: var(--browser-border-hover);
+}
+
+/* ========== iframe 容器样式 ========== */
+.insight-ai-browser .browser-iframe-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: var(--browser-bg-primary);
+  border-radius: var(--browser-radius-sm);
+  overflow: hidden;
+}
+
+.insight-ai-browser .browser-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: var(--browser-bg-primary);
+}
+
+/* ========== 状态栏样式 ========== */
+.insight-ai-browser .browser-status-bar {
+  background: var(--browser-bg-secondary);
+  border-top: 1px solid var(--browser-border-color);
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  color: var(--browser-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.insight-ai-browser .browser-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.insight-ai-browser .browser-status-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+}
+
+.insight-ai-browser .browser-status-dot.loading {
+  background: var(--browser-primary);
+  animation: browser-pulse 1.5s infinite;
+}
+
+.insight-ai-browser .browser-status-dot.success {
+  background: var(--browser-success);
+}
+
+.insight-ai-browser .browser-status-dot.error {
+  background: var(--browser-error);
+}
+
+@keyframes browser-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ========== 空状态样式 ========== */
+.insight-ai-browser .browser-empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: var(--browser-bg-secondary);
+  padding: 2rem;
+}
+
+.insight-ai-browser .browser-empty-content {
+  text-align: center;
+  max-width: 20rem;
+}
+
+.insight-ai-browser .browser-empty-icon {
+  width: 4rem;
+  height: 4rem;
+  margin: 0 auto 1rem;
+  padding: 1rem;
+  background: var(--browser-bg-tertiary);
+  color: var(--browser-text-muted);
+  border-radius: var(--browser-radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.insight-ai-browser .browser-empty-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--browser-text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.insight-ai-browser .browser-empty-description {
+  color: var(--browser-text-secondary);
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.insight-ai-browser .browser-empty-features {
+  font-size: 0.75rem;
+  color: var(--browser-text-muted);
+  line-height: 1.4;
+}
+
+/* ========== 验证提示样式 ========== */
+.insight-ai-browser .browser-validation-tooltip {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 0.25rem;
+  padding: 0.5rem;
+  background: var(--browser-error-bg);
+  border: 1px solid var(--browser-error);
+  border-radius: var(--browser-radius-sm);
+  box-shadow: var(--browser-shadow-sm);
+  z-index: 20;
+}
+
+.insight-ai-browser .browser-validation-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--browser-error);
+}
+
+/* ========== 响应式适配 ========== */
+@media (max-width: 768px) {
+  .insight-ai-browser .browser-address-bar {
+    padding: 0.5rem;
+  }
+  
+  .insight-ai-browser .browser-nav-button {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+  
+  .insight-ai-browser .browser-error-card {
+    margin: 0 1rem;
+    padding: 1rem;
+  }
+  
+  .insight-ai-browser .browser-empty-content {
+    padding: 1rem;
+  }
+}
+
+/* ========== 深色主题支持（如果需要） ========== */
+@media (prefers-color-scheme: dark) {
+  .insight-ai-browser.dark-theme {
+    --browser-primary: #3b82f6;
+    --browser-primary-hover: #2563eb;
+    --browser-bg-primary: #0f172a;
+    --browser-bg-secondary: #1e293b;
+    --browser-bg-tertiary: #334155;
+    --browser-border-color: #475569;
+    --browser-border-hover: #64748b;
+    --browser-text-primary: #f1f5f9;
+    --browser-text-secondary: #cbd5e1;
+    --browser-text-muted: #94a3b8;
+    --browser-error-bg: #1e1b1b;
+    --browser-success-bg: #1a1e1a;
+    --browser-warning-bg: #1e1c1a;
+  }
+}
+
+/* ========== 打印样式 ========== */
+@media print {
+  .insight-ai-browser .browser-address-bar,
+  .insight-ai-browser .browser-status-bar {
+    display: none;
+  }
+  
+  .insight-ai-browser .browser-iframe-container {
+    border: 1px solid #000;
+  }
+}
+
+/* ========== 高对比度支持 ========== */
+@media (prefers-contrast: high) {
+  .insight-ai-browser {
+    --browser-border-color: #000;
+    --browser-text-secondary: #000;
+  }
+}
+
+/* ========== 减少动画支持 ========== */
+@media (prefers-reduced-motion: reduce) {
+  .insight-ai-browser * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

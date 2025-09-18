@@ -29,6 +29,7 @@ import {
 import { useOptimisticUserMessage } from "#/hooks/use-optimistic-user-message";
 import { useWSErrorMessage } from "#/hooks/use-ws-error-message";
 import { shouldRenderInsightAIEvent } from "#/components/insight-ai/chat/insight-ai-message-filter";
+import { AgentState } from "#/types/agent-state";
 
 export type WebSocketStatus = "CONNECTING" | "CONNECTED" | "DISCONNECTED" | "NOT_CONNECTED";
 
@@ -379,7 +380,31 @@ export function useInsightAIWsClient(
           source: "chat",
           metadata: { msgId: event.id },
         });
-        return;
+        
+        // 对于状态更新错误，需要创建一个智能体状态变更事件以确保UI正确显示错误状态
+        if (isStatusUpdate(event)) {
+          // 创建一个符合AgentStateChangeObservation接口的智能体状态变更观察事件
+          const errorStateEvent = {
+            id: parseInt(event.id as string) + 1 || Date.now(), // 确保有唯一ID
+            source: "agent" as const,
+            message: errorMessage,
+            timestamp: new Date().toISOString(),
+            cause: parseInt(event.id as string) || 0, // 引用触发错误的事件ID
+            observation: "agent_state_changed" as const,
+            content: errorMessage,
+            extras: {
+              agent_state: AgentState.ERROR,
+              reason: errorMessage
+            }
+          };
+          
+          // 添加到解析事件中，这样智能体状态钩子就能检测到错误状态
+          const newParsedEvents = [...currentConnection.parsedEvents, errorStateEvent];
+          currentConnection.parsedEvents = newParsedEvents;
+          currentConnection.subscriptions.forEach(callback => callback({ parsedEvents: newParsedEvents }));
+        }
+        
+        // 继续处理其他事件逻辑，不要提前返回
       }
 
       if (isOpenHandsAction(event) || isOpenHandsObservation(event)) {
@@ -611,6 +636,9 @@ export function useInsightAIWsClient(
       baseUrl = import.meta.env.VITE_BACKEND_BASE_URL || window?.location.host;
     }
 
+    // Get the base path from global variable (set by Vite)
+    const basePath = (window as any).__VITE_BASE_PATH__ || '/openhands';
+    
     const sio = io(baseUrl, {
       transports: ["websocket"],
       query,
@@ -618,6 +646,8 @@ export function useInsightAIWsClient(
       autoConnect: true,
       reconnection: false,
       timeout: 10000, // 10秒连接超时
+      // Use base path + socket.io path for internal network gateway routing
+      path: `${basePath}/socket.io/`,
     });
 
     sio.on("connect", handleConnect);

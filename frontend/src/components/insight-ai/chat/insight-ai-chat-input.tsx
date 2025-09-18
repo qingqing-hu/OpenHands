@@ -2,6 +2,7 @@ import React from "react";
 import { MdAttachFile } from "react-icons/md";
 import { BsFillArrowUpCircleFill } from "react-icons/bs";
 import { Bot } from "lucide-react";
+import { FaArrowDown } from "react-icons/fa6";
 import { validateFiles } from "../../../utils/file-validation";
 import { isFileImage } from "../../../utils/is-file-image";
 import { displayErrorToast } from "../../../utils/custom-toast-handlers";
@@ -14,6 +15,8 @@ interface InsightAIChatInputProps {
   disabled?: boolean;
   agentStateMessage?: string;
   agentState?: AgentState;
+  onScrollToBottom?: () => void;
+  showScrollToBottom?: boolean;
 }
 
 export function InsightAIChatInput({
@@ -21,6 +24,8 @@ export function InsightAIChatInput({
   disabled = false,
   agentStateMessage,
   agentState,
+  onScrollToBottom,
+  showScrollToBottom = false,
 }: InsightAIChatInputProps) {
   const [message, setMessage] = React.useState("");
   const [images, setImages] = React.useState<File[]>([]);
@@ -46,7 +51,8 @@ export function InsightAIChatInput({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    // 避免在输入法组合输入过程中触发发送
+    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
       handleSubmit(e);
     }
@@ -124,8 +130,8 @@ export function InsightAIChatInput({
           };
         case AgentState.LOADING:
         case AgentState.INIT:
-          // 合并显示：两个状态都表示智能体正在初始化，用户无法交互
-          // 使用相同的琥珀色和脉冲动画来表示"工作中"状态
+          // 合并显示：LOADING表示正在连接智能体，INIT表示正在初始化智能体
+          // 两个状态都是用户无法交互的准备阶段，使用相同的琥珀色和脉冲动画
           return {
             color: "text-amber-500 animate-pulse",
             bgColor: "bg-amber-100",
@@ -238,16 +244,16 @@ export function InsightAIChatInput({
       )}
 
       {/* 输入框和状态指示器的容器 */}
-      <div className="flex items-center justify-center gap-3 w-full">
+      <div className="relative flex items-center justify-center gap-3 w-full">
         {/* 智能体状态指示器 - 位于输入框左侧 */}
         {agentState && agentStateMessage && (
-          <AgentStateIndicator 
-            state={agentState} 
+          <AgentStateIndicator
+            state={agentState}
             message={agentStateMessage}
           />
         )}
 
-        <form onSubmit={handleSubmit} className="insight-ai-input-form">
+        <form onSubmit={handleSubmit} className="insight-ai-input-form relative">
           {/* File attachment button */}
           <button
             type="button"
@@ -299,6 +305,46 @@ export function InsightAIChatInput({
               <BsFillArrowUpCircleFill className="w-7 h-7" />
             </button>
           </div>
+
+          {/* Scroll to bottom button - positioned relative to the form */}
+          {showScrollToBottom && onScrollToBottom && (
+            <div
+              className="absolute left-full top-1/2 transform -translate-y-1/2 ml-3"
+              style={{
+                zIndex: 9999,
+                pointerEvents: 'auto'
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  if (onScrollToBottom) {
+                    onScrollToBottom();
+                  }
+                }}
+                className="group flex items-center justify-center w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 flex-shrink-0"
+                aria-label="滑到底部"
+                style={{
+                  cursor: 'pointer',
+                  pointerEvents: 'auto',
+                  zIndex: 9999,
+                  position: 'relative'
+                }}
+              >
+                <FaArrowDown
+                  className="w-3 h-3 text-gray-600 group-hover:text-gray-800 transition-colors duration-200"
+                  style={{ pointerEvents: 'none' }}
+                />
+              </button>
+
+              {/* Tooltip */}
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-50">
+                滑到底部
+                {/* Tooltip arrow */}
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-800"></div>
+              </div>
+            </div>
+          )}
         </form>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import React from "react";
 import { AgentState } from "#/types/agent-state";
-import { isAgentStateChangeObservation } from "#/types/core/guards";
+import { isAgentStateChangeObservation, isOpenHandsAction } from "#/types/core/guards";
 import { OpenHandsParsedEvent } from "#/types/core";
 
 interface UseInsightAIAgentState {
@@ -12,7 +12,7 @@ interface UseInsightAIAgentState {
 
 interface UseInsightAIAgentStateOptions {
   /** WebSocket连接状态 */
-  webSocketStatus?: "CONNECTING" | "CONNECTED" | "DISCONNECTED";
+  webSocketStatus?: "CONNECTING" | "CONNECTED" | "DISCONNECTED" | "NOT_CONNECTED";
   // 移除reconnect选项，采用纯服务器驱动的状态管理
 }
 
@@ -108,8 +108,8 @@ export function useInsightAIAgentState(
   const getAgentStateMessage = React.useCallback((): string => {
     switch (agentState) {
       case AgentState.LOADING:
+        return "正在连接智能体...";
       case AgentState.INIT:
-        // 合并显示：两种状态都是用户无法交互的初始化阶段
         return "正在初始化智能体...";
       case AgentState.RUNNING:
         return "智能体正在执行任务...";
@@ -128,11 +128,11 @@ export function useInsightAIAgentState(
       case AgentState.RATE_LIMITED:
         return "智能体已达到速率限制。正在重试...";
       case AgentState.AWAITING_USER_CONFIRMATION:
-        return "代理正在等待用户确认待处理的操作。";
+        return "智能体正在等待用户确认...";
       case AgentState.USER_CONFIRMED:
-        return "代理操作已确认！";
+        return "智能体操作已确认！";
       case AgentState.USER_REJECTED:
-        return "代理操作已被拒绝！";
+        return "智能体操作已被拒绝！";
       default:
         return "智能体状态未知";
     }

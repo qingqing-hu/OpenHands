@@ -75,17 +75,13 @@ export function handleObservationMessage(message: ObservationMessage) {
 
     switch (observation) {
       case "browse":
-        if (message.extras?.screenshot) {
-          store.dispatch(setScreenshotSrc(message.extras.screenshot));
-        }
+        // Screenshot functionality removed - now using iframe browser
         if (message.extras?.url) {
           store.dispatch(setUrl(message.extras.url));
         }
         break;
       case "browse_interactive":
-        if (message.extras?.screenshot) {
-          store.dispatch(setScreenshotSrc(message.extras.screenshot));
-        }
+        // Screenshot functionality removed - now using iframe browser
         if (message.extras?.url) {
           store.dispatch(setUrl(message.extras.url));
         }
