@@ -15,12 +15,15 @@ import { ConversationLoadingIndicator } from "../shared/insight-ai-loading-state
 import { WebSocketConnectionError } from "../shared/websocket-connection-error";
 import OpenHands from "#/api/open-hands";
 import { insightAIKeys } from "#/hooks/insight-ai/use-insight-ai-tasks";
+import { type UseInsightAIWsClient } from "#/hooks/insight-ai/use-insight-ai-ws-client";
 
 interface InsightAIConversationProps {
   conversationId: string;
   conversationTitle?: string;
   onTogglePanel?: () => void;
   isPanelExpanded?: boolean;
+  // 新增：接受共享的WebSocket连接数据
+  sharedWsConnection?: UseInsightAIWsClient;
 }
 
 // WebSocket状态指示器组件
@@ -136,6 +139,7 @@ export function InsightAIConversation({
   conversationTitle = "数据分析对话",
   onTogglePanel,
   isPanelExpanded,
+  sharedWsConnection,
 }: InsightAIConversationProps) {
   // Default conversation title
   const defaultTitle = conversationTitle;
@@ -152,7 +156,9 @@ export function InsightAIConversation({
 
   // ===== 所有的 React Hooks 必须在组件顶层无条件调用 =====
 
-  // 使用简化的InsightAI消息处理hook
+  // 🏆 使用共享WebSocket连接（如果提供）或创建独立连接
+  const messagesData = useInsightAIMessages(conversationId, sharedWsConnection);
+
   const {
     messages,
     isConnected,
@@ -163,7 +169,7 @@ export function InsightAIConversation({
     parsedEvents,
     conversationData,
     reconnect,
-  } = useInsightAIMessages(conversationId);
+  } = messagesData;
 
   // 检查是否有有效的对话ID
   const hasValidConversationId = Boolean(

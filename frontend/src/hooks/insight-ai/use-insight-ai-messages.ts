@@ -1,5 +1,6 @@
 import React from "react";
 import { useInsightAIWsClient } from "./use-insight-ai-ws-client";
+import { type UseInsightAIWsClient } from "./use-insight-ai-ws-client";
 import {
   shouldRenderInsightAIEvent,
   convertEventsToInsightAIMessages,
@@ -20,11 +21,23 @@ export interface TerminalEntry {
 /**
  * Hook for processing WebSocket events into InsightAI messages
  * Uses InsightAI-specific WebSocket client to avoid route dependency issues
+ * 支持共享WebSocket连接以避免双重连接问题
  */
-export function useInsightAIMessages(conversationId: string) {
-  // Always call the WebSocket hook, but pass safe defaults
+export function useInsightAIMessages(
+  conversationId: string,
+  sharedWsConnection?: UseInsightAIWsClient
+) {
+  // 🏆 如果提供了共享连接，直接使用；否则创建独立连接
   const safeConversationId =
     conversationId && conversationId !== "placeholder" ? conversationId : "";
+
+  // 只有在没有共享连接时才创建独立连接，避免双重连接
+  const independentConnection = useInsightAIWsClient(
+    sharedWsConnection ? "SHARED_CONNECTION_SKIP" : safeConversationId
+  );
+
+  const activeConnection = sharedWsConnection || independentConnection;
+
   const {
     webSocketStatus,
     isLoadingMessages,
@@ -35,7 +48,7 @@ export function useInsightAIMessages(conversationId: string) {
     hasConnectionError,
     reconnect,
     dismissConnectionError,
-  } = useInsightAIWsClient(safeConversationId);
+  } = activeConnection;
 
   // Check if we have a valid conversation ID
   const hasValidConversationId = Boolean(

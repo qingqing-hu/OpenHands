@@ -72,7 +72,7 @@ const isMessageAction = (
 ): event is UserMessageAction | AssistantMessageAction =>
   isUserMessage(event) || isAssistantMessage(event);
 
-interface UseInsightAIWsClient {
+export interface UseInsightAIWsClient {
   webSocketStatus: WebSocketStatus;
   isLoadingMessages: boolean;
   events: Record<string, unknown>[];
@@ -120,6 +120,21 @@ let clientCounter = 0;
 export function useInsightAIWsClient(
   conversationId: string,
 ): UseInsightAIWsClient {
+
+  // 🏆 如果是共享连接标识符，返回空的连接对象，避免创建实际连接
+  if (conversationId === "SHARED_CONNECTION_SKIP") {
+    return {
+      webSocketStatus: "NOT_CONNECTED",
+      isLoadingMessages: false,
+      events: [],
+      parsedEvents: [],
+      send: () => {},
+      conversationData: undefined,
+      hasConnectionError: false,
+      reconnect: () => {},
+      dismissConnectionError: () => {},
+    };
+  }
 
   const { removeOptimisticUserMessage } = useOptimisticUserMessage();
   const { removeErrorMessage } = useWSErrorMessage();
@@ -291,28 +306,33 @@ export function useInsightAIWsClient(
   const dismissConnectionError = React.useCallback(() => {
     const currentConnection = globalConnections.get(conversationId);
     if (!currentConnection) return;
-    
+
     currentConnection.hasConnectionError = false;
     currentConnection.subscriptions.forEach(callback => callback({ hasConnectionError: false }));
   }, [conversationId]);
 
+
+
+
+
   const handleConnect = React.useCallback(() => {
     const currentConnection = globalConnections.get(conversationId);
     if (!currentConnection) return;
-    
+
     isConnectingRef.current = false;
     if (connectionTimeoutRef.current) {
       clearTimeout(connectionTimeoutRef.current);
       connectionTimeoutRef.current = null;
     }
     removeErrorMessage();
-    
+
     console.log(`[InsightAI-WS-${clientId}] WebSocket connected to conversation ${conversationId}`);
-    
+
+
     // 直接更新全局状态并广播
     currentConnection.status = "CONNECTED";
     currentConnection.hasConnectionError = false;
-    currentConnection.subscriptions.forEach(callback => callback({ 
+    currentConnection.subscriptions.forEach(callback => callback({
       status: "CONNECTED" as WebSocketStatus,
       hasConnectionError: false
     }));
@@ -322,7 +342,7 @@ export function useInsightAIWsClient(
   const handleMessage = React.useCallback((event: Record<string, unknown>) => {
     const currentConnection = globalConnections.get(conversationId);
     if (!currentConnection) return;
-    
+
     // 检查是否已经处理过这个事件（通过事件ID去重）
     const eventId = event.id as string;
     if (eventId && currentConnection.events.some(e => e.id === eventId)) {
@@ -482,9 +502,9 @@ export function useInsightAIWsClient(
   const handleDisconnect = React.useCallback((data: unknown) => {
     const currentConnection = globalConnections.get(conversationId);
     if (!currentConnection) return;
-    
+
     console.log(`[InsightAI-WS-${clientId}] WebSocket disconnected from conversation ${conversationId}`, data);
-    
+
     isConnectingRef.current = false;
     if (connectionTimeoutRef.current) {
       clearTimeout(connectionTimeoutRef.current);
@@ -499,7 +519,7 @@ export function useInsightAIWsClient(
 
     currentConnection.status = "DISCONNECTED";
     currentConnection.hasConnectionError = true;
-    currentConnection.subscriptions.forEach(callback => callback({ 
+    currentConnection.subscriptions.forEach(callback => callback({
       status: "DISCONNECTED" as WebSocketStatus,
       hasConnectionError: true
     }));
@@ -508,23 +528,23 @@ export function useInsightAIWsClient(
   const handleError = React.useCallback((data: unknown) => {
     const currentConnection = globalConnections.get(conversationId);
     if (!currentConnection) return;
-    
+
     console.log(`[InsightAI-WS-${clientId}] WebSocket error for conversation ${conversationId}`, data);
-    
+
     isConnectingRef.current = false;
     if (connectionTimeoutRef.current) {
       clearTimeout(connectionTimeoutRef.current);
       connectionTimeoutRef.current = null;
     }
-    
+
     // 重置连接状态记录，避免卡住
     currentConversationRef.current = "";
-    
+
     updateStatusWhenErrorMessagePresent(data);
 
     currentConnection.status = "DISCONNECTED";
     currentConnection.hasConnectionError = true;
-    currentConnection.subscriptions.forEach(callback => callback({ 
+    currentConnection.subscriptions.forEach(callback => callback({
       status: "DISCONNECTED" as WebSocketStatus,
       hasConnectionError: true
     }));

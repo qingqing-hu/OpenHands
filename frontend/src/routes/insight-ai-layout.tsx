@@ -10,7 +10,7 @@ import { LuPanelLeft, LuPanelRight } from "react-icons/lu";
 import { useQueryClient } from "@tanstack/react-query";
 import { InsightAIProvider } from "#/components/insight-ai/context/insight-ai-context";
 import { InsightAITaskList } from "#/components/insight-ai/task-list/insight-ai-task-list";
-import { InsightAIConversation } from "#/components/insight-ai/chat/insight-ai-conversation";
+import { InsightAIConversationWrapper } from "#/components/insight-ai/chat/insight-ai-conversation-wrapper";
 import { InsightAICodePanel } from "#/components/insight-ai/code-panel/insight-ai-code-panel";
 import {
   useInsightAITasks,
@@ -19,7 +19,21 @@ import {
 } from "#/hooks/insight-ai/use-insight-ai-tasks";
 import { InsightAIService } from "#/api/insight-ai-service/insight-ai-service.api";
 import OpenHands from "#/api/open-hands";
+import { useInsightAIWsClient } from "#/hooks/insight-ai/use-insight-ai-ws-client";
+import { type UseInsightAIWsClient } from "#/hooks/insight-ai/use-insight-ai-ws-client";
 import "#/styles/insight-ai-theme.css";
+
+// 🏆 创建布局级别的WebSocket Context用于整个InsightAI共享连接
+const InsightAILayoutWsContext = React.createContext<UseInsightAIWsClient | null>(null);
+
+// 导出Context以供子组件使用
+export const useInsightAILayoutWsContext = () => {
+  const context = React.useContext(InsightAILayoutWsContext);
+  if (!context) {
+    throw new Error("useInsightAILayoutWsContext must be used within InsightAILayoutWsProvider");
+  }
+  return context;
+};
 
 export default function InsightAILayout() {
   // ===== 所有的 React Hooks 必须在组件顶层无条件调用 =====
@@ -58,6 +72,9 @@ export default function InsightAILayout() {
   const createTaskMutation = useCreateInsightAITask();
   const deleteTaskMutation = useDeleteInsightAITask();
   const queryClient = useQueryClient();
+
+  // 🏆 在布局级别创建共享的WebSocket连接，避免双重连接
+  const sharedWsConnection = useInsightAIWsClient(selectedTaskId || "");
 
   // 添加页面焦点监听，用于跨前端状态同步
   React.useEffect(() => {
@@ -421,7 +438,8 @@ export default function InsightAILayout() {
   // ===== JSX 渲染 =====
   return (
     <InsightAIProvider>
-      <div className="insight-ai-layout bg-white h-screen">
+      <InsightAILayoutWsContext.Provider value={sharedWsConnection}>
+        <div className="insight-ai-layout bg-white h-screen">
         {/* Header */}
         {/* <InsightAIHeader
           currentPath={location.pathname}
@@ -544,7 +562,7 @@ export default function InsightAILayout() {
           >
             <div className="flex-1 overflow-hidden">
               {selectedTaskId ? (
-                <InsightAIConversation
+                <InsightAIConversationWrapper
                   conversationId={selectedTaskId}
                   conversationTitle={conversationTitle}
                   onTogglePanel={handleToggleMiddlePanel}
@@ -672,7 +690,8 @@ export default function InsightAILayout() {
             </div>
           </div>
         )}
-      </div>
+        </div>
+      </InsightAILayoutWsContext.Provider>
     </InsightAIProvider>
   );
 }

@@ -6,8 +6,22 @@ import {
   useInsightAITaskFiles,
   useInsightAIFileOperations,
 } from "#/hooks/insight-ai/use-insight-ai-tasks";
+import { useInsightAILayoutWsContext } from "#/routes/insight-ai-layout";
+import { type UseInsightAIWsClient } from "#/hooks/insight-ai/use-insight-ai-ws-client";
 import { InsightAITerminal } from "./insight-ai-terminal";
 import { InsightAIBrowserPanel } from "../browser";
+
+// 🏆 创建WebSocket Context用于在Panel级别共享连接
+const InsightAIWsContext = React.createContext<UseInsightAIWsClient | null>(null);
+
+// 导出Context以供子组件使用
+export const useInsightAIWsContext = () => {
+  const context = React.useContext(InsightAIWsContext);
+  if (!context) {
+    throw new Error("useInsightAIWsContext must be used within InsightAIWsProvider");
+  }
+  return context;
+};
 
 interface FileItem {
   name: string;
@@ -31,27 +45,23 @@ type ViewMode = "terminal" | "files" | "browser";
 
 export function InsightAICodePanel({
   taskId,
-  isRunning = false,
-  onRestart,
+  isRunning: _isRunning = false,
+  onRestart: _onRestart,
   onClose,
   onClosePanel,
 }: InsightAICodePanelProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("terminal");
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
 
+  // 🏆 使用布局级别的共享WebSocket连接，避免双重连接
+  const wsConnection = useInsightAILayoutWsContext();
+
   // Use real API data for files
-  const { data: logsData } = useInsightAITaskLogs(taskId || "");
+  const { data: _logsData } = useInsightAITaskLogs(taskId || "");
   const { data: filesData } = useInsightAITaskFiles(taskId || "");
   const fileOperations = useInsightAIFileOperations(taskId || "");
 
-  // Convert API data to component format
-  const logs = React.useMemo(() => {
-    if (!logsData?.logs || !Array.isArray(logsData.logs)) return [];
-    return logsData.logs.map((log) => ({
-      ...log,
-      timestamp: new Date(log.timestamp),
-    }));
-  }, [logsData?.logs]);
+  // Note: logs data is available via _logsData but not currently used in this component
 
   const files = React.useMemo(() => {
     if (!filesData?.files || !Array.isArray(filesData.files)) return [];
@@ -241,7 +251,8 @@ export function InsightAICodePanel({
   );
 
   return (
-    <div className="h-full flex flex-col bg-gray-50">
+    <InsightAIWsContext.Provider value={wsConnection}>
+      <div className="h-full flex flex-col bg-gray-50">
       {/* Single white container for both header and content */}
       <div className="h-full py-2 px-1.5 bg-gray-50">
         <div className="bg-white rounded-xl shadow-sm h-full flex flex-col overflow-hidden">
@@ -387,13 +398,21 @@ export function InsightAICodePanel({
           </div>
 
           {/* Content directly controlled by segmented control */}
-          <div className="flex-1 overflow-hidden">
-            {viewMode === "terminal" && renderTerminalContentInline()}
-            {viewMode === "files" && renderWorkspaceContentInline()}
-            {viewMode === "browser" && renderBrowserContentInline()}
+          <div className="flex-1 overflow-hidden relative">
+            {/* 🏆 持久化Tab渲染：所有Tab始终存在，通过CSS控制显示 */}
+            <div className={`absolute inset-0 ${viewMode === "terminal" ? "block" : "hidden"}`}>
+              {renderTerminalContentInline()}
+            </div>
+            <div className={`absolute inset-0 ${viewMode === "files" ? "block" : "hidden"}`}>
+              {renderWorkspaceContentInline()}
+            </div>
+            <div className={`absolute inset-0 ${viewMode === "browser" ? "block" : "hidden"}`}>
+              {renderBrowserContentInline()}
+            </div>
           </div>
         </div>
       </div>
     </div>
+    </InsightAIWsContext.Provider>
   );
 }
