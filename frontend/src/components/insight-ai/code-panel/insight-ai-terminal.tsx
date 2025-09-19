@@ -316,18 +316,18 @@ export function InsightAITerminal({ taskId }: InsightAITerminalProps) {
           return (
             <div key={entry.id} className="mb-1">
               {entry.type === "command" ? (
-                <div className="flex overflow-x-auto whitespace-nowrap min-w-0">
-                  <span className="whitespace-nowrap flex-shrink-0" style={{ color: "#FFCB6B" }}>
+                <div className="break-all">
+                  <span style={{ color: "#FFCB6B" }}>
                     {promptPrefix}
                     <span style={{ color: "#89DDFF" }}>:</span>
                     <span style={{ color: "#89DDFF" }}>~</span>
                   </span>
-                  <span className="flex-shrink-0" style={{ color: "#89DDFF" }}>$ </span>
-                  <span className="flex-shrink-0" style={{ color: "#EEFFFF" }}>{entry.content}</span>
+                  <span style={{ color: "#89DDFF" }}>$ </span>
+                  <span style={{ color: "#EEFFFF" }}>{entry.content}</span>
                 </div>
               ) : (
                 <div
-                  className="whitespace-pre-wrap pl-4"
+                  className="whitespace-pre-wrap break-words pl-4"
                   style={{ color: "#C3E88D" }}
                 >
                   {entry.content}
@@ -416,37 +416,43 @@ export function InsightAITerminal({ taskId }: InsightAITerminalProps) {
 
         {/* Current command input line - only show when connected AND agent is ready (not in runtime inactive states) */}
         {isConnected && !isRuntimeInactive && (
-          <div className="flex items-center overflow-x-auto whitespace-nowrap min-w-0">
-            <span className="whitespace-nowrap flex-shrink-0" style={{ color: "#FFCB6B" }}>
-              {getPromptPrefix()}
-              <span style={{ color: "#89DDFF" }}>:</span>
-              <span style={{ color: "#89DDFF" }}>~</span>
-            </span>
-            <span className="flex-shrink-0" style={{ color: "#89DDFF" }}>$ </span>
-            <input
-              ref={inputRef}
-              type="text"
-              value={commandInput}
-              onChange={(e) => setCommandInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              onCompositionStart={handleCompositionStart}
-              onCompositionEnd={handleCompositionEnd}
-              disabled={!canExecuteCommands}
-              readOnly={!!pendingCommand}
-              className="flex-1 bg-transparent border-none outline-none text-inherit min-w-0"
-              style={{
-                color: "#EEFFFF",
-                fontFamily: "inherit",
-                fontSize: "inherit",
-              }}
-              placeholder=""
-              autoComplete="off"
-            />
-            {!pendingCommand && webSocketStatus === "CONNECTED" && (
-              <span className="animate-pulse flex-shrink-0" style={{ color: "#89DDFF" }}>
-                _
+          <div className="flex items-start flex-wrap">
+            <div className="flex items-center flex-shrink-0">
+              <span style={{ color: "#FFCB6B" }}>
+                {getPromptPrefix()}
+                <span style={{ color: "#89DDFF" }}>:</span>
+                <span style={{ color: "#89DDFF" }}>~</span>
               </span>
-            )}
+              <span style={{ color: "#89DDFF" }}>$ </span>
+            </div>
+            <div className="flex items-center flex-1 min-w-0">
+              <input
+                ref={inputRef}
+                type="text"
+                value={commandInput}
+                onChange={(e) => setCommandInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onCompositionStart={handleCompositionStart}
+                onCompositionEnd={handleCompositionEnd}
+                disabled={!canExecuteCommands}
+                readOnly={!!pendingCommand}
+                className="w-full bg-transparent border-none outline-none text-inherit break-all"
+                style={{
+                  color: "#EEFFFF",
+                  fontFamily: "inherit",
+                  fontSize: "inherit",
+                  wordBreak: "break-all",
+                  overflowWrap: "anywhere"
+                }}
+                placeholder=""
+                autoComplete="off"
+              />
+              {!pendingCommand && webSocketStatus === "CONNECTED" && (
+                <span className="animate-pulse ml-1" style={{ color: "#89DDFF" }}>
+                  _
+                </span>
+              )}
+            </div>
           </div>
         )}
 
