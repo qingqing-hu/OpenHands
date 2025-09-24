@@ -1,7 +1,7 @@
 import React from "react";
 import { Check, X, Clock } from "lucide-react";
 
-export type InsightAIStatusType = "success" | "error" | "timeout" | "pending";
+export type InsightAIStatusType = "success" | "error" | "timeout" | "pending" | "rejected" | "awaiting";
 
 interface InsightAIStatusIndicatorProps {
   status: InsightAIStatusType;
@@ -33,6 +33,16 @@ export function InsightAIStatusIndicator({
       className:
         "text-insight-text-secondary bg-insight-surface-hover animate-pulse",
       title: "Pending",
+    },
+    rejected: {
+      icon: X,
+      className: "text-orange-500 bg-orange-100 dark:bg-orange-900/30",
+      title: "用户拒绝执行",
+    },
+    awaiting: {
+      icon: Clock,
+      className: "text-gray-500 bg-gray-100 dark:bg-gray-900/30",
+      title: "等待用户确认（未完成）",
     },
   };
 

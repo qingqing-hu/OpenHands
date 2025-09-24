@@ -39,7 +39,7 @@ class DownloadResponse(BaseModel):
     content_type: str = "text/html"
 
 
-app = APIRouter(prefix="/openhands/api", tags=["browser"])
+app = APIRouter(prefix="/api", tags=["browser"])
 
 
 @app.post("/browser/{conversation_id}/navigate")

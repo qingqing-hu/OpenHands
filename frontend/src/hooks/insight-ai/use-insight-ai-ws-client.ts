@@ -29,6 +29,7 @@ import {
 import { useOptimisticUserMessage } from "#/hooks/use-optimistic-user-message";
 import { useWSErrorMessage } from "#/hooks/use-ws-error-message";
 import { shouldRenderInsightAIEvent } from "#/components/insight-ai/chat/insight-ai-message-filter";
+import { AgentState } from "#/types/agent-state";
 
 export type WebSocketStatus = "CONNECTING" | "CONNECTED" | "DISCONNECTED" | "NOT_CONNECTED";
 
@@ -71,7 +72,7 @@ const isMessageAction = (
 ): event is UserMessageAction | AssistantMessageAction =>
   isUserMessage(event) || isAssistantMessage(event);
 
-interface UseInsightAIWsClient {
+export interface UseInsightAIWsClient {
   webSocketStatus: WebSocketStatus;
   isLoadingMessages: boolean;
   events: Record<string, unknown>[];
@@ -119,6 +120,21 @@ let clientCounter = 0;
 export function useInsightAIWsClient(
   conversationId: string,
 ): UseInsightAIWsClient {
+
+  // 🏆 如果是共享连接标识符，返回空的连接对象，避免创建实际连接
+  if (conversationId === "SHARED_CONNECTION_SKIP") {
+    return {
+      webSocketStatus: "NOT_CONNECTED",
+      isLoadingMessages: false,
+      events: [],
+      parsedEvents: [],
+      send: () => {},
+      conversationData: undefined,
+      hasConnectionError: false,
+      reconnect: () => {},
+      dismissConnectionError: () => {},
+    };
+  }
 
   const { removeOptimisticUserMessage } = useOptimisticUserMessage();
   const { removeErrorMessage } = useWSErrorMessage();
@@ -290,28 +306,33 @@ export function useInsightAIWsClient(
   const dismissConnectionError = React.useCallback(() => {
     const currentConnection = globalConnections.get(conversationId);
     if (!currentConnection) return;
-    
+
     currentConnection.hasConnectionError = false;
     currentConnection.subscriptions.forEach(callback => callback({ hasConnectionError: false }));
   }, [conversationId]);
 
+
+
+
+
   const handleConnect = React.useCallback(() => {
     const currentConnection = globalConnections.get(conversationId);
     if (!currentConnection) return;
-    
+
     isConnectingRef.current = false;
     if (connectionTimeoutRef.current) {
       clearTimeout(connectionTimeoutRef.current);
       connectionTimeoutRef.current = null;
     }
     removeErrorMessage();
-    
+
     console.log(`[InsightAI-WS-${clientId}] WebSocket connected to conversation ${conversationId}`);
-    
+
+
     // 直接更新全局状态并广播
     currentConnection.status = "CONNECTED";
     currentConnection.hasConnectionError = false;
-    currentConnection.subscriptions.forEach(callback => callback({ 
+    currentConnection.subscriptions.forEach(callback => callback({
       status: "CONNECTED" as WebSocketStatus,
       hasConnectionError: false
     }));
@@ -321,7 +342,7 @@ export function useInsightAIWsClient(
   const handleMessage = React.useCallback((event: Record<string, unknown>) => {
     const currentConnection = globalConnections.get(conversationId);
     if (!currentConnection) return;
-    
+
     // 检查是否已经处理过这个事件（通过事件ID去重）
     const eventId = event.id as string;
     if (eventId && currentConnection.events.some(e => e.id === eventId)) {
@@ -379,7 +400,31 @@ export function useInsightAIWsClient(
           source: "chat",
           metadata: { msgId: event.id },
         });
-        return;
+        
+        // 对于状态更新错误，需要创建一个智能体状态变更事件以确保UI正确显示错误状态
+        if (isStatusUpdate(event)) {
+          // 创建一个符合AgentStateChangeObservation接口的智能体状态变更观察事件
+          const errorStateEvent = {
+            id: parseInt(event.id as string) + 1 || Date.now(), // 确保有唯一ID
+            source: "agent" as const,
+            message: errorMessage,
+            timestamp: new Date().toISOString(),
+            cause: parseInt(event.id as string) || 0, // 引用触发错误的事件ID
+            observation: "agent_state_changed" as const,
+            content: errorMessage,
+            extras: {
+              agent_state: AgentState.ERROR,
+              reason: errorMessage
+            }
+          };
+          
+          // 添加到解析事件中，这样智能体状态钩子就能检测到错误状态
+          const newParsedEvents = [...currentConnection.parsedEvents, errorStateEvent];
+          currentConnection.parsedEvents = newParsedEvents;
+          currentConnection.subscriptions.forEach(callback => callback({ parsedEvents: newParsedEvents }));
+        }
+        
+        // 继续处理其他事件逻辑，不要提前返回
       }
 
       if (isOpenHandsAction(event) || isOpenHandsObservation(event)) {
@@ -457,9 +502,9 @@ export function useInsightAIWsClient(
   const handleDisconnect = React.useCallback((data: unknown) => {
     const currentConnection = globalConnections.get(conversationId);
     if (!currentConnection) return;
-    
+
     console.log(`[InsightAI-WS-${clientId}] WebSocket disconnected from conversation ${conversationId}`, data);
-    
+
     isConnectingRef.current = false;
     if (connectionTimeoutRef.current) {
       clearTimeout(connectionTimeoutRef.current);
@@ -474,7 +519,7 @@ export function useInsightAIWsClient(
 
     currentConnection.status = "DISCONNECTED";
     currentConnection.hasConnectionError = true;
-    currentConnection.subscriptions.forEach(callback => callback({ 
+    currentConnection.subscriptions.forEach(callback => callback({
       status: "DISCONNECTED" as WebSocketStatus,
       hasConnectionError: true
     }));
@@ -483,23 +528,23 @@ export function useInsightAIWsClient(
   const handleError = React.useCallback((data: unknown) => {
     const currentConnection = globalConnections.get(conversationId);
     if (!currentConnection) return;
-    
+
     console.log(`[InsightAI-WS-${clientId}] WebSocket error for conversation ${conversationId}`, data);
-    
+
     isConnectingRef.current = false;
     if (connectionTimeoutRef.current) {
       clearTimeout(connectionTimeoutRef.current);
       connectionTimeoutRef.current = null;
     }
-    
+
     // 重置连接状态记录，避免卡住
     currentConversationRef.current = "";
-    
+
     updateStatusWhenErrorMessagePresent(data);
 
     currentConnection.status = "DISCONNECTED";
     currentConnection.hasConnectionError = true;
-    currentConnection.subscriptions.forEach(callback => callback({ 
+    currentConnection.subscriptions.forEach(callback => callback({
       status: "DISCONNECTED" as WebSocketStatus,
       hasConnectionError: true
     }));
@@ -611,6 +656,9 @@ export function useInsightAIWsClient(
       baseUrl = import.meta.env.VITE_BACKEND_BASE_URL || window?.location.host;
     }
 
+    // Get the base path from global variable (set by Vite)
+    const basePath = (window as any).__VITE_BASE_PATH__ || '/openhands';
+    
     const sio = io(baseUrl, {
       transports: ["websocket"],
       query,
@@ -618,6 +666,8 @@ export function useInsightAIWsClient(
       autoConnect: true,
       reconnection: false,
       timeout: 10000, // 10秒连接超时
+      // Use base path + socket.io path for internal network gateway routing
+      path: `${basePath}/socket.io/`,
     });
 
     sio.on("connect", handleConnect);

@@ -483,7 +483,7 @@
   "OBSERVATION_MESSAGE$READ": "读取 <path>{{path}}</path>",
   "OBSERVATION_MESSAGE$EDIT": "编辑 <path>{{path}}</path>",
   "OBSERVATION_MESSAGE$WRITE": "写入 <path>{{path}}</path>",
-  "OBSERVATION_MESSAGE$BROWSE": "浏览",
+  "OBSERVATION_MESSAGE$BROWSE": "网页浏览",
   "OBSERVATION_MESSAGE$MCP": "MCP 工具结果: {{mcp_tool_name}}",
   "OBSERVATION_MESSAGE$RECALL": "微代理已就绪",
   "OBSERVATION_MESSAGE$THINK": "思考",

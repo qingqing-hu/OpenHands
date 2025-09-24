@@ -16,6 +16,8 @@ import { InsightAIErrorMessage } from "../shared/insight-ai-error-message";
 interface InsightAICollapsibleMessageProps {
   messages: InsightAIMessage[];
   isLoading: boolean;
+  isAwaitingUserConfirmation?: boolean;
+  onSend?: (event: Record<string, unknown>) => void;
 }
 
 // Category styling configuration
@@ -78,6 +80,12 @@ const getCategoryConfig = (category: InsightAIMessageCategory) => {
         label: "System",
         bgColor: "bg-blue-100",
         textColor: "text-blue-700",
+      };
+    case "browse":
+      return {
+        label: "Browse",
+        bgColor: "bg-green-100",
+        textColor: "text-green-700",
       };
     case "message":
     default:
@@ -275,9 +283,19 @@ const getExpandableMessageCategory = (
 };
 
 const CollapsibleMessageItem = React.memo(
-  ({ message }: { message: InsightAIMessage }) => {
+  ({ 
+    message, 
+    isLastMessage, 
+    isAwaitingUserConfirmation,
+    onSend
+  }: { 
+    message: InsightAIMessage;
+    isLastMessage?: boolean;
+    isAwaitingUserConfirmation?: boolean;
+    onSend?: (event: Record<string, unknown>) => void;
+  }) => {
     // Determine default expand/collapse state based on native OpenHands patterns
-    const getDefaultExpandedState = () => {
+    const getDefaultExpandedState = React.useCallback(() => {
       // ChatMessage (user/assistant regular messages without expandable content) are never collapsed in native OpenHands
       if (
         message.type === "user" ||
@@ -309,10 +327,10 @@ const CollapsibleMessageItem = React.memo(
 
       // Default expanded for other cases (simple messages)
       return true;
-    };
+    }, [message.type, message.category, message.hasExpandableContent, message.content]);
 
-    const [isExpanded, setIsExpanded] = React.useState(
-      getDefaultExpandedState(),
+    const [isExpanded, setIsExpanded] = React.useState(() => 
+      getDefaultExpandedState()
     );
 
     const formatTime = React.useMemo(() => {
@@ -331,7 +349,7 @@ const CollapsibleMessageItem = React.memo(
       (message.extras?.tool || message.extras?.arguments);
 
     // Determine if message should be collapsible based on native OpenHands patterns and new hasExpandableContent
-    const shouldBeCollapsible = () => {
+    const shouldShowCollapsed = React.useMemo(() => {
       // User messages and assistant regular messages without detailed content are never collapsible
       if (
         message.type === "user" ||
@@ -353,9 +371,7 @@ const CollapsibleMessageItem = React.memo(
         message.content.length > 100 ||
         message.content.includes("```")
       );
-    };
-
-    const shouldShowCollapsed = shouldBeCollapsible();
+    }, [message.type, message.category, message.hasExpandableContent, message.content]);
 
     return (
       <div
@@ -415,7 +431,7 @@ const CollapsibleMessageItem = React.memo(
                       : message.category;
                     const expandableCategoryConfig =
                       getCategoryConfig(expandableCategory);
-                    if (expandableCategory !== "message") {
+                    if (expandableCategory !== "message" && expandableCategoryConfig.label) {
                       return (
                         <div
                           className={`px-1.5 py-0.5 rounded-md font-medium ${expandableCategoryConfig.bgColor} ${expandableCategoryConfig.textColor}`}
@@ -434,46 +450,141 @@ const CollapsibleMessageItem = React.memo(
             </div>
 
             {/* Message content row - aligned with avatar position */}
-            <div style={{ minWidth: "200px", width: "100%" }}>
-              {/* Message content with inline status indicator for MCP tools */}
+            <div style={{ minWidth: "200px", width: "100%", position: "relative" }}>
+              {/* Message content */}
               <div
-                className="flex items-center gap-2"
-                style={{ width: "100%" }}
+                className="inline-block"
+                style={{
+                  width: "100%",
+                  maxWidth: "100%",
+                  boxSizing: "border-box"
+                }}
               >
-                {/* Message content */}
-                <div className="inline-block">
-                  {/* Message Content */}
-                  {message.isError ? (
-                    // Error messages - use dedicated error component
-                    <InsightAIErrorMessage message={message} />
-                  ) : (
-                    // All non-user messages - use unified renderer
-                    <InsightAIUnifiedMessage message={message} />
-                  )}
-                </div>
-
-                {/* Status indicators - only for MCP tool calls, positioned after message */}
-                {message.category === "mcp" && message.status && (
-                  <div className="inline-flex items-center gap-1">
-                    <InsightAIStatusIndicator status={message.status} />
-                  </div>
+                {/* Message Content */}
+                {message.isError ? (
+                  // Error messages - use dedicated error component
+                  <InsightAIErrorMessage message={message} />
+                ) : (
+                  // All non-user messages - use unified renderer
+                  <InsightAIUnifiedMessage
+                    message={message}
+                    isLastMessage={isLastMessage}
+                    isAwaitingUserConfirmation={isAwaitingUserConfirmation}
+                    onSend={onSend}
+                  />
                 )}
               </div>
+
+              {/* Status indicators - positioned outside the 80% width constraint */}
+              {((message.category === "mcp" && message.status) ||
+                (message.category === "command" && message.status && (
+                  message.type === "observation" ||
+                  (message.type === "assistant" && (message.status === "rejected" || message.status === "awaiting" || message.status === "success" || message.status === "error"))
+                )) ||
+                (message.category === "code" && message.status && (
+                  message.type === "observation" ||
+                  (message.type === "assistant" && (message.status === "rejected" || message.status === "awaiting" || message.status === "success" || message.status === "error"))
+                ))) && (
+                <div
+                  className="inline-flex items-center gap-1 ml-2"
+                  style={{
+                    position: "absolute",
+                    right: "-28px", // 位置在80%容器外面
+                    top: "50%", // 垂直居中对齐
+                    transform: "translateY(-50%)", // 精确居中
+                    zIndex: 1
+                  }}
+                >
+                  <InsightAIStatusIndicator status={message.status} />
+                </div>
+              )}
             </div>
           </div>
         )}
       </div>
     );
   },
+  (prevProps, nextProps) => {
+    // 只有在关键属性真正改变时才重新渲染
+    return (
+      prevProps.message.id === nextProps.message.id &&
+      prevProps.message.content === nextProps.message.content &&
+      prevProps.message.status === nextProps.message.status &&
+      prevProps.isLastMessage === nextProps.isLastMessage &&
+      prevProps.isAwaitingUserConfirmation === nextProps.isAwaitingUserConfirmation
+    );
+  }
 );
+
+export interface ScrollState {
+  showScrollToBottom: boolean;
+  scrollToBottom: () => void;
+}
 
 export function InsightAICollapsibleMessages({
   messages,
   isLoading,
-}: InsightAICollapsibleMessageProps) {
+  isAwaitingUserConfirmation = false,
+  onSend,
+  onScrollStateChange,
+}: InsightAICollapsibleMessageProps & {
+  onScrollStateChange?: (scrollState: ScrollState) => void;
+}) {
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
-  // const scrollContainerRef = useScrollbarVisibility<HTMLDivElement>();
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+  const [showScrollToBottom, setShowScrollToBottom] = React.useState(false);
 
+  // Scroll to bottom function
+  const scrollToBottom = React.useCallback(() => {
+    if (scrollContainerRef.current) {
+      const container = scrollContainerRef.current;
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: "smooth"
+      });
+    }
+  }, []);
+
+  // Handle scroll detection
+  const handleScroll = React.useCallback(() => {
+    if (!scrollContainerRef.current) return;
+
+    const container = scrollContainerRef.current;
+    const scrollTop = container.scrollTop;
+    const scrollHeight = container.scrollHeight;
+    const clientHeight = container.clientHeight;
+
+    // Show button if user scrolled up more than 100px from bottom
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+    const shouldShow = !isNearBottom && messages.length > 0;
+
+
+    setShowScrollToBottom(shouldShow);
+  }, [messages.length]);
+
+  // Update scroll state when it changes
+  React.useEffect(() => {
+    if (onScrollStateChange) {
+      onScrollStateChange({
+        showScrollToBottom,
+        scrollToBottom,
+      });
+    }
+  }, [showScrollToBottom, scrollToBottom, onScrollStateChange]);
+
+  // Add scroll event listener
+  React.useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+    };
+  }, [handleScroll]);
+
+  // Auto scroll to bottom when new messages arrive
   React.useEffect(() => {
     if (messages && messages.length > 0) {
       requestAnimationFrame(() => {
@@ -504,9 +615,18 @@ export function InsightAICollapsibleMessages({
   }
 
   return (
-    <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 insight-ai-scrollbar">
-      {messages.map((message) => (
-        <CollapsibleMessageItem key={message.id} message={message} />
+    <div
+      ref={scrollContainerRef}
+      className="flex-1 overflow-y-auto overflow-x-hidden p-4 insight-ai-scrollbar"
+    >
+      {messages.map((message, index) => (
+        <CollapsibleMessageItem
+          key={message.id}
+          message={message}
+          isLastMessage={index === messages.length - 1}
+          isAwaitingUserConfirmation={isAwaitingUserConfirmation}
+          onSend={onSend}
+        />
       ))}
 
       {/* Loading indicator */}

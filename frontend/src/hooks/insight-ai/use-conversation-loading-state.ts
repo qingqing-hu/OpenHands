@@ -117,8 +117,7 @@ export function useConversationLoadingState({
     hasValidConversationId,
     conversationStatus,
     conversationRuntimeStatus,
-    webSocketStatus,
-    loadingState,
+    // 移除webSocketStatus和loadingState依赖，避免与WebSocket状态监听冲突
   ]);
 
   // 监听WebSocket状态变化
@@ -132,46 +131,48 @@ export function useConversationLoadingState({
 
     switch (webSocketStatus) {
       case "CONNECTING":
-        // 只有在非ready和非unstarted状态时才设置为connecting
-        if (
-          loadingState !== "ready" &&
-          (loadingState as ConversationLoadingState) !== "unstarted"
-        ) {
-          setLoadingState("connecting");
-        }
+        // 🏆 简化逻辑：只在必要时设置connecting状态，避免状态循环
+        setLoadingState((currentState) => {
+          if (currentState === "ready" || currentState === "unstarted") {
+            return currentState; // 保持当前状态
+          }
+          return "connecting";
+        });
         setError("");
         break;
       case "CONNECTED":
-        // 只有在非ready和非unstarted状态时才设置为connected
-        if (
-          loadingState !== "ready" &&
-          (loadingState as ConversationLoadingState) !== "unstarted"
-        ) {
-          setLoadingState("connected");
-        }
+        // 🏆 简化逻辑：只在必要时设置connected状态，避免状态循环
+        setLoadingState((currentState) => {
+          if (currentState === "ready" || currentState === "unstarted") {
+            return currentState; // 保持当前状态
+          }
+          return "connected";
+        });
         setError("");
         break;
       case "NOT_CONNECTED":
         // NOT_CONNECTED状态表示从未尝试连接，对于已停止的对话是正常状态
         if (!isConversationActiveOrStarting()) {
-          // 对话未启动或已停止，设置为unstarted状态
-          if ((loadingState as ConversationLoadingState) !== "unstarted") {
-            setLoadingState("unstarted");
-          }
+          // 🏆 使用函数式更新避免状态读取依赖
+          setLoadingState((currentState) => {
+            return currentState === "unstarted" ? currentState : "unstarted";
+          });
         }
         break;
       case "DISCONNECTED":
         // 如果对话未启动，保持unstarted状态，否则显示错误
         if (!isConversationActiveOrStarting()) {
-          // 对话未启动或已停止，保持unstarted状态
-          if ((loadingState as ConversationLoadingState) !== "unstarted") {
-            setLoadingState("unstarted");
-          }
-        } else if (
-          loadingState !== "ready" &&
-          (loadingState as ConversationLoadingState) !== "unstarted"
-        ) {
-          setLoadingState("error");
+          // 🏆 使用函数式更新避免状态读取依赖
+          setLoadingState((currentState) => {
+            return currentState === "unstarted" ? currentState : "unstarted";
+          });
+        } else {
+          setLoadingState((currentState) => {
+            if (currentState === "ready" || currentState === "unstarted") {
+              return currentState;
+            }
+            return "error";
+          });
           setError("WebSocket连接断开");
         }
         break;
@@ -191,56 +192,69 @@ export function useConversationLoadingState({
   React.useEffect(() => {
     if (!hasValidConversationId || webSocketStatus !== "CONNECTED") return;
 
-    // 如果连接成功但还没有数据，显示加载历史状态
-    if (parsedEvents.length === 0 && loadingState === "connected") {
-      setLoadingState("loading_history");
+    // 🏆 使用函数式更新避免直接读取loadingState
+    if (parsedEvents.length === 0) {
+      setLoadingState((currentState) => {
+        // 如果连接成功但还没有数据，显示加载历史状态
+        return currentState === "connected" ? "loading_history" : currentState;
+      });
       return;
     }
 
     // 有数据了，显示处理状态然后设为准备就绪
-    if (parsedEvents.length > 0 && loadingState !== "ready") {
-      if (loadingState !== "processing_messages") {
-        setLoadingState("processing_messages");
+    if (parsedEvents.length > 0) {
+      setLoadingState((currentState) => {
+        if (currentState === "ready") return currentState;
+        if (currentState === "processing_messages") return currentState;
 
-        // 短暂延迟后设为准备就绪
-        const timeoutId = setTimeout(() => {
+        // 设置为处理状态
+        setTimeout(() => {
           setLoadingState("ready");
         }, 200);
 
-        return () => clearTimeout(timeoutId);
-      }
+        return "processing_messages";
+      });
     }
   }, [parsedEvents.length, hasValidConversationId, webSocketStatus]);
 
   // 空对话超时处理
   React.useEffect(() => {
     if (!hasValidConversationId || webSocketStatus !== "CONNECTED") return;
+    if (parsedEvents.length > 0) return; // 有数据就不需要超时处理
 
-    if (loadingState === "loading_history" && parsedEvents.length === 0) {
-      const timeoutId = setTimeout(() => {
-        setLoadingState("ready");
-      }, 3000);
+    // 🏆 避免直接依赖loadingState，使用延迟检查
+    const timeoutId = setTimeout(() => {
+      setLoadingState((currentState) => {
+        // 只有在loading_history状态且没有数据时才设为ready
+        return currentState === "loading_history" ? "ready" : currentState;
+      });
+    }, 3000);
 
-      return () => clearTimeout(timeoutId);
-    }
+    return () => clearTimeout(timeoutId);
   }, [
-    loadingState,
     parsedEvents.length,
     hasValidConversationId,
     webSocketStatus,
   ]);
 
-  // 错误处理
+  // 错误处理 - 连接超时
   React.useEffect(() => {
+    if (webSocketStatus !== "CONNECTING") return;
+
+    // 🏆 只在CONNECTING状态时启动超时检查
     const timeout = setTimeout(() => {
-      if (loadingState === "connecting") {
-        setLoadingState("error");
-        setError("连接超时，请检查网络连接");
-      }
+      setLoadingState((currentState) => {
+        // 只有在connecting状态时才设为error
+        if (currentState === "connecting") {
+          setError("连接超时，请检查网络连接");
+          return "error";
+        }
+        return currentState;
+      });
     }, 10000); // 10秒连接超时
 
     return () => clearTimeout(timeout);
-  }, [loadingState]);
+  }, [webSocketStatus]);
 
   return {
     loadingState,

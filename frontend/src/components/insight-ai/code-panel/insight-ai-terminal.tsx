@@ -1,6 +1,22 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useSelector } from "react-redux";
 import { useInsightAIMessages } from "#/hooks/insight-ai/use-insight-ai-messages";
 import { getInsightAITerminalCommand } from "#/services/insight-ai-terminal-service";
+import {
+  isTerminalCommand,
+  isTerminalOutput,
+} from "#/services/insight-ai-terminal-service";
+import { useInsightAIWsContext } from "./insight-ai-code-panel";
+import { RootState } from "#/store";
+import { RUNTIME_INACTIVE_STATES } from "#/types/agent-state";
+
+interface TerminalEntry {
+  id: string;
+  type: "command" | "output";
+  content: string;
+  timestamp: Date;
+  exitCode?: number;
+}
 
 interface InsightAITerminalProps {
   taskId: string;
@@ -11,17 +27,84 @@ export function InsightAITerminal({ taskId }: InsightAITerminalProps) {
   const [pendingCommand, setPendingCommand] = useState<string | null>(null);
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [isComposing, setIsComposing] = useState(false);
+  const [promptInfo, setPromptInfo] = useState<{
+    username?: string;
+    hostname?: string;
+  }>({});
 
   const terminalRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // 获取智能体状态
+  const { curAgentState } = useSelector((state: RootState) => state.agent);
+  const isRuntimeInactive = RUNTIME_INACTIVE_STATES.includes(curAgentState);
+  const isAgentError = curAgentState === "error";
+
+  // 🏆 使用共享的WebSocket连接而不是创建新连接
+  const sharedWsConnection = useInsightAIWsContext();
+
+  // 从共享连接中提取终端所需的数据和方法
   const {
-    terminalEntries,
+    parsedEvents,
     send,
-    isConnected,
     webSocketStatus,
     hasConnectionError,
-  } = useInsightAIMessages(taskId || "");
+  } = sharedWsConnection;
+
+  // 处理终端条目，从共享的事件流中提取
+  const terminalEntries = React.useMemo(() => {
+    if (!parsedEvents || parsedEvents.length === 0) {
+      return [];
+    }
+
+    const entries: TerminalEntry[] = [];
+
+    parsedEvents.forEach((event: any) => {
+      if (isTerminalCommand(event as any)) {
+        const command = (event as any).args?.command || "";
+        entries.push({
+          id: `cmd_${event.id}`,
+          type: "command",
+          content: command,
+          timestamp: new Date((event as any).timestamp || Date.now()),
+        });
+      } else if (isTerminalOutput(event as any)) {
+        const output = (event as any).content || (event as any).message || "";
+
+        // 尝试从事件中提取用户名和hostname信息
+        const metadata = (event as any).metadata;
+        if (metadata?.username && metadata?.hostname) {
+          setPromptInfo({
+            username: metadata.username,
+            hostname: metadata.hostname,
+          });
+        }
+
+        entries.push({
+          id: `out_${event.id}`,
+          type: "output",
+          content: output,
+          timestamp: new Date((event as any).timestamp || Date.now()),
+          exitCode: (event as any).extras?.exit_code,
+        });
+      }
+    });
+
+    return entries.sort(
+      (a, b) => a.timestamp.getTime() - b.timestamp.getTime(),
+    );
+  }, [parsedEvents]);
+
+  const isConnected = webSocketStatus === "CONNECTED";
+  const canExecuteCommands = isConnected && !isRuntimeInactive && !isAgentError;
+
+  // 生成动态提示符
+  const getPromptPrefix = () => {
+    const username = promptInfo.username || "ai";
+    const hostname = promptInfo.hostname || "sandbox";
+    return `${username}@${hostname}`;
+  };
 
   // Combine real terminal entries with pending command
   const displayEntries = React.useMemo(() => {
@@ -46,7 +129,7 @@ export function InsightAITerminal({ taskId }: InsightAITerminalProps) {
   const handleSendCommand = (command: string = commandInput.trim()) => {
     if (!command) return;
 
-    if (!isConnected) {
+    if (!canExecuteCommands) {
       return;
     }
 
@@ -76,8 +159,22 @@ export function InsightAITerminal({ taskId }: InsightAITerminalProps) {
     }
   };
 
+  // Handle composition events for IME input
+  const handleCompositionStart = () => {
+    setIsComposing(true);
+  };
+
+  const handleCompositionEnd = () => {
+    setIsComposing(false);
+  };
+
   // Handle key events for command input and history navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    // If we're in the middle of IME composition, don't handle Enter
+    if (isComposing) {
+      return;
+    }
+
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendCommand();
@@ -106,9 +203,9 @@ export function InsightAITerminal({ taskId }: InsightAITerminalProps) {
     }
   };
 
-  // Auto focus terminal input when clicked
+  // Auto focus terminal input when clicked (only if commands can be executed)
   const handleTerminalClick = () => {
-    if (!inputRef.current?.matches(":focus")) {
+    if (canExecuteCommands && !inputRef.current?.matches(":focus")) {
       inputRef.current?.focus();
     }
   };
@@ -133,42 +230,46 @@ export function InsightAITerminal({ taskId }: InsightAITerminalProps) {
     }
   }, [terminalEntries, pendingCommand]);
 
-  // Auto focus on mount
+  // Auto focus on mount (only if commands can be executed)
   useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+    if (canExecuteCommands) {
+      inputRef.current?.focus();
+    }
+  }, [canExecuteCommands]);
 
   // Auto re-focus input when command execution completes
   useEffect(() => {
     // When pendingCommand changes from a value to null (command completed)
     // or when new terminal entries are added, refocus the input
-    if (!pendingCommand && isConnected) {
+    if (!pendingCommand && canExecuteCommands) {
       // Small delay to ensure DOM is updated
       setTimeout(() => {
         inputRef.current?.focus();
       }, 100);
     }
-  }, [pendingCommand, isConnected, terminalEntries.length]);
+  }, [pendingCommand, canExecuteCommands, terminalEntries.length]);
 
-  // Keep focus on input even during command execution
+  // Keep focus on input even during command execution (only when commands can be executed)
   useEffect(() => {
     const handleGlobalClick = (e: MouseEvent) => {
       const terminalElement = terminalRef.current;
-      if (terminalElement && terminalElement.contains(e.target as Node)) {
-        // If clicking anywhere inside terminal, focus the input
+      if (terminalElement && terminalElement.contains(e.target as Node) && canExecuteCommands) {
+        // If clicking anywhere inside terminal, focus the input only when commands can be executed
         setTimeout(() => {
           inputRef.current?.focus();
         }, 0);
       }
     };
 
-    document.addEventListener("click", handleGlobalClick);
-    return () => document.removeEventListener("click", handleGlobalClick);
-  }, []);
+    if (canExecuteCommands) {
+      document.addEventListener("click", handleGlobalClick);
+      return () => document.removeEventListener("click", handleGlobalClick);
+    }
+  }, [canExecuteCommands]);
 
   return (
     <div
-      className="h-full bg-gray-900 rounded-xl overflow-hidden cursor-text"
+      className={`h-full bg-gray-900 rounded-xl overflow-hidden ${canExecuteCommands ? "cursor-text" : "cursor-default"}`}
       onClick={handleTerminalClick}
       style={{
         fontFamily: "Fira Code, Monaco, Cascadia Code, Roboto Mono, monospace",
@@ -210,35 +311,40 @@ export function InsightAITerminal({ taskId }: InsightAITerminalProps) {
         </div>
 
         {/* Terminal history and output */}
-        {displayEntries.map((entry) => (
-          <div key={entry.id} className="mb-1">
-            {entry.type === "command" ? (
-              <div className="flex">
-                <span style={{ color: "#FFCB6B" }}>insight-ai@workspace</span>
-                <span style={{ color: "#89DDFF" }}>:</span>
-                <span style={{ color: "#89DDFF" }}>~</span>
-                <span style={{ color: "#89DDFF" }}>$ </span>
-                <span style={{ color: "#EEFFFF" }}>{entry.content}</span>
-              </div>
-            ) : (
-              <div
-                className="whitespace-pre-wrap pl-4"
-                style={{ color: "#C3E88D" }}
-              >
-                {entry.content}
-                {entry.exitCode !== undefined && entry.exitCode !== 0 && (
-                  <span style={{ color: "#FF5370" }}>
-                    {" "}
-                    [Exit: {entry.exitCode}]
+        {displayEntries.map((entry) => {
+          const promptPrefix = getPromptPrefix();
+          return (
+            <div key={entry.id} className="mb-1">
+              {entry.type === "command" ? (
+                <div className="break-all">
+                  <span style={{ color: "#FFCB6B" }}>
+                    {promptPrefix}
+                    <span style={{ color: "#89DDFF" }}>:</span>
+                    <span style={{ color: "#89DDFF" }}>~</span>
                   </span>
-                )}
-              </div>
-            )}
-          </div>
-        ))}
+                  <span style={{ color: "#89DDFF" }}>$ </span>
+                  <span style={{ color: "#EEFFFF" }}>{entry.content}</span>
+                </div>
+              ) : (
+                <div
+                  className="whitespace-pre-wrap break-words pl-4"
+                  style={{ color: "#C3E88D" }}
+                >
+                  {entry.content}
+                  {entry.exitCode !== undefined && entry.exitCode !== 0 && (
+                    <span style={{ color: "#FF5370" }}>
+                      {" "}
+                      [Exit: {entry.exitCode}]
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
 
         {/* Welcome message when connected and no terminal data */}
-        {displayEntries.length === 0 && isConnected && (
+        {displayEntries.length === 0 && isConnected && !isRuntimeInactive && (
           <div className="mb-4 opacity-75">
             <div style={{ color: "#89DDFF" }}>
               Welcome to InsightAI Terminal
@@ -252,57 +358,101 @@ export function InsightAITerminal({ taskId }: InsightAITerminalProps) {
           </div>
         )}
 
-        {/* WebSocket connection error message - only show if connection failed */}
-        {hasConnectionError && displayEntries.length === 0 && (
-          <div className="mb-4">
+        {/* Runtime inactive message when connected but agent not ready */}
+        {isConnected && isRuntimeInactive && (
+          <div className="mb-2 p-2 rounded border-l-4" style={{
+            backgroundColor: "rgba(255, 203, 107, 0.1)",
+            borderLeftColor: "#FFCB6B"
+          }}>
             <div className="flex items-center gap-2">
-              <span style={{ color: "#FF5370" }}>⚠️</span>
-              <div style={{ color: "#FF5370" }} className="font-medium">
-                WebSocket连接异常
+              <span style={{ color: "#FFCB6B", fontSize: "12px" }}>⚡</span>
+              <div style={{ color: "#FFCB6B", fontSize: "12px" }} className="font-medium">
+                智能体未就绪
               </div>
+            </div>
+            <div className="mt-0.5" style={{ color: "#C3E88D", fontSize: "12px" }}>
+              当前智能体处于 {curAgentState} 状态，终端命令功能暂时不可用
             </div>
           </div>
         )}
 
-        {/* Show execution status if command is pending */}
-        {pendingCommand && (
-          <div className="mb-1 opacity-75" style={{ color: "#FFCB6B" }}>
-            Executing: {pendingCommand}
-            <span className="animate-pulse ml-1" style={{ color: "#89DDFF" }}>
-              _
-            </span>
+        {/* WebSocket connection error message - only show if WebSocket actually disconnected */}
+        {webSocketStatus === "DISCONNECTED" && (
+          <div className="mb-2 p-2 rounded border-l-4" style={{
+            backgroundColor: "rgba(255, 83, 112, 0.1)",
+            borderLeftColor: "#FF5370"
+          }}>
+            <div className="flex items-center gap-2">
+              <span style={{ color: "#FF5370", fontSize: "12px" }}>⚠️</span>
+              <div style={{ color: "#FF5370", fontSize: "12px" }} className="font-medium">
+                WebSocket连接已断开
+              </div>
+            </div>
+            <div className="mt-0.5" style={{ color: "#C3E88D", fontSize: "12px" }}>
+              网络连接中断，请刷新页面重试
+            </div>
           </div>
         )}
 
-        {/* Current command input line - only show when connected */}
-        {isConnected && (
-          <div className="flex items-center">
-            <span style={{ color: "#FFCB6B" }}>insight-ai@workspace</span>
-            <span style={{ color: "#89DDFF" }}>:</span>
-            <span style={{ color: "#89DDFF" }}>~</span>
-            <span style={{ color: "#89DDFF" }}>$ </span>
-            <input
-              ref={inputRef}
-              type="text"
-              value={commandInput}
-              onChange={(e) => setCommandInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              disabled={!isConnected}
-              readOnly={!!pendingCommand}
-              className="flex-1 bg-transparent border-none outline-none text-inherit"
-              style={{
-                color: "#EEFFFF",
-                fontFamily: "inherit",
-                fontSize: "inherit",
-              }}
-              placeholder={pendingCommand ? "Executing..." : ""}
-              autoComplete="off"
-            />
-            {!pendingCommand && (
-              <span className="animate-pulse" style={{ color: "#89DDFF" }}>
-                _
+        {/* Sandbox container error message - show when agent is in error state but WebSocket is connected */}
+        {isAgentError && webSocketStatus === "CONNECTED" && (
+          <div className="mb-2 p-2 rounded border-l-4" style={{
+            backgroundColor: "rgba(255, 83, 112, 0.1)",
+            borderLeftColor: "#FF5370"
+          }}>
+            <div className="flex items-center gap-2">
+              <span style={{ color: "#FF5370", fontSize: "12px" }}>🚫</span>
+              <div style={{ color: "#FF5370", fontSize: "12px" }} className="font-medium">
+                智能体遇到错误
+              </div>
+            </div>
+            <div className="mt-0.5" style={{ color: "#C3E88D", fontSize: "12px" }}>
+              智能体执行过程中发生异常，智能体不可用
+            </div>
+          </div>
+        )}
+
+
+
+        {/* Current command input line - only show when connected AND agent is ready (not in runtime inactive states) */}
+        {isConnected && !isRuntimeInactive && (
+          <div className="flex items-start flex-wrap">
+            <div className="flex items-center flex-shrink-0">
+              <span style={{ color: "#FFCB6B" }}>
+                {getPromptPrefix()}
+                <span style={{ color: "#89DDFF" }}>:</span>
+                <span style={{ color: "#89DDFF" }}>~</span>
               </span>
-            )}
+              <span style={{ color: "#89DDFF" }}>$ </span>
+            </div>
+            <div className="flex items-center flex-1 min-w-0">
+              <input
+                ref={inputRef}
+                type="text"
+                value={commandInput}
+                onChange={(e) => setCommandInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onCompositionStart={handleCompositionStart}
+                onCompositionEnd={handleCompositionEnd}
+                disabled={!canExecuteCommands}
+                readOnly={!!pendingCommand}
+                className="w-full bg-transparent border-none outline-none text-inherit break-all"
+                style={{
+                  color: "#EEFFFF",
+                  fontFamily: "inherit",
+                  fontSize: "inherit",
+                  wordBreak: "break-all",
+                  overflowWrap: "anywhere"
+                }}
+                placeholder=""
+                autoComplete="off"
+              />
+              {!pendingCommand && webSocketStatus === "CONNECTED" && (
+                <span className="animate-pulse ml-1" style={{ color: "#89DDFF" }}>
+                  _
+                </span>
+              )}
+            </div>
           </div>
         )}
 

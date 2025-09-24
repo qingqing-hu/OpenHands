@@ -18,9 +18,8 @@ const getCommandObservationContent = (
   event: CommandObservation | IPythonObservation,
 ): string => {
   let { content } = event;
-  if (content.length > MAX_CONTENT_LENGTH) {
-    content = `${content.slice(0, MAX_CONTENT_LENGTH)}...`;
-  }
+  // 对于命令输出，不截断内容，让用户可以通过滚动查看完整结果
+  // 在扩展内容中应该能看到完整的命令执行结果
   return `Output:\n\`\`\`sh\n${content.trim() || i18n.t("OBSERVATION$COMMAND_NO_OUTPUT")}\n\`\`\``;
 };
 
@@ -123,6 +122,9 @@ export const getObservationContent = (event: OpenHandsObservation): string => {
     case "mcp":
       // For MCP observations, always return the full JSON content
       return getDefaultEventContent(event);
+    case "user_rejected":
+      // For user_rejected observations, return the message content directly
+      return event.content || "操作已被用户拒绝";
     default:
       return getDefaultEventContent(event);
   }

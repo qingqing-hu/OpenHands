@@ -226,6 +226,7 @@ logs
 cache
 
 # configuration
+config.toml
 config.toml.bak
 
 # swe-bench-eval

@@ -50,7 +50,7 @@ export function ConversationLoadingIndicator({
           title: "连接中",
           description: "正在连接到服务器...",
           showSpinner: true,
-          color: "text-yellow-600",
+          color: "text-yellow-400",
         };
       case "connected":
         return {
