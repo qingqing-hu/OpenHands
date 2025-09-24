@@ -152,4 +152,6 @@ class Settings(BaseModel):
         )
         
         logger.info(f'[DEBUG] Settings.from_config: 创建的settings.llm_proxy_headers = {settings.llm_proxy_headers}')
+        logger.info(f'[DEBUG] Settings.from_config: 创建的settings.llm_use_token_auth = {settings.llm_use_token_auth}')
+        logger.info(f'[DEBUG] Settings.from_config: 创建的settings.llm_model = {settings.llm_model}')
         return settings

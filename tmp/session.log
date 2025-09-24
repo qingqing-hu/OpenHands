@@ -1,0 +1,38 @@
+06:14:31 - openhands:INFO: session.py:100 - [DEBUG] Session.initialize_agent: 保存用户设置 - llm_use_token_auth: True
+06:14:31 - openhands:INFO: session.py:143 - [DEBUG] Session.initialize_agent: 检查用户设置代理配置 - llm_use_token_auth: True
+06:14:31 - openhands:INFO: session.py:144 - [DEBUG] Session.initialize_agent: 检查用户设置代理配置 - llm_proxy_headers: None
+06:14:31 - openhands:INFO: session.py:147 - [DEBUG] Session.initialize_agent: 从用户设置应用自定义代理配置到默认LLM配置
+06:14:31 - openhands:INFO: session.py:153 - [DEBUG] Session.initialize_agent: 应用代理设置后 - use_token_auth: True
+06:14:31 - openhands:INFO: session.py:154 - [DEBUG] Session.initialize_agent: 应用代理设置后 - proxy_headers: {'host': 'arsenal-openai-server', 'X-Arsenal-Auth': 'arsenal-tools'}
+06:14:31 - openhands:INFO: session.py:276 - [DEBUG] Session._create_llm: 开始创建LLM - agent_name: CodeActAgent
+06:14:31 - openhands:INFO: session.py:277 - [DEBUG] Session._create_llm: 原始LLM配置 - 模型: o3
+06:14:31 - openhands:INFO: session.py:278 - [DEBUG] Session._create_llm: 原始LLM配置 - base_url: http://172.21.54.74:28000/vtuber/ai_access/chatgpt/v3/chat/completions
+06:14:31 - openhands:INFO: session.py:279 - [DEBUG] Session._create_llm: 原始LLM配置 - use_token_auth: True
+06:14:31 - openhands:INFO: session.py:298 - [DEBUG] Session._apply_user_settings_to_llm_config: 从用户设置中应用自定义代理配置
+06:14:31 - openhands:INFO: session.py:306 - [DEBUG] Session._apply_user_settings_to_llm_config: 未找到proxy_headers设置
+06:14:31 - openhands:INFO: session.py:307 - [DEBUG] Session._apply_user_settings_to_llm_config: 应用后LLM配置 - use_token_auth: True
+06:14:31 - openhands:INFO: session.py:308 - [DEBUG] Session._apply_user_settings_to_llm_config: 应用后LLM配置 - response_wrapper_field: data
+06:14:31 - openhands:INFO: session.py:309 - [DEBUG] Session._apply_user_settings_to_llm_config: 应用后LLM配置 - proxy_headers: {'host': 'arsenal-openai-server', 'X-Arsenal-Auth': 'arsenal-tools'}
+06:14:31 - openhands:INFO: session.py:201 - Enabling pipeline condenser with: browser_output_masking(attention_window=2),  llm(model="o3",  base_url="http://172.21.54.74:28000/vtuber/ai_access/chatgpt/v3/chat/completions",  keep_first=4, max_size=80)
+06:14:31 - openhands:INFO: session.py:224 - [DEBUG] Session: 开始启动agent_session
+06:14:31 - openhands:INFO: session.py:225 - [DEBUG] Session: runtime_name: docker
+06:14:31 - openhands:INFO: session.py:226 - [DEBUG] Session: agent: <openhands.agenthub.codeact_agent.codeact_agent.CodeActAgent object at 0x7fc7e08e0da0>
+06:14:31 - openhands:INFO: session.py:227 - [DEBUG] Session: max_iterations: 500
+06:14:31 - openhands:INFO: session.py:298 - [DEBUG] Session._apply_user_settings_to_llm_config: 从用户设置中应用自定义代理配置
+06:14:31 - openhands:INFO: session.py:306 - [DEBUG] Session._apply_user_settings_to_llm_config: 未找到proxy_headers设置
+06:14:31 - openhands:INFO: session.py:307 - [DEBUG] Session._apply_user_settings_to_llm_config: 应用后LLM配置 - use_token_auth: True
+06:14:31 - openhands:INFO: session.py:308 - [DEBUG] Session._apply_user_settings_to_llm_config: 应用后LLM配置 - response_wrapper_field: data
+06:14:31 - openhands:INFO: session.py:309 - [DEBUG] Session._apply_user_settings_to_llm_config: 应用后LLM配置 - proxy_headers: {'host': 'arsenal-openai-server', 'X-Arsenal-Auth': 'arsenal-tools'}
+06:14:31 - openhands:INFO: session.py:323 - [DEBUG] Session._create_agent_to_llm_config_with_settings: 已生成应用用户设置的agent_to_llm_config
+06:14:31 - openhands:INFO: agent_session.py:334 - [DEBUG] AgentSession._create_runtime: 开始初始化runtime `docker`...
+06:14:31 - openhands:INFO: agent_session.py:335 - [DEBUG] AgentSession._create_runtime: 会话ID: 3ed40b4bd4d646c2b32286e6840e2eed
+06:14:31 - openhands:INFO: agent_session.py:336 - [DEBUG] AgentSession._create_runtime: 用户ID: None
+06:14:31 - openhands:INFO: agent_session.py:338 - [DEBUG] AgentSession._create_runtime: Runtime类: DockerRuntime
+06:14:32 - openhands:INFO: agent_session.py:384 - [DEBUG] AgentSession._create_runtime: 开始连接到runtime...
+06:16:11 - openhands:INFO: agent_session.py:386 - [DEBUG] AgentSession._create_runtime: Runtime连接成功
+  File "/usr/local/lib/python3.12/site-packages/mcp/client/session.py", line 368, in list_tools
+  File "/usr/local/lib/python3.12/site-packages/mcp/shared/session.py", line 286, in send_request
+06:18:18 - openhands:INFO: agent_session.py:211 - Agent session start succeeded in 227.41621899604797s
+06:18:18 - openhands:INFO: session.py:245 - [DEBUG] Session: agent_session启动成功
+06:31:47 - openhands:ERROR: session.py:423 - Agent status error: RuntimeError: There was an unexpected error while running the agent: LLMNoResponseError. You can refresh the page or ask the agent to try again.
+06:31:47 - openhands:ERROR: session.py:362 - Agent status error: RuntimeError: There was an unexpected error while running the agent: LLMNoResponseError. You can refresh the page or ask the agent to try again.

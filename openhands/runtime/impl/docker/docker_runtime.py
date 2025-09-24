@@ -322,6 +322,25 @@ class DockerRuntime(ActionExecutionClient):
             logger.info(
                 f'Mount OpenHands code: {host_openhands_code_path} -> /openhands/code/openhands (ro)'
             )
+            
+            # Also mount poetry configuration files from project root
+            project_root = os.path.dirname(host_openhands_code_path)
+            pyproject_path = os.path.join(project_root, 'pyproject.toml')
+            poetry_lock_path = os.path.join(project_root, 'poetry.lock')
+            
+            if os.path.exists(pyproject_path):
+                volumes[pyproject_path] = {
+                    'bind': '/openhands/code/pyproject.toml',
+                    'mode': 'ro',
+                }
+                logger.info(f'Mount pyproject.toml: {pyproject_path} -> /openhands/code/pyproject.toml')
+                
+            if os.path.exists(poetry_lock_path):
+                volumes[poetry_lock_path] = {
+                    'bind': '/openhands/code/poetry.lock',
+                    'mode': 'ro',
+                }
+                logger.info(f'Mount poetry.lock: {poetry_lock_path} -> /openhands/code/poetry.lock')
 
         return volumes
 
@@ -406,10 +425,22 @@ class DockerRuntime(ActionExecutionClient):
                 'PIP_BREAK_SYSTEM_PACKAGES': '1',
             }
         )
+        
         if self.config.debug or DEBUG:
             environment['DEBUG'] = 'true'
         # also update with runtime_startup_env_vars
         environment.update(self.config.sandbox.runtime_startup_env_vars)
+        
+        # Set PYTHONPATH for mounted OpenHands code (MUST be after runtime_startup_env_vars to avoid being overridden)
+        mount_openhands_code = os.environ.get('MOUNT_OPENHANDS_CODE', '').lower() == 'true'
+        logger.info(f'[DEBUG] MOUNT_OPENHANDS_CODE environment variable: {mount_openhands_code}')
+        if mount_openhands_code:
+            current_pythonpath = environment.get('PYTHONPATH', '')
+            if current_pythonpath:
+                environment['PYTHONPATH'] = f'/openhands/code:{current_pythonpath}'
+            else:
+                environment['PYTHONPATH'] = '/openhands/code'
+            logger.info(f'[DEBUG] Set PYTHONPATH for mounted OpenHands code: {environment["PYTHONPATH"]}')
 
         self.log('debug', f'Workspace Base: {self.config.workspace_base}')
 

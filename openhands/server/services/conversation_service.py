@@ -57,10 +57,34 @@ async def create_new_conversation(
     settings_store = await SettingsStoreImpl.get_instance(config, user_id)
     settings = await settings_store.load()
     logger.info('Settings loaded')
+    
+    # Debug: log the loaded settings details
+    if settings:
+        logger.info(f'[DEBUG] conversation_service: 加载的用户设置 - llm_use_token_auth: {getattr(settings, "llm_use_token_auth", "未设置")}')
+        logger.info(f'[DEBUG] conversation_service: 加载的用户设置 - llm_model: {getattr(settings, "llm_model", "未设置")}')
+        logger.info(f'[DEBUG] conversation_service: 加载的用户设置 - llm_proxy_headers: {getattr(settings, "llm_proxy_headers", "未设置")}')
 
     session_init_args: dict[str, Any] = {}
     if settings:
         session_init_args = {**settings.__dict__, **session_init_args}
+        
+        # Check if user settings lack proxy configuration and merge with env defaults
+        if not getattr(settings, 'llm_use_token_auth', False):
+            logger.info('[DEBUG] conversation_service: 用户设置中llm_use_token_auth为False，尝试从环境变量补充')
+            from openhands.storage.data_models.settings import Settings
+            default_settings = Settings.from_config()
+            if default_settings and getattr(default_settings, 'llm_use_token_auth', False):
+                logger.info('[DEBUG] conversation_service: 从环境变量配置中找到use_token_auth=True，应用到用户设置')
+                settings.llm_use_token_auth = default_settings.llm_use_token_auth
+                if default_settings.llm_proxy_headers:
+                    settings.llm_proxy_headers = default_settings.llm_proxy_headers
+                if default_settings.llm_response_wrapper_field:
+                    settings.llm_response_wrapper_field = default_settings.llm_response_wrapper_field
+                logger.info(f'[DEBUG] conversation_service: 合并后设置 - llm_use_token_auth: {settings.llm_use_token_auth}')
+                logger.info(f'[DEBUG] conversation_service: 合并后设置 - llm_proxy_headers: {getattr(settings, "llm_proxy_headers", None)}')
+                # Update session_init_args with merged settings
+                session_init_args = {**settings.__dict__, **session_init_args}
+        
         # We could use litellm.check_valid_key for a more accurate check,
         # but that would run a tiny inference.
         if (
@@ -73,8 +97,28 @@ async def create_new_conversation(
             )
 
     else:
-        logger.warning('Settings not present, not starting conversation')
-        raise MissingSettingsError('Settings not found')
+        logger.warning('Settings not present, using default settings from config')
+        # Use default settings from environment variables/config when no user settings exist
+        from openhands.storage.data_models.settings import Settings
+        logger.info('[DEBUG] conversation_service: 调用Settings.from_config()获取默认设置')
+        settings = Settings.from_config()
+        logger.info(f'[DEBUG] conversation_service: Settings.from_config()返回: {settings is not None}')
+        if settings:
+            session_init_args = {**settings.__dict__, **session_init_args}
+            logger.info(f'[DEBUG] conversation_service: 使用默认设置 - llm_use_token_auth: {getattr(settings, "llm_use_token_auth", False)}')
+            logger.info(f'[DEBUG] conversation_service: 使用默认设置 - llm_model: {getattr(settings, "llm_model", "None")}')
+            # Check API key for default settings too
+            if (
+                not settings.llm_api_key
+                or settings.llm_api_key.get_secret_value().isspace()
+            ):
+                logger.warning(f'Missing api key for model {settings.llm_model}')
+                raise LLMAuthenticationError(
+                    'Error authenticating with the LLM provider. Please check your API key'
+                )
+        else:
+            logger.warning('Both user settings and default settings not available')
+            raise MissingSettingsError('Settings not found')
 
     session_init_args['git_provider_tokens'] = git_provider_tokens
     session_init_args['selected_repository'] = selected_repository

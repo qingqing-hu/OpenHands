@@ -138,6 +138,23 @@ class Session:
         default_llm_config.model = settings.llm_model or ''
         default_llm_config.api_key = settings.llm_api_key
         default_llm_config.base_url = settings.llm_base_url
+        
+        # Apply custom proxy settings from user settings
+        self.logger.info(f'[DEBUG] Session.initialize_agent: 检查用户设置代理配置 - llm_use_token_auth: {getattr(settings, "llm_use_token_auth", "不存在")}')
+        self.logger.info(f'[DEBUG] Session.initialize_agent: 检查用户设置代理配置 - llm_proxy_headers: {getattr(settings, "llm_proxy_headers", "不存在")}')
+        
+        if hasattr(settings, 'llm_use_token_auth') and settings.llm_use_token_auth:
+            self.logger.info('[DEBUG] Session.initialize_agent: 从用户设置应用自定义代理配置到默认LLM配置')
+            default_llm_config.use_token_auth = settings.llm_use_token_auth
+            if hasattr(settings, 'llm_response_wrapper_field') and settings.llm_response_wrapper_field:
+                default_llm_config.response_wrapper_field = settings.llm_response_wrapper_field
+            if hasattr(settings, 'llm_proxy_headers') and settings.llm_proxy_headers:
+                default_llm_config.proxy_headers = settings.llm_proxy_headers
+            self.logger.info(f'[DEBUG] Session.initialize_agent: 应用代理设置后 - use_token_auth: {default_llm_config.use_token_auth}')
+            self.logger.info(f'[DEBUG] Session.initialize_agent: 应用代理设置后 - proxy_headers: {getattr(default_llm_config, "proxy_headers", None)}')
+        else:
+            self.logger.info('[DEBUG] Session.initialize_agent: 用户设置中没有启用代理配置，跳过应用')
+            self.logger.info(f'[DEBUG] Session.initialize_agent: 默认LLM配置保持 - use_token_auth: {getattr(default_llm_config, "use_token_auth", False)}')
         self.config.search_api_key = settings.search_api_key
         if settings.sandbox_api_key:
             self.config.sandbox.api_key = settings.sandbox_api_key.get_secret_value()
@@ -215,7 +232,7 @@ class Session:
                 agent=agent,
                 max_iterations=max_iterations,
                 max_budget_per_task=max_budget_per_task,
-                agent_to_llm_config=self.config.get_agent_to_llm_config_map(),
+                agent_to_llm_config=self._create_agent_to_llm_config_with_settings(),
                 agent_configs=self.config.get_agent_configs(),
                 git_provider_tokens=git_provider_tokens,
                 custom_secrets=custom_secrets,
@@ -262,26 +279,49 @@ class Session:
         self.logger.info(f'[DEBUG] Session._create_llm: 原始LLM配置 - use_token_auth: {getattr(llm_config, "use_token_auth", False)}')
         
         # Apply custom proxy settings from user settings if available
-        if hasattr(self, '_user_settings') and self._user_settings:
-            settings = self._user_settings
-            if hasattr(settings, 'llm_use_token_auth') and settings.llm_use_token_auth:
-                self.logger.info('[DEBUG] Session._create_llm: 从用户设置中应用自定义代理配置')
-                llm_config.use_token_auth = settings.llm_use_token_auth
-                if hasattr(settings, 'llm_response_wrapper_field') and settings.llm_response_wrapper_field:
-                    llm_config.response_wrapper_field = settings.llm_response_wrapper_field
-                if hasattr(settings, 'llm_proxy_headers') and settings.llm_proxy_headers:
-                    llm_config.proxy_headers = settings.llm_proxy_headers
-                    self.logger.info(f'[DEBUG] Session._create_llm: 应用了proxy_headers: {settings.llm_proxy_headers}')
-                else:
-                    self.logger.info('[DEBUG] Session._create_llm: 未找到proxy_headers设置')
-                self.logger.info(f'[DEBUG] Session._create_llm: 应用后LLM配置 - use_token_auth: {llm_config.use_token_auth}')
-                self.logger.info(f'[DEBUG] Session._create_llm: 应用后LLM配置 - response_wrapper_field: {getattr(llm_config, "response_wrapper_field", None)}')
-                self.logger.info(f'[DEBUG] Session._create_llm: 应用后LLM配置 - proxy_headers: {getattr(llm_config, "proxy_headers", None)}')
+        llm_config = self._apply_user_settings_to_llm_config(llm_config)
         
         return LLM(
             config=llm_config,
             retry_listener=self._notify_on_llm_retry,
         )
+
+    def _apply_user_settings_to_llm_config(self, llm_config):
+        """Apply user settings to LLM config. This is extracted as a separate method 
+        to ensure consistency between agent creation and conversation handling."""
+        # Make a deep copy to avoid modifying the original config
+        llm_config = deepcopy(llm_config)
+        
+        if hasattr(self, '_user_settings') and self._user_settings:
+            settings = self._user_settings
+            if hasattr(settings, 'llm_use_token_auth') and settings.llm_use_token_auth:
+                self.logger.info('[DEBUG] Session._apply_user_settings_to_llm_config: 从用户设置中应用自定义代理配置')
+                llm_config.use_token_auth = settings.llm_use_token_auth
+                if hasattr(settings, 'llm_response_wrapper_field') and settings.llm_response_wrapper_field:
+                    llm_config.response_wrapper_field = settings.llm_response_wrapper_field
+                if hasattr(settings, 'llm_proxy_headers') and settings.llm_proxy_headers:
+                    llm_config.proxy_headers = settings.llm_proxy_headers
+                    self.logger.info(f'[DEBUG] Session._apply_user_settings_to_llm_config: 应用了proxy_headers: {settings.llm_proxy_headers}')
+                else:
+                    self.logger.info('[DEBUG] Session._apply_user_settings_to_llm_config: 未找到proxy_headers设置')
+                self.logger.info(f'[DEBUG] Session._apply_user_settings_to_llm_config: 应用后LLM配置 - use_token_auth: {llm_config.use_token_auth}')
+                self.logger.info(f'[DEBUG] Session._apply_user_settings_to_llm_config: 应用后LLM配置 - response_wrapper_field: {getattr(llm_config, "response_wrapper_field", None)}')
+                self.logger.info(f'[DEBUG] Session._apply_user_settings_to_llm_config: 应用后LLM配置 - proxy_headers: {getattr(llm_config, "proxy_headers", None)}')
+        return llm_config
+
+    def _create_agent_to_llm_config_with_settings(self):
+        """Create agent_to_llm_config map with user settings applied.
+        This ensures consistency with the LLM used for agent creation."""
+        agent_to_llm_config = {}
+        base_map = self.config.get_agent_to_llm_config_map()
+        
+        for agent_name, llm_config in base_map.items():
+            # Apply user settings to each LLM config
+            modified_config = self._apply_user_settings_to_llm_config(llm_config)
+            agent_to_llm_config[agent_name] = modified_config
+        
+        self.logger.info('[DEBUG] Session._create_agent_to_llm_config_with_settings: 已生成应用用户设置的agent_to_llm_config')
+        return agent_to_llm_config
 
     def _notify_on_llm_retry(self, retries: int, max: int) -> None:
         self.queue_status_message(

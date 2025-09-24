@@ -36,11 +36,33 @@ def create_app() -> FastAPI:
         Returns:
             HTMLResponse: An HTML page with an appropriate viewer for the file.
         """
-        # Security check: Only allow requests from localhost
+        # Security check: Allow localhost, internal networks, and specific domain proxy
         client_host = request.client.host if request.client else None
-        if client_host not in ['127.0.0.1', 'localhost', '::1']:
+        allowed_hosts = ['127.0.0.1', 'localhost', '::1']
+        
+        # Check for internal network ranges
+        is_internal = False
+        if client_host:
+            # Allow 192.168.x.x, 10.x.x.x, 172.16-31.x.x ranges
+            import ipaddress
+            try:
+                ip = ipaddress.ip_address(client_host)
+                if ip.is_private or ip.is_loopback:
+                    is_internal = True
+            except ValueError:
+                # Not a valid IP, could be hostname
+                pass
+        
+        # Check X-Forwarded-For header for proxy scenarios (phonestat.hexin.cn)
+        forwarded_for = request.headers.get('X-Forwarded-For', '').split(',')[0].strip()
+        forwarded_host = request.headers.get('X-Forwarded-Host', '')
+        
+        # Allow if from allowed hosts, internal network, or specific domain proxy
+        if (client_host not in allowed_hosts and 
+            not is_internal and 
+            forwarded_host != 'phonestat.hexin.cn'):
             return HTMLResponse(
-                content='<h1>Access Denied</h1><p>This endpoint is only accessible from localhost</p>',
+                content='<h1>Access Denied</h1><p>This endpoint is only accessible from localhost, internal networks, or authorized proxy</p>',
                 status_code=403,
             )
 
@@ -95,7 +117,7 @@ def start_file_viewer_server(port: int) -> tuple[str, threading.Thread]:
     logger.info(f'Starting file viewer server on port {port}')
 
     app = create_app()
-    config = Config(app=app, host='127.0.0.1', port=port, log_level='error')
+    config = Config(app=app, host='0.0.0.0', port=port, log_level='error')
     server = Server(config=config)
 
     # Run the server in a new thread

@@ -228,6 +228,45 @@ class ActionExecutor:
         )
         self.memory_monitor.start_monitoring()
 
+    def _get_file_viewer_host(self) -> str:
+        """
+        Determine the appropriate host address for file viewer URLs.
+        Supports localhost, internal networks, and phonestat.hexin.cn proxy.
+        """
+        # Check for environment variable first (highest priority)
+        if env_host := os.environ.get('DOCKER_HOST_ADDR'):
+            logger.info(f"Using DOCKER_HOST_ADDR: {env_host} for file viewer")
+            return env_host
+        
+        # Check for phonestat.hexin.cn proxy environment
+        if proxy_host := os.environ.get('PHONESTAT_PROXY_HOST'):
+            logger.info(f"Using PHONESTAT_PROXY_HOST: {proxy_host} for file viewer")
+            return proxy_host
+        
+        # Check if phonestat.hexin.cn domain is configured
+        if os.environ.get('USE_PHONESTAT_PROXY', '').lower() in ['true', '1', 'yes']:
+            logger.info("Using phonestat.hexin.cn proxy for file viewer")
+            return 'phonestat.hexin.cn'
+        
+        # Try to detect internal network IP
+        try:
+            import socket
+            # Connect to a remote address to get local IP
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+                s.connect(("8.8.8.8", 80))
+                local_ip = s.getsockname()[0]
+                # Check if it's a private IP
+                import ipaddress
+                if ipaddress.ip_address(local_ip).is_private:
+                    logger.info(f"Detected internal network IP: {local_ip} for file viewer")
+                    return local_ip
+        except Exception as e:
+            logger.warning(f"Could not detect internal IP: {e}")
+        
+        # Fallback to localhost
+        logger.info("Falling back to localhost for file viewer")
+        return 'localhost'
+
     @property
     def initial_cwd(self):
         return self._initial_cwd
@@ -605,9 +644,11 @@ class ActionExecutor:
         
         # Check if this is an HTML file and if so, trigger browser auto-switch
         if filepath.lower().endswith(('.html', '.htm')):
-            # Create a localhost URL using the file viewer service
+            # Create a URL using the file viewer service with flexible host detection
             if self.file_viewer_port:
-                file_url = f"http://localhost:{self.file_viewer_port}/view?path={filepath}"
+                # Try to determine the appropriate host for URL generation
+                host_addr = self._get_file_viewer_host()
+                file_url = f"http://{host_addr}:{self.file_viewer_port}/view?path={filepath}"
                 logger.info(f"HTML file created, triggering auto-switch to: {file_url}")
                 return RealBrowseObservation(
                     content=f'HTML file created and ready for viewing: {action.path}',

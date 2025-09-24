@@ -173,10 +173,21 @@ class BrowserService:
                 logger.warning(f"File is not HTML: {file_path}")
                 # 对于非HTML文件，可能需要不同的处理
                 
-            # 4. 构建会话隔离的预览URL
+            # 4. 构建会话隔离的预览URL，支持域名代理
             import os
+            
+            # 获取基础路径和主机配置
             frontend_base_path = os.getenv('FRONTEND_BASE_PATH', '/openhands')
-            preview_url = f"{frontend_base_path}/api/files/preview/{conversation_id}/{file_path}"
+            
+            # 检查是否需要使用phonestat.hexin.cn域名代理
+            if os.getenv('USE_PHONESTAT_PROXY', '').lower() in ['true', '1', 'yes']:
+                base_host = 'phonestat.hexin.cn'
+                preview_url = f"http://{base_host}{frontend_base_path}/api/files/preview/{conversation_id}/{file_path}"
+            elif proxy_host := os.getenv('PHONESTAT_PROXY_HOST'):
+                preview_url = f"http://{proxy_host}{frontend_base_path}/api/files/preview/{conversation_id}/{file_path}"
+            else:
+                # 使用相对路径，由前端处理实际的主机
+                preview_url = f"{frontend_base_path}/api/files/preview/{conversation_id}/{file_path}"
             
             logger.info(f"Local file preview URL created: {preview_url} for conversation: {conversation_id}")
             return preview_url

@@ -8,7 +8,7 @@ services:
     image: openhands:latest
     container_name: openhands-app-${DATE:-}
     environment:
-      - SANDBOX_RUNTIME_CONTAINER_IMAGE=repositories-hub.myhexin.com:8081/all-hands-ai/runtime:0.50-nikolaik
+      - SANDBOX_RUNTIME_CONTAINER_IMAGE=repositories-hub.myhexin.com:8081/all-hands-ai/runtime:0.55-nikolaik
       - RUNTIME_MOUNT=${RUNTIME_MOUNT:-$PWD/workspace:/workspace:rw}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - BACKEND_LOG_FILE=/logs/backend.log
@@ -27,6 +27,8 @@ services:
       - LLM_PROXY_HEADERS={"host":"arsenal-openai-server","X-Arsenal-Auth":"arsenal-tools"}
       - LLM_RESPONSE_WRAPPER_FIELD=data
       - MOUNT_OPENHANDS_CODE=true
+      # Let auto-detection find the mount path, same as dev environment
+      # - OPENHANDS_CODE_PATH=${PWD}/openhands
       - CONTAINER_NAME=openhands-app-dev
       - port=5000
 
@@ -38,6 +40,7 @@ services:
       - ~/.openhands:/.openhands
       - ${WORKSPACE_BASE:-$PWD/workspace}:/opt/workspace_base
       - ./logs:/logs
+      - ./openhands:/app/openhands
     pull_policy: build
     network_mode: bridge
     stdin_open: true
