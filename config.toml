@@ -71,6 +71,13 @@ network_error_base_wait = 5
 local_runtime_url = "http://172.17.0.1"
 keep_runtime_alive = true
 
+# Claude Code + MCP Integration
+runtime_extra_deps = """
+COPY ./claude-mcp-integration /claude-mcp-integration
+RUN /claude-mcp-integration/install-claude-with-mcp.sh && rm -rf /claude-mcp-integration
+RUN apt-get update && apt-get install -y jq && apt-get clean && rm -rf /var/lib/apt/lists/*
+"""
+
 [app]
 port=3000
 frontend_port=3001

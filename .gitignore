@@ -240,3 +240,7 @@ containers/runtime/Dockerfile
 containers/runtime/project.tar.gz
 containers/runtime/code
 **/node_modules/
+
+# Claude Code binaries (too large for GitHub)
+claude-mcp-integration/claude-linux-arm64
+claude-mcp-integration/claude-linux-x64
