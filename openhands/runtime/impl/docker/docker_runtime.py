@@ -557,6 +557,104 @@ class DockerRuntime(ActionExecutionClient):
 
         self.check_if_alive()
 
+    def setup_initial_env(self) -> None:
+        """Setup initial environment including dynamic Claude Code installation."""
+        # Call parent class setup first
+        super().setup_initial_env()
+        
+        # Install Claude Code dynamically if not attaching to existing container
+        if not self.attach_to_existing:
+            try:
+                self._install_claude_code_dynamically()
+            except Exception as e:
+                self.log('warning', f'Failed to install Claude Code dynamically: {e}')
+
+    def _install_claude_code_dynamically(self) -> None:
+        """Dynamically install Claude Code in the running container."""
+        if self.container is None:
+            self.log('error', 'Container is not available for Claude Code installation')
+            return
+            
+        self.log('info', 'Installing Claude Code dynamically...')
+        
+        # Check if Claude Code is already installed
+        try:
+            result = self.container.exec_run('which claude', user='root')
+            if result.exit_code == 0:
+                self.log('info', 'Claude Code is already installed')
+                return
+        except Exception as e:
+            self.log('debug', f'Error checking Claude Code installation: {e}')
+        
+        # Copy claude-mcp-integration files to container
+        import os
+        # Get the path relative to the project root
+        current_dir = os.path.dirname(os.path.abspath(__file__))  # docker_runtime.py directory
+        project_root = os.path.join(current_dir, '../../../..')  # Navigate to project root (4 levels up)
+        integration_path = os.path.join(project_root, 'claude-mcp-integration')
+        integration_path = os.path.abspath(integration_path)
+        
+        try:
+            # Create archive of integration files
+            import io
+            import tarfile
+            import os
+            
+            if not os.path.exists(integration_path):
+                self.log('error', f'Integration path not found: {integration_path}')
+                return
+                
+            self.log('info', f'Creating archive from path: {integration_path}')
+            tar_stream = io.BytesIO()
+            with tarfile.open(mode='w', fileobj=tar_stream) as tar:
+                # Add each file individually to preserve structure
+                file_count = 0
+                for root, dirs, files in os.walk(integration_path):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        arcname = os.path.join('claude-mcp-integration', os.path.relpath(file_path, integration_path))
+                        tar.add(file_path, arcname=arcname)
+                        file_count += 1
+                        self.log('info', f'Added to archive: {file_path} -> {arcname}')
+                self.log('info', f'Archive created with {file_count} files')
+            tar_stream.seek(0)
+            
+            # Extract to container
+            self.log('info', 'Copying archive to container /tmp/')
+            try:
+                self.container.put_archive('/tmp', tar_stream)
+                self.log('info', 'Archive copied successfully')
+                
+                # Verify files were copied
+                result = self.container.exec_run('ls -la /tmp/claude-mcp-integration/', user='root')
+                if result.exit_code == 0:
+                    self.log('info', f'Files in /tmp/claude-mcp-integration/: {result.output.decode()}')
+                else:
+                    self.log('error', f'Failed to list files in /tmp/claude-mcp-integration/: {result.output.decode()}')
+                    return
+            except Exception as e:
+                self.log('error', f'Failed to copy archive to container: {e}')
+                return
+            
+            # Execute installation script
+            result = self.container.exec_run(
+                'bash /tmp/claude-mcp-integration/install-claude-with-mcp.sh',
+                user='root',
+                environment={'DEBIAN_FRONTEND': 'noninteractive'}
+            )
+            
+            if result.exit_code == 0:
+                self.log('info', 'Claude Code installed successfully')
+                self.log('debug', f'Installation output: {result.output.decode()}')
+            else:
+                self.log('error', f'Claude Code installation failed: {result.output.decode()}')
+                
+            # Clean up installation files
+            self.container.exec_run('rm -rf /tmp/claude-mcp-integration', user='root')
+            
+        except Exception as e:
+            self.log('error', f'Error during Claude Code installation: {e}')
+
     def close(self, rm_all_containers: bool | None = None) -> None:
         """Closes the DockerRuntime and associated objects
 

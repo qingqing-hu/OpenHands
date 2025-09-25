@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "your-custom-service": {
+      "command": "your-mcp-command",
+      "args": ["arg1", "arg2"],
+      "env": {
+        "API_KEY": "${YOUR_API_KEY:-}",
+        "DEBUG": "false"
+      }
+    }
+  }
+}
