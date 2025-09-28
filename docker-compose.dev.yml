@@ -22,16 +22,20 @@ services:
       - SANDBOX_ENV_RESPONSE_WRAPPER_FIELD=data
       - SANDBOX_ENV_ANTHROPIC_BASE_URL=https://crs.xianyi666.top/api
       - SANDBOX_ENV_ANTHROPIC_AUTH_TOKEN=cr_d5b05cfb7ef6caca026234e4b7a3b44f5def03dd599eab1c92a5b48de7ba4d36
+      - SANDBOX_ENV_ENABLE_CLAUDABLE=true
       - LLM_MODEL=moonshot/kimi-k2-0905-preview
       - LLM_BASE_URL=https://api.moonshot.cn/v1
       - LLM_API_KEY=sk-Bj0CpfGB8EKPsDrRXxrQd8EzB1LAmmjJJ1dC816DeWxhJAIm
       - LLM_USE_TOKEN_AUTH=false
       - LLM_PROXY_HEADERS={"host":"arsenal-openai-server","X-Arsenal-Auth":"arsenal-tools"}
       - LLM_RESPONSE_WRAPPER_FIELD=data
+      - ANTHROPIC_BASE_URL=https://crs.xianyi666.top/api
+      - ANTHROPIC_AUTH_TOKEN=cr_d5b05cfb7ef6caca026234e4b7a3b44f5def03dd599eab1c92a5b48de7ba4d36
       - port=5002
       #- EXTERNAL_VSCODE_SERVER_URL=http://10.0.56.134:5003
       - MOUNT_OPENHANDS_CODE=true
       - CONTAINER_NAME=openhands-app-dev
+      - ENABLE_CLAUDABLE=true
     ports:
       - "5002:5002"
       - "5001:5001"
@@ -42,6 +46,7 @@ services:
       - ./logs:/logs
       - ./openhands:/app/openhands
       - ./claude-mcp-integration:/app/claude-mcp-integration
+      - ./claudable-integration:/app/claudable-integration
     pull_policy: build
     network_mode: bridge
     stdin_open: true

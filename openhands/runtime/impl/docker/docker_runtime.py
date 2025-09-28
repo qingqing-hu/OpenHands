@@ -558,16 +558,22 @@ class DockerRuntime(ActionExecutionClient):
         self.check_if_alive()
 
     def setup_initial_env(self) -> None:
-        """Setup initial environment including dynamic Claude Code installation."""
+        """Setup initial environment including dynamic Claude Code and Claudable installation."""
         # Call parent class setup first
         super().setup_initial_env()
         
-        # Install Claude Code dynamically if not attaching to existing container
+        # Install services dynamically if not attaching to existing container
         if not self.attach_to_existing:
             try:
+                # Install Claude Code first (Claudable depends on claude-code-sdk)
                 self._install_claude_code_dynamically()
+                
+                # Install Claudable if enabled
+                if os.getenv('ENABLE_CLAUDABLE', 'false').lower() == 'true':
+                    self._install_claudable_dynamically()
+                    
             except Exception as e:
-                self.log('warning', f'Failed to install Claude Code dynamically: {e}')
+                self.log('warning', f'Failed to install services dynamically: {e}')
 
     def _install_claude_code_dynamically(self) -> None:
         """Dynamically install Claude Code in the running container."""
@@ -654,6 +660,101 @@ class DockerRuntime(ActionExecutionClient):
             
         except Exception as e:
             self.log('error', f'Error during Claude Code installation: {e}')
+
+    def _install_claudable_dynamically(self) -> None:
+        """Dynamically install Claudable in the running container."""
+        if self.container is None:
+            self.log('error', 'Container is not available for Claudable installation')
+            return
+            
+        self.log('info', 'Installing Claudable dynamically...')
+        
+        # Check if Claudable is already running
+        try:
+            result = self.container.exec_run('ps aux | grep claudable', user='root')
+            if 'claudable' in result.output.decode().lower():
+                self.log('info', 'Claudable services are already running')
+                return
+        except Exception as e:
+            self.log('debug', f'Error checking Claudable installation: {e}')
+        
+        # Copy claudable-integration files to container
+        import os
+        # Get the path relative to the project root
+        current_dir = os.path.dirname(os.path.abspath(__file__))  # docker_runtime.py directory
+        project_root = os.path.join(current_dir, '../../../..')  # Navigate to project root (4 levels up)
+        integration_path = os.path.join(project_root, 'claudable-integration')
+        integration_path = os.path.abspath(integration_path)
+        
+        try:
+            # Create archive of integration files
+            import io
+            import tarfile
+            
+            if not os.path.exists(integration_path):
+                self.log('error', f'Claudable integration path not found: {integration_path}')
+                return
+                
+            self.log('info', f'Creating Claudable archive from path: {integration_path}')
+            tar_stream = io.BytesIO()
+            with tarfile.open(mode='w', fileobj=tar_stream) as tar:
+                # Add each file individually to preserve structure
+                file_count = 0
+                for root, dirs, files in os.walk(integration_path):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        arcname = os.path.join('claudable-integration', os.path.relpath(file_path, integration_path))
+                        tar.add(file_path, arcname=arcname)
+                        file_count += 1
+                        self.log('info', f'Added to archive: {file_path} -> {arcname}')
+                self.log('info', f'Claudable archive created with {file_count} files')
+            tar_stream.seek(0)
+            
+            # Extract to container
+            self.log('info', 'Copying Claudable archive to container /tmp/')
+            try:
+                self.container.put_archive('/tmp', tar_stream)
+                self.log('info', 'Claudable archive copied successfully')
+                
+                # Verify files were copied
+                result = self.container.exec_run('ls -la /tmp/claudable-integration/', user='root')
+                if result.exit_code == 0:
+                    self.log('info', f'Files in /tmp/claudable-integration/: {result.output.decode()}')
+                else:
+                    self.log('error', f'Failed to list files in /tmp/claudable-integration/: {result.output.decode()}')
+                    return
+            except Exception as e:
+                self.log('error', f'Failed to copy Claudable archive to container: {e}')
+                return
+            
+            # Set proper environment variables for installation
+            env_vars = {
+                'DEBIAN_FRONTEND': 'noninteractive',
+                'APP_PORT_1': str(self._app_ports[0]) if self._app_ports else '50396',
+                'APP_PORT_2': str(self._app_ports[1]) if len(self._app_ports) > 1 else '57023',
+                'ANTHROPIC_API_KEY': os.getenv('ANTHROPIC_API_KEY', ''),
+                'ANTHROPIC_AUTH_TOKEN': os.getenv('ANTHROPIC_AUTH_TOKEN', ''),
+                'ANTHROPIC_BASE_URL': os.getenv('ANTHROPIC_BASE_URL', '')
+            }
+            
+            # Execute installation script
+            result = self.container.exec_run(
+                'bash /tmp/claudable-integration/install-claudable-runtime.sh',
+                user='root',
+                environment=env_vars
+            )
+            
+            if result.exit_code == 0:
+                self.log('info', 'Claudable installed and started successfully')
+                self.log('debug', f'Claudable installation output: {result.output.decode()}')
+            else:
+                self.log('error', f'Claudable installation failed: {result.output.decode()}')
+                
+            # Clean up installation files  
+            self.container.exec_run('rm -rf /tmp/claudable-integration', user='root')
+            
+        except Exception as e:
+            self.log('error', f'Error during Claudable installation: {e}')
 
     def close(self, rm_all_containers: bool | None = None) -> None:
         """Closes the DockerRuntime and associated objects
